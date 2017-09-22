@@ -394,10 +394,21 @@ export const Graph = types
     };
   });
 
+const RefToLink = types.maybe(types.reference(Link));
+
 export const GraphView = types
   .model("GraphView", {
-    graph: Graph
+    graph: Graph,
+    topViewLink: RefToLink,
+    bottomViewLink: RefToLink,
+    selectedLink: RefToLink,
+    endSelectedLink: RefToLink
   })
+  .views(self => ({
+    get shownLinks() {
+      return "comin right up!";
+    }
+  }))
   .actions(self => {
     const evaluate = linkId => {
       const link = self.graph.links.get(linkId);
