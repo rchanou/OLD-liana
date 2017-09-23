@@ -212,10 +212,11 @@ export const Param = types
     with(params) {
       const { param } = self;
       if (params.has(param)) {
+        const mapValue = params.get(param);
         if (isObservableMap(params)) {
-          return params.get(param).val;
+          return mapValue.val;
         } else {
-          return params.get(param);
+          return mapValue;
         }
       } else {
         return new Hole({ [param]: true }); // HACK?
