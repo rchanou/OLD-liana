@@ -319,3 +319,14 @@ while (a > 3){
 #### Insights
 - Caching to an ID is an effectful operation. How can cache ID assignment be contained in "higher-order" operations?
 - Can types be fully inferred for the "for" operation? Will it know how to handle if it's a sent a pure function as opposed to a "generator"?
+
+#### View State Outline
+
+- possible view states
+  - condense nodes two units from selected
+  - somehow only focus "relevant" nodes
+    - hide/compress non-static nodes
+  - "bin-packing" algorithm? or...
+  - expand highlighted node
+  - keep routing, history, forward/back navigation in mind
+  - T connections rather than "ray-converge" lines
