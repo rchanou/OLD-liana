@@ -402,8 +402,8 @@ export const Graph = types
     packages: types.optional(types.map(Package), {}),
     links: types.optional(types.map(Link), {}),
     calls: types.optional(types.map(Call), {}),
-    subs: types.optional(types.map(Sub), {}),
-    viewport: Viewport
+    subs: types.optional(types.map(Sub), {})
+    // viewport: Viewport
   })
   .views(self => {
     return {

@@ -117,7 +117,7 @@ class Test extends React.Component {
     const d = getVal(23);
     const subLink = graph.subs.get(0).sub.get(0)[0].ref.link;
     // console.log(subLink, 'le link')
-    graphView.graph.expandSub("0", "24", { ref: "5" });
+    graph.expandSub("0", "24", { ref: "5" });
     // const e = getVal("24-2");
     // console.log(e);
     // console.log(getVal("32"));
@@ -131,6 +131,8 @@ class Test extends React.Component {
     autorun(() => {
       console.log("le pkg", graph.packages.get(0).with());
     });
+
+    console.log(graph);
   }
 
   render() {
