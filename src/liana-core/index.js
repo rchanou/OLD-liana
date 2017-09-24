@@ -273,7 +273,6 @@ export const Link = types
       display(state, base = {}) {
         const { link } = self;
         let { idPrefix = "", x = 0, y = 10 } = base;
-        // let idPrefix = idPrefix || "";
         idPrefix = idPrefix || self.id;
 
         let allNodes = [];
