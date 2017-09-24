@@ -280,26 +280,27 @@ export const Link = types
         for (let i = 0; i < link.length; i++) {
           const node = link[i];
           const nodeType = getType(node);
+          const key = `${idPrefix}-${i}`;
           switch (nodeType) {
             case Op:
-              allNodes.push({ key: `${idPrefix}-o-${node.op}`, x, y, width: 1, color: opColor });
+              allNodes.push({ key, x, y, width: 1, color: opColor });
               x += 1;
               break;
             case Val:
-              allNodes.push({ key: `${idPrefix}-v-${node.val}`, x, y, width: 1, color: valColor });
+              allNodes.push({ key, x, y, width: 1, color: valColor });
               x += 1;
               break;
             case Input:
-              allNodes.push({ key: `${idPrefix}-i-${node.in}`, x, y, width: 1, color: inputColor });
+              allNodes.push({ key, x, y, width: 1, color: inputColor });
               x += 1;
               break;
             case Param:
-              allNodes.push({ key: `${idPrefix}-p-${node.param}`, x, y, width: 1, color: paramColor });
+              allNodes.push({ key, x, y, width: 1, color: paramColor });
               x += 1;
               break;
 
             case PackageRef:
-              allNodes.push({ key: `${idPrefix}-k-${node.id}`, x, y, width: 1, color: packageColor });
+              allNodes.push({ key, x, y, width: 1, color: packageColor });
               x += 1;
               break;
             case LinkRef:
@@ -307,7 +308,7 @@ export const Link = types
               allNodes.push(...otherLinkNodes);
               x += otherLinkNodes.length;
             default:
-              allNodes.push({ key: `${idPrefix}-u-${node.id || `?-${i}`}`, x, y, width: 1, color: unknownColor });
+              allNodes.push({ key: `${idPrefix}-${i}`, x, y, width: 1, color: unknownColor });
               x += 1;
           }
         }
