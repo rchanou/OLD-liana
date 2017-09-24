@@ -270,9 +270,9 @@ export const Link = types
           return head;
         }
       },
-      display(state, base = { idPrefix: "", x: 0, y: 10 }) {
+      display(state, base = {}) {
         const { link } = self;
-        let { idPrefix, x, y } = base;
+        let { idPrefix = "", x = 0, y = 10 } = base;
         // let idPrefix = idPrefix || "";
         idPrefix = idPrefix || self.id;
 
@@ -283,30 +283,30 @@ export const Link = types
           const key = `${idPrefix}-${i}`;
           switch (nodeType) {
             case Op:
-              allNodes.push({ key, x, y, width: 1, color: opColor });
+              allNodes.push({ key, x, y, width: 1, color: opColor, text: node.op });
               x += 1;
               break;
             case Val:
-              allNodes.push({ key, x, y, width: 1, color: valColor });
+              allNodes.push({ key, x, y, width: 1, color: valColor, text: node.val });
               x += 1;
               break;
             case Input:
-              allNodes.push({ key, x, y, width: 1, color: inputColor });
+              allNodes.push({ key, x, y, width: 1, color: inputColor, text: node.in });
               x += 1;
               break;
             case Param:
-              allNodes.push({ key, x, y, width: 1, color: paramColor });
+              allNodes.push({ key, x, y, width: 1, color: paramColor, text: node.param });
               x += 1;
               break;
-
             case PackageRef:
-              allNodes.push({ key, x, y, width: 1, color: packageColor });
+              allNodes.push({ key, x, y, width: 1, color: packageColor, text: node.path });
               x += 1;
               break;
             case LinkRef:
-              const otherLinkNodes = node.ref.display(state, { idPrefix: key, x: 0, y: y - 1 });
+              const otherLinkNodes = node.ref.display(state, { idPrefix: key, x, y: y - 1 });
               allNodes.push(...otherLinkNodes);
               x += otherLinkNodes.length;
+              break;
             default:
               allNodes.push({ key: `${idPrefix}-${i}`, x, y, width: 1, color: unknownColor });
               x += 1;
@@ -428,13 +428,10 @@ export const Graph = types
       get display() {
         // TODO: filtering
         let allNodes = [];
-        // for (const linkInstance of Object.value(self.links) {
         self.links.forEach(link => {
           allNodes.push(...link.display());
         });
-        // return Object.values(self.links).map(link => link.display());
-        // }
-        console.log("le all nodes", allNodes);
+        console.table(allNodes);
         return allNodes;
       }
     };
