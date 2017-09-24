@@ -236,6 +236,11 @@ const packageColor = "hsl(315,88%,88%)";
 const pendingColor = "hsl(270,88%,88%)";
 const unknownColor = "hsl(0,0%,88%)";
 
+export const loneForm = "lone";
+export const midForm = "mid";
+export const startForm = "start";
+export const endForm = "end";
+
 export const Link = types
   .model("Link", {
     id: types.identifier(types.string),
@@ -280,46 +285,52 @@ export const Link = types
         for (let i = 0; i < link.length; i++) {
           const node = link[i];
           const nodeType = getType(node);
+          const base = {
+            group,
+            index: i,
+            x,
+            y,
+            form: link.length === 1 ? loneForm : !i ? startForm : i === link.length - 1 ? endForm : midForm
+          };
+
           switch (nodeType) {
             case Op:
-              allNodes.push({ group, index: i, x, y, width: 1, color: opColor, text: node.op });
+              allNodes.push({ ...base, size: 1, color: opColor, text: node.op });
               x += 1;
               break;
             case Val:
-              allNodes.push({ group, index: i, x, y, width: 1, color: valColor, text: node.val });
+              allNodes.push({ ...base, size: 1, color: valColor, text: node.val });
               x += 1;
               break;
             case Input:
-              allNodes.push({ group, index: i, x, y, width: 1, color: inputColor, text: node.in });
+              allNodes.push({ ...base, size: 1, color: inputColor, text: node.in });
               x += 1;
               break;
             case Param:
-              allNodes.push({ group, index: i, x, y, width: 1, color: paramColor, text: node.param });
+              allNodes.push({ ...base, size: 1, color: paramColor, text: node.param });
               x += 1;
               break;
             case PackageRef:
-              allNodes.push({ group, index: i, x, y, width: 1, color: packageColor, text: node.path });
+              allNodes.push({ ...base, size: 1, color: packageColor, text: node.path });
               x += 1;
               break;
             case LinkRef:
               const innerGroup = `${group}-${i}`;
               const otherLinkNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
               const sourceNodes = otherLinkNodes.filter(node => node.group === innerGroup);
-              const space = sourceNodes.reduce((sum, node) => sum + node.width, 0);
+              const space = sourceNodes.reduce((sum, node) => sum + node.size, 0);
               const thisNode = {
-                group,
-                index: i,
-                x,
-                y,
-                width: space,
+                ...base,
+                size: space,
                 color: pendingColor,
-                text: node.ref.id
+                text: node.ref.id,
+                link: true
               };
               allNodes.push(...otherLinkNodes, thisNode);
               x += space;
               break;
             default:
-              allNodes.push({ group, index: i, x, y, width: 1, color: unknownColor });
+              allNodes.push({ ...base, size: 1, color: unknownColor });
               x += 1;
           }
         }
