@@ -262,18 +262,55 @@ export const Link = types
         } else {
           return head;
         }
+      },
+      display(state, base = { x: 0, y: 10 }) {
+        const { id, link } = self;
+        let { x, y } = base;
+
+        let allNodes = [];
+        for (let i = 0; i < link.length; i++) {
+          const node = link[i];
+          const nodeType = getType(node);
+          switch (nodeType) {
+            case Op:
+              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              x += 1;
+              break;
+            case Val:
+              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              x += 1;
+              break;
+            case Input:
+              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              x += 1;
+              break;
+            case PackageRef:
+              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              x += 1;
+              break;
+            case LinkRef: // recursive
+              const otherLinkNodes = node.val.display(state, { x: 0, y: y - 1 });
+              allNodes.push(...otherLinkNodes);
+              x += otherLinkNodes.length;
+          }
+        }
+        return allNodes;
       }
     };
   });
 
-export const LinkRef = types.model("LinkRef", { ref: types.reference(Link) }).views(self => ({
-  get val() {
-    return self.ref.val;
-  },
-  with() {
-    return self.val;
-  }
-}));
+export const LinkRef = types
+  .model("LinkRef", {
+    ref: types.reference(Link)
+  })
+  .views(self => ({
+    get val() {
+      return self.ref.val;
+    },
+    with() {
+      return self.val;
+    }
+  }));
 
 export const Call = types
   .model("Call", {
@@ -358,12 +395,23 @@ export const SubRef = types
     }
   }));
 
+export const Viewport = types.model("Viewport", {});
+
 export const Graph = types
   .model("Graph", {
     packages: types.optional(types.map(Package), {}),
     links: types.optional(types.map(Link), {}),
     calls: types.optional(types.map(Call), {}),
-    subs: types.optional(types.map(Sub), {})
+    subs: types.optional(types.map(Sub), {}),
+    viewport: Viewport
+  })
+  .views(self => {
+    return {
+      display() {
+        // TODO: filtering
+        return Object.values(self.links).map(link => link.display(self.viewport));
+      }
+    };
   })
   .actions(self => {
     return {
@@ -396,26 +444,3 @@ export const Graph = types
   });
 
 const RefToLink = types.maybe(types.reference(Link));
-
-export const GraphView = types
-  .model("GraphView", {
-    graph: Graph,
-    topViewLink: RefToLink,
-    bottomViewLink: RefToLink,
-    selectedLink: RefToLink,
-    endSelectedLink: RefToLink
-  })
-  .views(self => ({
-    get shownLinks() {
-      return "comin right up!";
-    }
-  }))
-  .actions(self => {
-    const evaluate = linkId => {
-      const link = self.graph.links.get(linkId);
-    };
-
-    return {
-      evaluate
-    };
-  });
