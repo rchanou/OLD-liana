@@ -274,7 +274,7 @@ export const Link = types
         const { link } = self;
         let { idPrefix, x, y } = base;
         // let idPrefix = idPrefix || "";
-        idPrefix += self.id;
+        idPrefix = idPrefix || self.id;
 
         let allNodes = [];
         for (let i = 0; i < link.length; i++) {
@@ -304,7 +304,7 @@ export const Link = types
               x += 1;
               break;
             case LinkRef:
-              const otherLinkNodes = node.ref.display(state, { idPrefix: `${idPrefix}-`, x: 0, y: y - 1 });
+              const otherLinkNodes = node.ref.display(state, { idPrefix: key, x: 0, y: y - 1 });
               allNodes.push(...otherLinkNodes);
               x += otherLinkNodes.length;
             default:
