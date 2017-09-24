@@ -232,7 +232,8 @@ const opColor = "hsl(120,88%,88%)";
 const valColor = "hsl(180,88%,88%)";
 const inputColor = "hsl(30,88%,88%)";
 const paramColor = "hsl(0,88%,88%)";
-const packageColor = "hsl(270,88%,88%)";
+const packageColor = "hsl(315,88%,88%)";
+const pendingColor = "hsl(270,88%,88%)";
 const unknownColor = "hsl(0,0%,88%)";
 
 export const Link = types
@@ -303,8 +304,18 @@ export const Link = types
               break;
             case LinkRef:
               const otherLinkNodes = node.ref.display(state, { idPrefix: key, x, y: y - 1 });
-              allNodes.push(...otherLinkNodes);
-              x += otherLinkNodes.length;
+              const sourceNodes = otherLinkNodes.slice(-node.ref.link.length); // these should be the most recently created ones
+              const space = sourceNodes.reduce((sum, node) => sum + node.width, 0);
+              const thisNode = {
+                key,
+                x,
+                y,
+                width: space,
+                color: pendingColor,
+                text: node.ref.id
+              };
+              allNodes.push(...otherLinkNodes, thisNode);
+              x += space;
               break;
             default:
               allNodes.push({ key: `${idPrefix}-${i}`, x, y, width: 1, color: unknownColor });

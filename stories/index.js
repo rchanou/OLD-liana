@@ -15,7 +15,12 @@ const simple = L.Graph.create({
   links: {
     0: { id: "0", link: [{ op: "g" }, { val: "Math" }] },
     1: { id: "1", link: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
-    2: { id: "2", link: [{ ref: "1" }, { param: "0" }, { val: 3 }] }
+    2: { id: "2", link: [{ ref: "1" }, { in: "n" }, { val: 2 }] },
+    3: { id: "3", link: [{ ref: "2" }, { val: 5 }] },
+    4: { id: "4", link: [{ ref: "2" }, { val: 12 }] },
+    5: { id: "5", link: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
+    6: { id: "6", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
+    7: { id: "7", link: [{ ref: "6" }, { ref: "5" }] }
   }
 });
 
@@ -137,13 +142,16 @@ const graph = L.Graph.create(
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
+const nodes = simple.links.get(7).display();
+console.table(nodes);
+
 class Test extends React.Component {
   constructor(props) {
     super(props);
   }
 
   render() {
-    return <Tree store={simple} />;
+    return <Tree nodes={nodes} />;
   }
 }
 

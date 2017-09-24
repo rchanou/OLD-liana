@@ -9,8 +9,8 @@ const containerStyle = {
 
 const nodeStyle = {
   position: "absolute",
-  border: "2px solid black",
-  borderRadius: 2,
+  border: "1px solid #111",
+  borderRadius: 4,
   height: 50,
   display: "flex",
   justifyContent: "center",
@@ -19,9 +19,9 @@ const nodeStyle = {
 
 const unit = 50;
 
-export const Tree = observer(({ store }) => (
+export const Tree = observer(({ nodes }) => (
   <div style={containerStyle}>
-    {store.display.map(node => (
+    {nodes.map(node => (
       <div
         key={node.key}
         style={{
