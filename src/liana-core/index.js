@@ -228,6 +228,13 @@ export const Node = types.union(Val, Op, Input, Param, types.late(() => LinkRef)
 
 const identity = x => x;
 
+const opColor = "hsl(120,88%,88%)";
+const valColor = "hsl(180,88%,88%)";
+const inputColor = "hsl(30,88%,88%)";
+const paramColor = "hsl(0,88%,88%)";
+const packageColor = "hsl(270,88%,88%)";
+const unknownColor = "hsl(0,0%,88%)";
+
 export const Link = types
   .model("Link", {
     id: types.identifier(types.string),
@@ -263,9 +270,11 @@ export const Link = types
           return head;
         }
       },
-      display(state, base = { x: 0, y: 10 }) {
-        const { id, link } = self;
-        let { x, y } = base;
+      display(state, base = { idPrefix: "", x: 0, y: 10 }) {
+        const { link } = self;
+        let { idPrefix, x, y } = base;
+        // let idPrefix = idPrefix || "";
+        idPrefix += self.id;
 
         let allNodes = [];
         for (let i = 0; i < link.length; i++) {
@@ -273,25 +282,33 @@ export const Link = types
           const nodeType = getType(node);
           switch (nodeType) {
             case Op:
-              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              allNodes.push({ key: `${idPrefix}-o-${node.op}`, x, y, width: 1, color: opColor });
               x += 1;
               break;
             case Val:
-              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              allNodes.push({ key: `${idPrefix}-v-${node.val}`, x, y, width: 1, color: valColor });
               x += 1;
               break;
             case Input:
-              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              allNodes.push({ key: `${idPrefix}-i-${node.in}`, x, y, width: 1, color: inputColor });
               x += 1;
               break;
+            case Param:
+              allNodes.push({ key: `${idPrefix}-p-${node.param}`, x, y, width: 1, color: paramColor });
+              x += 1;
+              break;
+
             case PackageRef:
-              allNodes.push({ key: `${id}-${i}`, x, y, width: 1 });
+              allNodes.push({ key: `${idPrefix}-k-${node.id}`, x, y, width: 1, color: packageColor });
               x += 1;
               break;
-            case LinkRef: // recursive
-              const otherLinkNodes = node.val.display(state, { x: 0, y: y - 1 });
+            case LinkRef:
+              const otherLinkNodes = node.ref.display(state, { idPrefix: `${idPrefix}-`, x: 0, y: y - 1 });
               allNodes.push(...otherLinkNodes);
               x += otherLinkNodes.length;
+            default:
+              allNodes.push({ key: `${idPrefix}-u-${node.id || `?-${i}`}`, x, y, width: 1, color: unknownColor });
+              x += 1;
           }
         }
         return allNodes;
@@ -407,9 +424,17 @@ export const Graph = types
   })
   .views(self => {
     return {
-      display() {
+      get display() {
         // TODO: filtering
-        return Object.values(self.links).map(link => link.display(self.viewport));
+        let allNodes = [];
+        // for (const linkInstance of Object.value(self.links) {
+        self.links.forEach(link => {
+          allNodes.push(...link.display());
+        });
+        // return Object.values(self.links).map(link => link.display());
+        // }
+        console.log("le all nodes", allNodes);
+        return allNodes;
       }
     };
   })
