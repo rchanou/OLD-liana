@@ -22,7 +22,11 @@ const simple = L.Graph.create({
     6: { id: "6", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { id: "7", link: [{ ref: "6" }, { ref: "5" }] }
   },
-  labels: {}
+  labels: {
+    0: { id: "0", label: "Math" },
+    1: { id: "1", label: "power" },
+    2: { id: "2", label: "square" }
+  }
 });
 
 const graph = L.Graph.create(

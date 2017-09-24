@@ -320,12 +320,17 @@ export const Link = types
               const otherLinkNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
               const sourceNodes = otherLinkNodes.filter(node => node.group === innerGroup);
               const space = sourceNodes.reduce((sum, node) => sum + node.size, 0);
+
+              const linkId = node.ref.id;
+
+              const label = resolveIdentifier(Label, self, linkId);
+
               const thisNode = {
                 ...base,
-                key: node.ref.id,
+                key: linkId,
                 size: space,
                 color: pendingColor,
-                text: node.ref.id, // look up label
+                text: (label && label.label) || linkId, // look up label
                 link: true
               };
               allNodes.push(...otherLinkNodes, thisNode);
@@ -439,7 +444,8 @@ export const SubRef = types
 
 export const Label = types.model("Label", {
   id: types.identifier(types.string),
-  linkRef: types.reference(Link)
+  label: types.string
+  // linkRef: types.reference(Link)
 });
 
 export const Post = types.model("Post", {
