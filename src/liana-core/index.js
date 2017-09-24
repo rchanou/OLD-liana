@@ -1,4 +1,4 @@
-import { types, getEnv, getChildType, getType, process } from "mobx-state-tree";
+import { types, getEnv, getChildType, getType, resolveIdentifier, process } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
@@ -290,28 +290,29 @@ export const Link = types
             index: i,
             x,
             y,
+            size: 1,
             form: link.length === 1 ? loneForm : !i ? startForm : i === link.length - 1 ? endForm : midForm
           };
 
           switch (nodeType) {
             case Op:
-              allNodes.push({ ...base, size: 1, color: opColor, text: node.op });
+              allNodes.push({ ...base, color: opColor, text: node.op });
               x += 1;
               break;
             case Val:
-              allNodes.push({ ...base, size: 1, color: valColor, text: node.val });
+              allNodes.push({ ...base, color: valColor, text: node.val });
               x += 1;
               break;
             case Input:
-              allNodes.push({ ...base, size: 1, color: inputColor, text: node.in });
+              allNodes.push({ ...base, color: inputColor, text: node.in });
               x += 1;
               break;
             case Param:
-              allNodes.push({ ...base, size: 1, color: paramColor, text: node.param });
+              allNodes.push({ ...base, color: paramColor, text: node.param });
               x += 1;
               break;
             case PackageRef:
-              allNodes.push({ ...base, size: 1, color: packageColor, text: node.path });
+              allNodes.push({ ...base, color: packageColor, text: node.path });
               x += 1;
               break;
             case LinkRef:
@@ -321,16 +322,17 @@ export const Link = types
               const space = sourceNodes.reduce((sum, node) => sum + node.size, 0);
               const thisNode = {
                 ...base,
+                key: node.ref.id,
                 size: space,
                 color: pendingColor,
-                text: node.ref.id,
+                text: node.ref.id, // look up label
                 link: true
               };
               allNodes.push(...otherLinkNodes, thisNode);
               x += space;
               break;
             default:
-              allNodes.push({ ...base, size: 1, color: unknownColor });
+              allNodes.push({ ...base, color: unknownColor });
               x += 1;
           }
         }
@@ -435,26 +437,29 @@ export const SubRef = types
     }
   }));
 
-export const Viewport = types.model("Viewport", {});
+export const Label = types.model("Label", {
+  id: types.identifier(types.string),
+  linkRef: types.reference(Link)
+});
+
+export const Post = types.model("Post", {
+  id: types.identifier(types.string),
+  linkRef: types.reference(Link)
+});
 
 export const Graph = types
   .model("Graph", {
     packages: types.optional(types.map(Package), {}),
     links: types.optional(types.map(Link), {}),
     calls: types.optional(types.map(Call), {}),
-    subs: types.optional(types.map(Sub), {})
+    subs: types.optional(types.map(Sub), {}),
+    labels: types.optional(types.map(Label), {})
     // viewport: Viewport
   })
   .views(self => {
     return {
       get display() {
-        // TODO: filtering
-        let allNodes = [];
-        self.links.forEach(link => {
-          allNodes.push(...link.display());
-        });
-        console.table(allNodes);
-        return allNodes;
+        return "hhmmm not yet";
       }
     };
   })

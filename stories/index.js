@@ -21,7 +21,8 @@ const simple = L.Graph.create({
     5: { id: "5", link: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
     6: { id: "6", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { id: "7", link: [{ ref: "6" }, { ref: "5" }] }
-  }
+  },
+  labels: {}
 });
 
 const graph = L.Graph.create(
@@ -115,7 +116,8 @@ const graph = L.Graph.create(
           2: [{ ref: "2" }, { subLink: 1 }]
         }
       }
-    }
+    },
+    posts: {}
   },
   { system: SystemJS }
 );
