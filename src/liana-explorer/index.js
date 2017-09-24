@@ -23,7 +23,7 @@ export const Tree = observer(({ nodes }) => (
   <div style={containerStyle}>
     {nodes.map(node => (
       <div
-        key={node.key}
+        key={`${node.group}-${node.index}`}
         style={{
           ...nodeStyle,
           top: node.y * unit,

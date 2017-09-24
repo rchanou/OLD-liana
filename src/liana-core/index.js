@@ -273,41 +273,42 @@ export const Link = types
       },
       display(state, base = {}) {
         const { link } = self;
-        let { idPrefix = "", x = 0, y = 10 } = base;
-        idPrefix = idPrefix || self.id;
+        let { group = "", x = 0, y = 10 } = base;
+        group = group || self.id;
 
         let allNodes = [];
         for (let i = 0; i < link.length; i++) {
           const node = link[i];
           const nodeType = getType(node);
-          const key = `${idPrefix}-${i}`;
           switch (nodeType) {
             case Op:
-              allNodes.push({ key, x, y, width: 1, color: opColor, text: node.op });
+              allNodes.push({ group, index: i, x, y, width: 1, color: opColor, text: node.op });
               x += 1;
               break;
             case Val:
-              allNodes.push({ key, x, y, width: 1, color: valColor, text: node.val });
+              allNodes.push({ group, index: i, x, y, width: 1, color: valColor, text: node.val });
               x += 1;
               break;
             case Input:
-              allNodes.push({ key, x, y, width: 1, color: inputColor, text: node.in });
+              allNodes.push({ group, index: i, x, y, width: 1, color: inputColor, text: node.in });
               x += 1;
               break;
             case Param:
-              allNodes.push({ key, x, y, width: 1, color: paramColor, text: node.param });
+              allNodes.push({ group, index: i, x, y, width: 1, color: paramColor, text: node.param });
               x += 1;
               break;
             case PackageRef:
-              allNodes.push({ key, x, y, width: 1, color: packageColor, text: node.path });
+              allNodes.push({ group, index: i, x, y, width: 1, color: packageColor, text: node.path });
               x += 1;
               break;
             case LinkRef:
-              const otherLinkNodes = node.ref.display(state, { idPrefix: key, x, y: y - 1 });
-              const sourceNodes = otherLinkNodes.slice(-node.ref.link.length); // these should be the most recently created ones
+              const innerGroup = `${group}-${i}`;
+              const otherLinkNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
+              const sourceNodes = otherLinkNodes.filter(node => node.group === innerGroup);
               const space = sourceNodes.reduce((sum, node) => sum + node.width, 0);
               const thisNode = {
-                key,
+                group,
+                index: i,
                 x,
                 y,
                 width: space,
@@ -318,7 +319,7 @@ export const Link = types
               x += space;
               break;
             default:
-              allNodes.push({ key: `${idPrefix}-${i}`, x, y, width: 1, color: unknownColor });
+              allNodes.push({ group, index: i, x, y, width: 1, color: unknownColor });
               x += 1;
           }
         }
