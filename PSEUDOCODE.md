@@ -330,3 +330,7 @@ while (a > 3){
   - expand highlighted node
   - keep routing, history, forward/back navigation in mind
   - T connections rather than "ray-converge" lines
+  - "backwards" connections 
+    - cache somehow? (via mobx)
+    - remember last visited, keep in the middle
+    - show via direct, selectable rays
