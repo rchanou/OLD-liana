@@ -251,6 +251,20 @@ export const Link = types
       get val() {
         return self.with();
       },
+      isPending() {
+        for (const node of self.link) {
+          const nodeType = getType(node);
+          console.log(node.val);
+          if (nodeType === Param || nodeType === Input) {
+            return true;
+          }
+          if (nodeType === LinkRef && node.ref.isPending) {
+            return true;
+          }
+          console.log("made it ");
+          return false;
+        }
+      },
       with(params) {
         const nodeVals = self.link.map(node => node.with(params));
 
@@ -289,7 +303,7 @@ export const Link = types
             group,
             index: i,
             x,
-            y,
+            y: y - 1,
             size: 1,
             form: link.length === 1 ? loneForm : !i ? startForm : i === link.length - 1 ? endForm : midForm
           };
@@ -317,30 +331,34 @@ export const Link = types
               break;
             case LinkRef:
               const innerGroup = `${group}-${i}`;
-              const otherLinkNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
-              const sourceNodes = otherLinkNodes.filter(node => node.group === innerGroup);
-              const space = sourceNodes.reduce((sum, node) => sum + node.size, 0);
+              const refChildNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
+              allNodes.push(...refChildNodes);
 
-              const linkId = node.ref.id;
-
-              const label = resolveIdentifier(Label, self, linkId);
-
-              const thisNode = {
-                ...base,
-                key: linkId,
-                size: space,
-                color: pendingColor,
-                text: (label && label.label) || `(${linkId})`, // look up label
-                link: true
-              };
-              allNodes.push(...otherLinkNodes, thisNode);
-              x += space;
+              const { size } = refChildNodes[refChildNodes.length - 1];
+              x += size;
               break;
             default:
               allNodes.push({ ...base, color: unknownColor });
               x += 1;
           }
         }
+
+        const label = resolveIdentifier(Label, self, self.id);
+
+        const thisNode = {
+          // key: self.id,
+          group,
+          index: "",
+          x: base.x || 0,
+          y,
+          size: x - (base.x || 0),
+          color: self.isPending ? pendingColor : valColor,
+          text: (label && label.label) || `(${self.id})`,
+          link: true,
+          form: midForm
+        };
+        allNodes.push(thisNode);
+
         return allNodes;
       }
     };
@@ -443,9 +461,9 @@ export const SubRef = types
   }));
 
 export const Label = types.model("Label", {
-  id: types.identifier(types.string),
+  id: types.identifier(types.string), // TODO: labels should have own id, not that of link!
   label: types.string
-  // linkRef: types.reference(Link)
+  // linkRef: types.reference(Link) // TODO: use this for link id
 });
 
 export const Post = types.model("Post", {

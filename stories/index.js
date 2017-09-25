@@ -29,7 +29,8 @@ const simple = L.Graph.create({
     3: { id: "3", label: "square of 5" },
     4: { id: "4", label: "square of 12" },
     5: { id: "5", label: "sum of squares of 5 and 12" },
-    6: { id: "6", label: "square root" }
+    6: { id: "6", label: "square root" },
+    7: { id: "7", label: "hypotenuse of 5 and 12" }
   }
 });
 
