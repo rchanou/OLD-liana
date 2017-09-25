@@ -330,7 +330,7 @@ export const Link = types
                 key: linkId,
                 size: space,
                 color: pendingColor,
-                text: (label && label.label) || linkId, // look up label
+                text: (label && label.label) || `(${linkId})`, // look up label
                 link: true
               };
               allNodes.push(...otherLinkNodes, thisNode);

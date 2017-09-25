@@ -25,7 +25,11 @@ const simple = L.Graph.create({
   labels: {
     0: { id: "0", label: "Math" },
     1: { id: "1", label: "power" },
-    2: { id: "2", label: "square" }
+    2: { id: "2", label: "square" },
+    3: { id: "3", label: "square of 5" },
+    4: { id: "4", label: "square of 12" },
+    5: { id: "5", label: "sum of squares of 5 and 12" },
+    6: { id: "6", label: "square root" }
   }
 });
 
