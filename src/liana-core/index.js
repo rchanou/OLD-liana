@@ -176,6 +176,7 @@ export const boolType = "b";
 export const anyType = "a";
 export const ParamType = types.enumeration("ParamType", [stringType, numType, boolType, anyType]);
 
+// is there a better way of doing this?
 class Hole {
   constructor(...paramSets) {
     this.params = {};
@@ -207,7 +208,7 @@ export const Param = types
           return mapValue;
         }
       } else {
-        return new Hole({ [param]: true }); // HACK?
+        return new Hole({ [param]: true });
       }
     }
   }));
@@ -251,14 +252,14 @@ export const Link = types
   })
   .views(self => {
     return {
-      get val() {
-        const nodeVals = self.link.map(node => node.val);
-
+      derive(nodeVals) {
+        // NOTE: this is a pure function, would it be better to pull this out of the model?
         if (nodeVals.indexOf(Package) !== -1) {
           return Package;
         }
 
         const [head, ...nodeParams] = nodeVals;
+
         if (typeof head === "function") {
           const inputs = nodeParams.filter(param => param === Param || param === Input);
           if (inputs.length) {
@@ -269,6 +270,10 @@ export const Link = types
         } else {
           return head;
         }
+      },
+      get val() {
+        const nodeVals = self.link.map(node => node.val);
+        return self.derive(nodeVals);
       },
       get isPending() {
         for (const node of self.link) {
@@ -291,21 +296,7 @@ export const Link = types
           return new Hole(...holes.map(hole => hole.params));
         }
 
-        if (nodeVals.indexOf(Package) !== -1) {
-          return Package;
-        }
-
-        const [head, ...nodeParams] = nodeVals;
-        if (typeof head === "function") {
-          const inputs = nodeParams.filter(param => param === Param || param === Input);
-          if (inputs.length) {
-            const curried = curry(head, nodeParams.length);
-            return ary(curried(...nodeParams), inputs.length);
-          }
-          return head(...nodeParams);
-        } else {
-          return head;
-        }
+        return self.derive(nodeVals);
       },
       display(state, base = {}) {
         const { link } = self;
