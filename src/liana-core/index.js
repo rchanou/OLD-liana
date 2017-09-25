@@ -133,7 +133,7 @@ export const Package = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function*() {
+      afterCreate: process(function* () {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -251,19 +251,17 @@ export const Link = types
       get val() {
         return self.with();
       },
-      isPending() {
+      get isPending() {
         for (const node of self.link) {
           const nodeType = getType(node);
-          console.log(node.val);
           if (nodeType === Param || nodeType === Input) {
             return true;
           }
           if (nodeType === LinkRef && node.ref.isPending) {
             return true;
           }
-          console.log("made it ");
-          return false;
         }
+        return false;
       },
       with(params) {
         const nodeVals = self.link.map(node => node.with(params));
@@ -305,7 +303,7 @@ export const Link = types
             x,
             y: y - 1,
             size: 1,
-            form: link.length === 1 ? loneForm : !i ? startForm : i === link.length - 1 ? endForm : midForm
+            form: link.length === 1 ? loneForm : i === link.length - 1 ? endForm : midForm
           };
 
           switch (nodeType) {
@@ -352,7 +350,7 @@ export const Link = types
           x: base.x || 0,
           y,
           size: x - (base.x || 0),
-          color: self.isPending ? pendingColor : valColor,
+          color: pendingColor,//self.isPending ? pendingColor : valColor,
           text: (label && label.label) || `(${self.id})`,
           link: true,
           form: midForm

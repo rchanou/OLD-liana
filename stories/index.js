@@ -137,18 +137,18 @@ const graph = L.Graph.create(
 // const c = getVal(19);
 // const d = getVal(23);
 // const subLink = graph.subs.get(0).sub.get(0)[0].ref.link;
-// // console.log(subLink, 'le link')
+// console.log(subLink, 'le link')
 // graph.expandSub("0", "24", { ref: "5" });
-// // const e = getVal("24-2");
-// // console.log(e);
-// // console.log(getVal("32"));
+// const e = getVal("24-2");
+// console.log(e);
+// console.log(getVal("32"));
 // const f = graph.calls.get(0).val;
-// // console.log("fff", f);
+// console.log("fff", f);
 // const g = graph.calls.get(1).val;
 // console.log("say what", g, g(37));
-// // const snap = getSnapshot(graph.links);
-// // console.log(JSON.stringify(snap));
-// // console.log("le test", testPkg);
+// const snap = getSnapshot(graph.links);
+// console.log(JSON.stringify(snap));
+// console.log("le test", testPkg);
 // autorun(() => {
 //   console.log("le pkg", graph.packages.get(0).with());
 // });

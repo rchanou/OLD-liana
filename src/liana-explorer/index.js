@@ -24,7 +24,7 @@ const nodeStyle = {
 const lineStyle = {
   position: "absolute",
   background: darkGray,
-  width: 2 * spacer,
+  width: 4 * spacer,
   height: 3 * spacer,
   zIndex: -1
 };
@@ -70,7 +70,7 @@ export const Tree = observer(({ nodes }) => {
         key={`${finalKey}-L`}
         style={{
           ...lineStyle,
-          left: unit * (x + 0.5 * size) - spacer,
+          left: unit * (x + 0.5 * size) - 2 * spacer,
           top: y * unit - 3 * spacer
         }}
       />
@@ -83,8 +83,6 @@ export const Tree = observer(({ nodes }) => {
       </div>
     ];
   });
-
-  console.log(test);
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });
