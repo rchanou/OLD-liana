@@ -133,7 +133,7 @@ export const Package = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function* () {
+      afterCreate: process(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -176,21 +176,6 @@ export const boolType = "b";
 export const anyType = "a";
 export const ParamType = types.enumeration("ParamType", [stringType, numType, boolType, anyType]);
 
-export const Input = types
-  .model("Input", {
-    in: ParamType
-  })
-  .views(self => ({
-    get val() {
-      return Input;
-    },
-    with() {
-      return self.val;
-    }
-  }));
-
-curry.placeholder = Input;
-
 class Hole {
   constructor(...paramSets) {
     this.params = {};
@@ -209,9 +194,12 @@ export const Param = types
     type: types.maybe(ParamType, anyType)
   })
   .views(self => ({
+    get val() {
+      return Param;
+    },
     with(params) {
       const { param } = self;
-      if (params.has(param)) {
+      if (params && params.has(param)) {
         const mapValue = params.get(param);
         if (isObservableMap(params)) {
           return mapValue.val;
@@ -223,6 +211,21 @@ export const Param = types
       }
     }
   }));
+
+export const Input = types
+  .model("Input", {
+    in: ParamType
+  })
+  .views(self => ({
+    get val() {
+      return Param;
+    },
+    with() {
+      return self.val;
+    }
+  }));
+
+curry.placeholder = Param;
 
 export const Node = types.union(Val, Op, Input, Param, types.late(() => LinkRef), types.late(() => SubRef), PackageRef);
 
@@ -249,7 +252,23 @@ export const Link = types
   .views(self => {
     return {
       get val() {
-        return self.with();
+        const nodeVals = self.link.map(node => node.val);
+
+        if (nodeVals.indexOf(Package) !== -1) {
+          return Package;
+        }
+
+        const [head, ...nodeParams] = nodeVals;
+        if (typeof head === "function") {
+          const inputs = nodeParams.filter(param => param === Param || param === Input);
+          if (inputs.length) {
+            const curried = curry(head, nodeParams.length);
+            return ary(curried(...nodeParams), inputs.length);
+          }
+          return head(...nodeParams);
+        } else {
+          return head;
+        }
       },
       get isPending() {
         for (const node of self.link) {
@@ -278,7 +297,7 @@ export const Link = types
 
         const [head, ...nodeParams] = nodeVals;
         if (typeof head === "function") {
-          const inputs = nodeParams.filter(param => param === Input);
+          const inputs = nodeParams.filter(param => param === Param || param === Input);
           if (inputs.length) {
             const curried = curry(head, nodeParams.length);
             return ary(curried(...nodeParams), inputs.length);
@@ -350,7 +369,7 @@ export const Link = types
           x: base.x || 0,
           y,
           size: x - (base.x || 0),
-          color: pendingColor,//self.isPending ? pendingColor : valColor,
+          color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.label) || `(${self.id})`,
           link: true,
           form: midForm
@@ -379,7 +398,7 @@ export const Call = types
   .model("Call", {
     id: types.identifier(types.string),
     link: types.reference(Link),
-    params: types.map(types.reference(Link))
+    params: types.optional(types.map(Node), {})
   })
   .views(self => ({
     get val() {
@@ -472,7 +491,7 @@ export const Post = types.model("Post", {
 export const Graph = types
   .model("Graph", {
     packages: types.optional(types.map(Package), {}),
-    links: types.optional(types.map(Link), {}),
+    links: types.optional(types.map(types.union(Link, Call)), {}),
     calls: types.optional(types.map(Call), {}),
     subs: types.optional(types.map(Sub), {}),
     labels: types.optional(types.map(Label), {})
