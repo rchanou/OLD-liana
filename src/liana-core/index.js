@@ -301,7 +301,7 @@ export const Link = types
       },
       display(state, base = {}) {
         const { link } = self;
-        let { group = "", x = 0, y = 10, hasRefSiblings = false } = base;
+        let { group = "", x = 0, y = 10, nextIsRef = false, isLast = true } = base;
         group = group || self.id;
 
         let allNodes = [];
@@ -345,11 +345,13 @@ export const Link = types
               break;
             case LinkRef:
               const innerGroup = `${group}-${i}`;
+              const isLast = i === link.length - 1;
               const refChildNodes = node.ref.display(state, {
                 group: innerGroup,
                 x,
                 y: y - 1,
-                hasRefSiblings: link.filter(node => getType(node) === LinkRef).length > 1
+                nextIsRef: !isLast && getType(link[i + 1]) === LinkRef,
+                isLast
               });
               allNodes.push(...refChildNodes);
 
@@ -364,10 +366,10 @@ export const Link = types
 
         const label = resolveIdentifier(Label, self, self.id);
 
-        const thisSize = link.filter(node => getType(node) === LinkRef).length
+        const thisSize = nextIsRef
           ? Math.max(...allNodes.map(n => n.x)) - (base.x || 0) + 2
-          : 1;
-        console.log(thisSize);
+          : isLast ? Math.max(...allNodes.map(n => n.x + n.size), 1) - (base.x || 0) : 1; //;
+
         const thisNode = {
           // key: self.id,
           group,
