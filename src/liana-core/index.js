@@ -133,7 +133,7 @@ export const Package = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function* () {
+      afterCreate: process(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -176,21 +176,7 @@ export const boolType = "b";
 export const anyType = "a";
 export const ParamType = types.enumeration("ParamType", [stringType, numType, boolType, anyType]);
 
-export const Input = types
-  .model("Input", {
-    in: ParamType
-  })
-  .views(self => ({
-    get val() {
-      return Input;
-    },
-    with() {
-      return self.val;
-    }
-  }));
-
-curry.placeholder = Input;
-
+// is there a better way of doing this?
 class Hole {
   constructor(...paramSets) {
     this.params = {};
@@ -209,9 +195,12 @@ export const Param = types
     type: types.maybe(ParamType, anyType)
   })
   .views(self => ({
+    get val() {
+      return Param;
+    },
     with(params) {
       const { param } = self;
-      if (params.has(param)) {
+      if (params && params.has(param)) {
         const mapValue = params.get(param);
         if (isObservableMap(params)) {
           return mapValue.val;
@@ -219,22 +208,38 @@ export const Param = types
           return mapValue;
         }
       } else {
-        return new Hole({ [param]: true }); // HACK?
+        return new Hole({ [param]: true });
       }
     }
   }));
+
+export const Input = types
+  .model("Input", {
+    in: ParamType
+  })
+  .views(self => ({
+    get val() {
+      return Param;
+    },
+    with() {
+      return self.val;
+    }
+  }));
+
+curry.placeholder = Param;
 
 export const Node = types.union(Val, Op, Input, Param, types.late(() => LinkRef), types.late(() => SubRef), PackageRef);
 
 const identity = x => x;
 
-const opColor = "hsl(120,88%,88%)";
-const valColor = "hsl(180,88%,88%)";
-const inputColor = "hsl(30,88%,88%)";
-const paramColor = "hsl(0,88%,88%)";
-const packageColor = "hsl(315,88%,88%)";
-const pendingColor = "hsl(270,88%,88%)";
-const unknownColor = "hsl(0,0%,88%)";
+const baseColor = ",66%,55%)";
+const opColor = `hsl(120${baseColor}`;
+const valColor = `hsl(210${baseColor}`;
+const inputColor = `hsl(30${baseColor}`;
+const paramColor = `hsl(,${baseColor}`;
+const packageColor = `hsl(315${baseColor}`;
+const pendingColor = `hsl(270${baseColor}`;
+const unknownColor = `hsl(0${baseColor}`;
 
 export const loneForm = "lone";
 export const midForm = "mid";
@@ -248,8 +253,28 @@ export const Link = types
   })
   .views(self => {
     return {
+      derive(nodeVals) {
+        // NOTE: this is a pure function, would it be better to pull this out of the model?
+        if (nodeVals.indexOf(Package) !== -1) {
+          return Package;
+        }
+
+        const [head, ...nodeParams] = nodeVals;
+
+        if (typeof head === "function") {
+          const inputs = nodeParams.filter(param => param === Param || param === Input);
+          if (inputs.length) {
+            const curried = curry(head, nodeParams.length);
+            return ary(curried(...nodeParams), inputs.length);
+          }
+          return head(...nodeParams);
+        } else {
+          return head;
+        }
+      },
       get val() {
-        return self.with();
+        const nodeVals = self.link.map(node => node.val);
+        return self.derive(nodeVals);
       },
       get isPending() {
         for (const node of self.link) {
@@ -272,25 +297,11 @@ export const Link = types
           return new Hole(...holes.map(hole => hole.params));
         }
 
-        if (nodeVals.indexOf(Package) !== -1) {
-          return Package;
-        }
-
-        const [head, ...nodeParams] = nodeVals;
-        if (typeof head === "function") {
-          const inputs = nodeParams.filter(param => param === Input);
-          if (inputs.length) {
-            const curried = curry(head, nodeParams.length);
-            return ary(curried(...nodeParams), inputs.length);
-          }
-          return head(...nodeParams);
-        } else {
-          return head;
-        }
+        return self.derive(nodeVals);
       },
       display(state, base = {}) {
         const { link } = self;
-        let { group = "", x = 0, y = 10 } = base;
+        let { group = "", x = 0, y = 10, nextIsRef = false, isLast = true } = base;
         group = group || self.id;
 
         let allNodes = [];
@@ -312,7 +323,12 @@ export const Link = types
               x += 1;
               break;
             case Val:
-              allNodes.push({ ...base, color: valColor, text: node.val });
+              const { val } = node;
+              allNodes.push({
+                ...base,
+                color: valColor,
+                text: typeof val === "string" ? `"${val}"` : val
+              });
               x += 1;
               break;
             case Input:
@@ -329,7 +345,14 @@ export const Link = types
               break;
             case LinkRef:
               const innerGroup = `${group}-${i}`;
-              const refChildNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
+              const isLast = i === link.length - 1;
+              const refChildNodes = node.ref.display(state, {
+                group: innerGroup,
+                x,
+                y: y - 1,
+                nextIsRef: !isLast && getType(link[i + 1]) === LinkRef,
+                isLast
+              });
               allNodes.push(...refChildNodes);
 
               const { size } = refChildNodes[refChildNodes.length - 1];
@@ -343,14 +366,18 @@ export const Link = types
 
         const label = resolveIdentifier(Label, self, self.id);
 
+        const thisSize = nextIsRef
+          ? Math.max(...allNodes.map(n => n.x)) - (base.x || 0) + 2
+          : isLast ? Math.max(...allNodes.map(n => n.x + n.size), 1) - (base.x || 0) : 1; //;
+
         const thisNode = {
           // key: self.id,
           group,
           index: "",
           x: base.x || 0,
           y,
-          size: x - (base.x || 0),
-          color: pendingColor,//self.isPending ? pendingColor : valColor,
+          size: thisSize, // x - (base.x || 0),
+          color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.label) || `(${self.id})`,
           link: true,
           form: midForm
@@ -379,7 +406,7 @@ export const Call = types
   .model("Call", {
     id: types.identifier(types.string),
     link: types.reference(Link),
-    params: types.map(types.reference(Link))
+    params: types.optional(types.map(Node), {})
   })
   .views(self => ({
     get val() {
@@ -472,7 +499,7 @@ export const Post = types.model("Post", {
 export const Graph = types
   .model("Graph", {
     packages: types.optional(types.map(Package), {}),
-    links: types.optional(types.map(Link), {}),
+    links: types.optional(types.map(types.union(Link, Call)), {}),
     calls: types.optional(types.map(Call), {}),
     subs: types.optional(types.map(Sub), {}),
     labels: types.optional(types.map(Label), {})

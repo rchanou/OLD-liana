@@ -26,6 +26,29 @@ const simple = L.Graph.create({
     0: { id: "0", label: "Math" },
     1: { id: "1", label: "power" },
     2: { id: "2", label: "square" },
+    3: { id: "3", label: "5²" },
+    4: { id: "4", label: "12²" },
+    5: { id: "5", label: "5² + 12²" },
+    6: { id: "6", label: "√" },
+    7: { id: "7", label: "hypotenuse for 5 and 12" }
+  }
+});
+
+const withCalls = L.Graph.create({
+  links: {
+    0: { id: "0", link: [{ op: "g" }, { val: "Math" }] },
+    1: { id: "1", link: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
+    2: { id: "2", link: [{ ref: "1" }, { param: "0" }, { val: 2 }] },
+    3: { id: "3", link: "2", params: { 0: { val: 7 } } },
+    4: { id: "4", link: [{ ref: "2" }, { val: 12 }] },
+    5: { id: "5", link: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
+    6: { id: "6", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
+    7: { id: "7", link: [{ ref: "6" }, { ref: "5" }] }
+  },
+  labels: {
+    0: { id: "0", label: "Math" },
+    1: { id: "1", label: "power" },
+    2: { id: "2", label: "square" },
     3: { id: "3", label: "square of 5" },
     4: { id: "4", label: "square of 12" },
     5: { id: "5", label: "sum of squares of 5 and 12" },
@@ -112,7 +135,7 @@ const graph = L.Graph.create(
       0: {
         id: "0",
         link: "31",
-        params: { a: "32" }
+        params: { a: { val: 14 } }
       },
       1: { id: "1", link: "31", params: {} }
     },
@@ -131,6 +154,8 @@ const graph = L.Graph.create(
   { system: SystemJS }
 );
 
+console.log("hmm", withCalls.links.get(2).val(12));
+console.log("hmm", withCalls.links.get(3).val);
 // const getVal = id => graph.links.get(id).val;
 // const a = getVal(18);
 // const b = getVal(5);
@@ -154,7 +179,7 @@ const graph = L.Graph.create(
 // });
 
 const nodes = simple.links.get(7).display();
-console.table(nodes);
+// console.table(nodes);
 
 class Test extends React.Component {
   constructor(props) {
