@@ -232,7 +232,7 @@ export const Node = types.union(Val, Op, Input, Param, types.late(() => LinkRef)
 
 const identity = x => x;
 
-const baseColor = ",77%,77%)";
+const baseColor = ",66%,55%)";
 const opColor = `hsl(120${baseColor}`;
 const valColor = `hsl(210${baseColor}`;
 const inputColor = `hsl(30${baseColor}`;
@@ -323,7 +323,12 @@ export const Link = types
               x += 1;
               break;
             case Val:
-              allNodes.push({ ...base, color: valColor, text: node.val });
+              const { val } = node;
+              allNodes.push({
+                ...base,
+                color: valColor,
+                text: typeof val === "string" ? `"${val}"` : val
+              });
               x += 1;
               break;
             case Input:

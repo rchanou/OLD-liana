@@ -9,25 +9,27 @@ const containerStyle = {
 
 const unit = 40;
 const spacer = 0.1 * unit;
-const darkGray = "#333";
+const darkGray = "#888";
 
 const nodeStyle = {
   position: "absolute",
-  borderWidth: 0.5 * spacer,
+  // borderWidth: 0.5 * spacer,
   borderStyle: "solid",
-  borderColor: darkGray,
-  borderRadius: 4,
+  borderColor: "#fff",
+  // borderRadius: 4,
+  boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)",
   height: unit - 2 * spacer,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  background: "white"
+  color: "#fff"
+  // background: "white"
 };
 
 const lineStyle = {
   position: "absolute",
   background: darkGray,
-  width: 4 * spacer,
+  width: 6 * spacer,
   height: 2 * spacer,
   zIndex: -1
 };
@@ -75,7 +77,7 @@ export const Tree = observer(({ nodes }) => {
         style={{
           ...lineStyle,
           // backgroundColor: color,
-          left: unit * (x + 0.5) - 2 * spacer,
+          left: unit * (x + 0.5) - 3 * spacer,
           top: y * unit - 2 * spacer
         }}
       />
