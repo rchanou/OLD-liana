@@ -13,12 +13,12 @@ const darkGray = "#888";
 
 const nodeStyle = {
   position: "absolute",
-  // borderWidth: 0.5 * spacer,
+  borderWidth: 0.5 * spacer,
   borderStyle: "solid",
   borderColor: "#fff",
   // borderRadius: 4,
   boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)",
-  height: unit - 2 * spacer,
+  height: unit - 3 * spacer,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -30,7 +30,7 @@ const lineStyle = {
   position: "absolute",
   background: darkGray,
   width: 6 * spacer,
-  height: 2 * spacer,
+  height: 4 * spacer,
   zIndex: -1
 };
 
@@ -38,33 +38,33 @@ export const Tree = observer(({ nodes }) => {
   const test = [];
 
   const displayNodes = nodes.map(({ x, y, size, color, key, group, index, form, text, link }) => {
-    let left, width;
-    switch (form) {
-      case "mid":
-        left = x * unit;
-        width = size * unit;
-        break;
-      case "start":
-        left = x * unit + spacer;
-        width = size * unit - spacer;
-        break;
-      case "end":
-        left = x * unit;
-        width = size * unit - spacer;
-        break;
-      case "lone":
-        left = x * unit + spacer;
-        width = size * unit - 2 * spacer;
-        break;
-      default:
-        throw new Error(`Provided form "${form}" is invalid.`);
-    }
+    // let left, width;
+    // switch (form) {
+    //   case "mid":
+    //     left = x * unit;
+    //     width = size * unit;
+    //     break;
+    //   case "start":
+    //     left = x * unit + spacer;
+    //     width = size * unit - spacer;
+    //     break;
+    //   case "end":
+    //     left = x * unit;
+    //     width = size * unit - spacer;
+    //     break;
+    //   case "lone":
+    //     left = x * unit + spacer;
+    //     width = size * unit - 2 * spacer;
+    //     break;
+    //   default:
+    //     throw new Error(`Provided form "${form}" is invalid.`);
+    // }
 
     const style = {
       ...nodeStyle,
       top: y * unit,
-      left,
-      width,
+      left: x * unit,
+      width: size * unit,
       background: color
       // borderColor: color
     };
@@ -78,7 +78,7 @@ export const Tree = observer(({ nodes }) => {
           ...lineStyle,
           // backgroundColor: color,
           left: unit * (x + 0.5) - 3 * spacer,
-          top: y * unit - 2 * spacer
+          top: y * unit - 4 * spacer
         }}
       />
     ) : null;

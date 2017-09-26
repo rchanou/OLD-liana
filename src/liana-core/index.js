@@ -301,7 +301,7 @@ export const Link = types
       },
       display(state, base = {}) {
         const { link } = self;
-        let { group = "", x = 0, y = 10 } = base;
+        let { group = "", x = 0, y = 10, hasRefSiblings = false } = base;
         group = group || self.id;
 
         let allNodes = [];
@@ -345,7 +345,12 @@ export const Link = types
               break;
             case LinkRef:
               const innerGroup = `${group}-${i}`;
-              const refChildNodes = node.ref.display(state, { group: innerGroup, x, y: y - 1 });
+              const refChildNodes = node.ref.display(state, {
+                group: innerGroup,
+                x,
+                y: y - 1,
+                hasRefSiblings: link.filter(node => getType(node) === LinkRef).length > 1
+              });
               allNodes.push(...refChildNodes);
 
               const { size } = refChildNodes[refChildNodes.length - 1];
@@ -359,13 +364,17 @@ export const Link = types
 
         const label = resolveIdentifier(Label, self, self.id);
 
+        const thisSize = link.filter(node => getType(node) === LinkRef).length
+          ? Math.max(...allNodes.map(n => n.x)) - (base.x || 0) + 2
+          : 1;
+        console.log(thisSize);
         const thisNode = {
           // key: self.id,
           group,
           index: "",
           x: base.x || 0,
           y,
-          size: x - (base.x || 0),
+          size: thisSize, // x - (base.x || 0),
           color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.label) || `(${self.id})`,
           link: true,
