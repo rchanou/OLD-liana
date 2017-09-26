@@ -13,7 +13,9 @@ const darkGray = "#222";
 
 const nodeStyle = {
   position: "absolute",
-  border: `1px solid ${darkGray}`,
+  borderWidth: 3,
+  borderStyle: 'solid',
+  borderColor: darkGray,
   borderRadius: 4,
   height: unit - 2 * spacer,
   display: "flex",
@@ -25,7 +27,7 @@ const lineStyle = {
   position: "absolute",
   background: darkGray,
   width: 4 * spacer,
-  height: 3 * spacer,
+  height: 2 * spacer,
   zIndex: -1
 };
 
@@ -60,18 +62,19 @@ export const Tree = observer(({ nodes }) => {
       top: y * unit,
       left,
       width,
-      background: color
+      borderColor: color
     };
 
     const finalKey = key || `${group}-${index}`;
     test.push(finalKey);
     const connector = link ? (
       <div
-        key={`${finalKey}-L`}
+        key={`${finalKey}L`}
         style={{
           ...lineStyle,
-          left: unit * (x + 0.5 * size) - 2 * spacer,
-          top: y * unit - 3 * spacer
+          backgroundColor: color,
+          left: unit * (x + 0.5) - 2 * spacer,
+          top: y * unit - 2 * spacer
         }}
       />
     ) : null;
