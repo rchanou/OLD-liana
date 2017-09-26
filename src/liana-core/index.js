@@ -241,11 +241,6 @@ const packageColor = `hsl(315${baseColor}`;
 const pendingColor = `hsl(270${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
 
-export const loneForm = "lone";
-export const midForm = "mid";
-export const startForm = "start";
-export const endForm = "end";
-
 export const Link = types
   .model("Link", {
     id: types.identifier(types.string),
@@ -313,8 +308,7 @@ export const Link = types
             index: i,
             x,
             y: y - 1,
-            size: 1,
-            form: link.length === 1 ? loneForm : i === link.length - 1 ? endForm : midForm
+            size: 1
           };
 
           switch (nodeType) {
@@ -368,7 +362,7 @@ export const Link = types
 
         const thisSize = nextIsRef
           ? Math.max(...allNodes.map(n => n.x)) - (base.x || 0) + 2
-          : isLast ? Math.max(...allNodes.map(n => n.x + n.size), 1) - (base.x || 0) : 1; //;
+          : isLast ? Math.max(...allNodes.map(n => n.x + n.size), 1) - (base.x || 0) : 1;
 
         const thisNode = {
           // key: self.id,
@@ -376,11 +370,10 @@ export const Link = types
           index: "",
           x: base.x || 0,
           y,
-          size: thisSize, // x - (base.x || 0),
+          size: thisSize,
           color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.label) || `(${self.id})`,
-          link: true,
-          form: midForm
+          link: true
         };
         allNodes.push(thisNode);
 
