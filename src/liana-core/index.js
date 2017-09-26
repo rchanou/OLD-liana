@@ -133,7 +133,7 @@ export const Package = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function* () {
+      afterCreate: process(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -232,7 +232,7 @@ export const Node = types.union(Val, Op, Input, Param, types.late(() => LinkRef)
 
 const identity = x => x;
 
-const baseColor = ',66%,55%)';
+const baseColor = ",77%,77%)";
 const opColor = `hsl(120${baseColor}`;
 const valColor = `hsl(210${baseColor}`;
 const inputColor = `hsl(30${baseColor}`;

@@ -9,18 +9,19 @@ const containerStyle = {
 
 const unit = 40;
 const spacer = 0.1 * unit;
-const darkGray = "#222";
+const darkGray = "#333";
 
 const nodeStyle = {
   position: "absolute",
-  borderWidth: 3,
-  borderStyle: 'solid',
+  borderWidth: 0.5 * spacer,
+  borderStyle: "solid",
   borderColor: darkGray,
   borderRadius: 4,
   height: unit - 2 * spacer,
   display: "flex",
   justifyContent: "center",
-  alignItems: "center"
+  alignItems: "center",
+  background: "white"
 };
 
 const lineStyle = {
@@ -62,7 +63,8 @@ export const Tree = observer(({ nodes }) => {
       top: y * unit,
       left,
       width,
-      borderColor: color
+      background: color
+      // borderColor: color
     };
 
     const finalKey = key || `${group}-${index}`;
@@ -72,7 +74,7 @@ export const Tree = observer(({ nodes }) => {
         key={`${finalKey}L`}
         style={{
           ...lineStyle,
-          backgroundColor: color,
+          // backgroundColor: color,
           left: unit * (x + 0.5) - 2 * spacer,
           top: y * unit - 2 * spacer
         }}
