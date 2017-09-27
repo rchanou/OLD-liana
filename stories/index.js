@@ -154,8 +154,10 @@ const graph = L.Graph.create(
   { system: SystemJS }
 );
 
-console.log("hmm", withCalls.links.get(2).val(12));
-console.log("hmm", withCalls.links.get(3).val);
+const { links } = withCalls;
+console.log("hmm", links.get(2).val(12));
+console.log("hmm", links.get(3).val);
+console.log("dep", simple.dependents("2"));
 // const getVal = id => graph.links.get(id).val;
 // const a = getVal(18);
 // const b = getVal(5);
@@ -179,7 +181,7 @@ console.log("hmm", withCalls.links.get(3).val);
 // });
 
 const nodes = simple.links.get(7).display();
-// console.table(nodes);
+console.table(nodes);
 
 class Test extends React.Component {
   constructor(props) {

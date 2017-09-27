@@ -1,4 +1,4 @@
-import { types, getEnv, getChildType, getType, resolveIdentifier, process } from "mobx-state-tree";
+import { types, getEnv, getRoot, getType, resolveIdentifier, process } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
@@ -246,141 +246,142 @@ export const Link = types
     id: types.identifier(types.string),
     link: types.array(Node)
   })
-  .views(self => {
-    return {
-      derive(nodeVals) {
-        // NOTE: this is a pure function, would it be better to pull this out of the model?
-        if (nodeVals.indexOf(Package) !== -1) {
-          return Package;
-        }
-
-        const [head, ...nodeParams] = nodeVals;
-
-        if (typeof head === "function") {
-          const inputs = nodeParams.filter(param => param === Param || param === Input);
-          if (inputs.length) {
-            const curried = curry(head, nodeParams.length);
-            return ary(curried(...nodeParams), inputs.length);
-          }
-          return head(...nodeParams);
-        } else {
-          return head;
-        }
-      },
-      get val() {
-        const nodeVals = self.link.map(node => node.val);
-        return self.derive(nodeVals);
-      },
-      get isPending() {
-        for (const node of self.link) {
-          const nodeType = getType(node);
-          if (nodeType === Param || nodeType === Input) {
-            return true;
-          }
-          if (nodeType === LinkRef && node.ref.isPending) {
-            return true;
-          }
-        }
-        return false;
-      },
-      with(params) {
-        const nodeVals = self.link.map(node => node.with(params));
-
-        const holes = nodeVals.filter(val => val instanceof Hole);
-
-        if (holes.length) {
-          return new Hole(...holes.map(hole => hole.params));
-        }
-
-        return self.derive(nodeVals);
-      },
-      display(state, base = {}) {
-        const { link } = self;
-        let { group = "", x = 0, y = 10, nextIsRef = false, isLast = true } = base;
-        group = group || self.id;
-
-        let allNodes = [];
-        for (let i = 0; i < link.length; i++) {
-          const node = link[i];
-          const nodeType = getType(node);
-          const base = {
-            group,
-            index: i,
-            x,
-            y: y - 1,
-            size: 1
-          };
-
-          switch (nodeType) {
-            case Op:
-              allNodes.push({ ...base, color: opColor, text: node.op });
-              x += 1;
-              break;
-            case Val:
-              const { val } = node;
-              allNodes.push({
-                ...base,
-                color: valColor,
-                text: typeof val === "string" ? `"${val}"` : val
-              });
-              x += 1;
-              break;
-            case Input:
-              allNodes.push({ ...base, color: inputColor, text: node.in });
-              x += 1;
-              break;
-            case Param:
-              allNodes.push({ ...base, color: paramColor, text: node.param });
-              x += 1;
-              break;
-            case PackageRef:
-              allNodes.push({ ...base, color: packageColor, text: node.path });
-              x += 1;
-              break;
-            case LinkRef:
-              const innerGroup = `${group}-${i}`;
-              const isLast = i === link.length - 1;
-              const refChildNodes = node.ref.display(state, {
-                group: innerGroup,
-                x,
-                y: y - 1,
-                nextIsRef: !isLast && getType(link[i + 1]) === LinkRef,
-                isLast
-              });
-              allNodes.push(...refChildNodes);
-
-              const { size } = refChildNodes[refChildNodes.length - 1];
-              x += size;
-              break;
-            default:
-              allNodes.push({ ...base, color: unknownColor });
-              x += 1;
-          }
-        }
-
-        const label = resolveIdentifier(Label, self, self.id);
-
-        const thisSize = nextIsRef
-          ? Math.max(...allNodes.map(n => n.x)) - (base.x || 0) + 2
-          : isLast ? Math.max(...allNodes.map(n => n.x + n.size), 1) - (base.x || 0) : 1;
-
-        const thisNode = {
-          // key: self.id,
-          group,
-          index: "",
-          x: base.x || 0,
-          y,
-          size: thisSize,
-          color: pendingColor, //self.isPending ? pendingColor : valColor,
-          text: (label && label.label) || `(${self.id})`,
-          link: true
-        };
-        allNodes.push(thisNode);
-
-        return allNodes;
+  .views(self => ({
+    derive(nodeVals) {
+      // NOTE: this is a pure function, would it be better to pull this out of the model?
+      if (nodeVals.indexOf(Package) !== -1) {
+        return Package;
       }
-    };
-  });
+
+      const [head, ...nodeParams] = nodeVals;
+
+      if (typeof head === "function") {
+        const inputs = nodeParams.filter(param => param === Param || param === Input);
+        if (inputs.length) {
+          const curried = curry(head, nodeParams.length);
+          return ary(curried(...nodeParams), inputs.length);
+        }
+        return head(...nodeParams);
+      } else {
+        return head;
+      }
+    },
+    get val() {
+      const nodeVals = self.link.map(node => node.val);
+      return self.derive(nodeVals);
+    },
+    get isPending() {
+      for (const node of self.link) {
+        const nodeType = getType(node);
+        if (nodeType === Param || nodeType === Input) {
+          return true;
+        }
+        if (nodeType === LinkRef && node.ref.isPending) {
+          return true;
+        }
+      }
+      return false;
+    },
+    with(params) {
+      const nodeVals = self.link.map(node => node.with(params));
+
+      const holes = nodeVals.filter(val => val instanceof Hole);
+
+      if (holes.length) {
+        return new Hole(...holes.map(hole => hole.params));
+      }
+
+      return self.derive(nodeVals);
+    }
+  }))
+  .views(self => ({
+    display(state, base = { group: "", x: 0, y: 10, nextIsRef: false, isLast: true }) {
+      // TODO: move to separate model!
+      const { link } = self;
+      let { group, x, y, nextIsRef, isLast } = base;
+      group = group || self.id;
+
+      let allNodes = [];
+      for (let i = 0; i < link.length; i++) {
+        const node = link[i];
+        const nodeType = getType(node);
+        const base = {
+          group,
+          index: i,
+          x,
+          y: y - 1,
+          size: 1
+        };
+
+        switch (nodeType) {
+          case Op:
+            allNodes.push({ ...base, color: opColor, text: node.op });
+            x += 1;
+            break;
+          case Val:
+            const { val } = node;
+            allNodes.push({
+              ...base,
+              color: valColor,
+              text: typeof val === "string" ? `"${val}"` : val
+            });
+            x += 1;
+            break;
+          case Input:
+            allNodes.push({ ...base, color: inputColor, text: node.in });
+            x += 1;
+            break;
+          case Param:
+            allNodes.push({ ...base, color: paramColor, text: node.param });
+            x += 1;
+            break;
+          case PackageRef:
+            allNodes.push({ ...base, color: packageColor, text: node.path });
+            x += 1;
+            break;
+          case LinkRef:
+            const innerGroup = `${group}-${i}`;
+            const isLast = i === link.length - 1;
+            const refChildNodes = node.ref.display(state, {
+              group: innerGroup,
+              x,
+              y: y - 1,
+              nextIsRef: !isLast && getType(link[i + 1]) === LinkRef,
+              isLast
+            });
+            allNodes.push(...refChildNodes);
+
+            const { size } = refChildNodes[refChildNodes.length - 1];
+            x += size;
+            break;
+          default:
+            allNodes.push({ ...base, color: unknownColor });
+            x += 1;
+        }
+      }
+
+      const label = resolveIdentifier(Label, self, self.id);
+
+      const thisSize = nextIsRef
+        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
+        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
+
+      const thisNode = {
+        // key: self.id,
+        group,
+        index: "",
+        x: base.x,
+        y,
+        size: thisSize,
+        color: pendingColor, //self.isPending ? pendingColor : valColor,
+        text: (label && label.label) || `(${self.id})`,
+        link: true
+      };
+      allNodes.push(thisNode);
+
+      return allNodes;
+    }
+  }));
 
 export const LinkRef = types
   .model("LinkRef", {
@@ -500,6 +501,15 @@ export const Graph = types
   })
   .views(self => {
     return {
+      dependents(linkId) {
+        const dependents = new Map();
+        self.links.forEach(linkRecord => {
+          if (linkRecord.link.some(node => node.ref && node.ref.id == linkId)) {
+            dependents.set(linkRecord.id, linkRecord);
+          }
+        });
+        return dependents;
+      },
       get display() {
         return "hhmmm not yet";
       }
