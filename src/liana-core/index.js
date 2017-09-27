@@ -295,10 +295,11 @@ export const Link = types
     }
   }))
   .views(self => ({
-    display(state, base = { group: "", x: 0, y: 10, nextIsRef: false, isLast: true }) {
+    display(state, base = { group: undefined, x: 0, y: 10, nextIsRef: false, isLast: true, path: [] }) {
       // TODO: move to separate model!
+      let { group, x, y, nextIsRef, isLast, path } = base;
+      // path = path || [self.id];
       const { link } = self;
-      let { group, x, y, nextIsRef, isLast } = base;
       group = group || self.id;
 
       let allNodes = [];
@@ -307,6 +308,7 @@ export const Link = types
         const nodeType = getType(node);
         const base = {
           group,
+          path,
           index: i,
           x,
           y: y - 1,
@@ -342,8 +344,10 @@ export const Link = types
           case LinkRef:
             const innerGroup = `${group}-${i}`;
             const isLast = i === link.length - 1;
+            const innerPath = [...path, node.ref.id];
             const refChildNodes = node.ref.display(state, {
               group: innerGroup,
+              path: innerPath,
               x,
               y: y - 1,
               nextIsRef: !isLast && getType(link[i + 1]) === LinkRef,
@@ -369,6 +373,7 @@ export const Link = types
       const thisNode = {
         // key: self.id,
         group,
+        path,
         index: "",
         x: base.x,
         y,
@@ -499,22 +504,20 @@ export const Graph = types
     labels: types.optional(types.map(Label), {})
     // viewport: Viewport
   })
-  .views(self => {
-    return {
-      dependents(linkId) {
-        const dependents = new Map();
-        self.links.forEach(linkRecord => {
-          if (linkRecord.link.some(node => node.ref && node.ref.id == linkId)) {
-            dependents.set(linkRecord.id, linkRecord);
-          }
-        });
-        return dependents;
-      },
-      get display() {
-        return "hhmmm not yet";
-      }
-    };
-  })
+  .views(self => ({
+    dependents(linkId) {
+      const dependents = new Map();
+      self.links.forEach(linkRecord => {
+        if (linkRecord.link.some(node => node.ref && node.ref.id == linkId)) {
+          dependents.set(linkRecord.id, linkRecord);
+        }
+      });
+      return dependents;
+    },
+    get display() {
+      return "hhmmm not yet";
+    }
+  }))
   .actions(self => {
     return {
       expandSub(subId, baseId, ...params) {

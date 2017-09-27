@@ -137,6 +137,9 @@
 - Secure Private Modules
 - Other Targets! (C, Jai, OCaml, Assembly, etc.)
 - Optimized Compilation
+  - "Minification" of the JSON "spec"
+    - Use one of the reserved unicode characters for namespacing
+  - Actual code transpilation
 - First Class Dependency Injection/Context?
 
 #
