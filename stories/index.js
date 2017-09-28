@@ -183,6 +183,7 @@ console.log(e);
 const nodes = simple.links.get(7).display();
 console.table(
   nodes.map(n => ({
+    key: n.key,
     grp: n.group,
     path: [...n.path, n.index].join("-"),
     i: n.index,

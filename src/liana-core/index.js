@@ -289,7 +289,7 @@ export const Link = types
     }
   }))
   .views(self => ({
-    display(state, base = { group: undefined, x: 0, y: 10, nextIsRef: false, isLast: true, path: [] }) {
+    display(state, base = { group: undefined, x: 0, y: 10, nextIsRef: false, isLast: true, path: [] }, root = true) {
       // TODO: move to separate model!
       let { group, x, y, nextIsRef, isLast, path } = base;
       // path = path || [self.id];
@@ -373,6 +373,23 @@ export const Link = types
         link: true
       };
       allNodes.push(thisNode);
+
+      if (root) {
+        const existingKeys = {};
+        // for (const node of allNodes){
+        let i = allNodes.length;
+        while (i--) {
+          console.log(i);
+          const node = allNodes[i];
+          let currentKeyTokens = [];
+          let j = node.path.length - 1;
+          while (existingKeys[currentKeyTokens.join("/")]) {
+            currentKeyTokens.push(node.path[j--]);
+          }
+          existingKeys[currentKeyTokens.join("/")] = true;
+          node.key = currentKeyTokens.join("/");
+        }
+      }
 
       return allNodes;
     }
@@ -485,16 +502,27 @@ export const Post = types.model("Post", {
   linkRef: types.reference(Link)
 });
 
+const getRefPaths = refs => {};
+
+const getLinkDependents = (links, link) => {
+  const dependents = new Map();
+  links.forEach(linkToCheck => {
+    if (linkToCheck.node.some(node => node.ref === linkToCheck)) {
+      dependents.set(linkToCheck.linkId, true);
+    }
+  });
+  return dependents;
+};
+
 export const Viewport = types
   .model("Viewport", {
     rootLink: types.reference(Link),
     expandedNodes: types.map(types.boolean)
   })
   .views(self => ({
-    tree(rootLink = self.rootLink, base, path) {
+    tree(rootLink = self.rootLink, path, currentMap = {}) {
       const linkRefs = rootLink.nodes.filter(node => node.ref);
-      if (linkRefs.length) {
-      }
+      // const refPaths = linkRefs.map(getRefPath)
     }
   }));
 
