@@ -2,6 +2,14 @@ import { types, getEnv, getRoot, getType, resolveIdentifier, process } from "mob
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
+export const reserved = "􂳰";
+export const linkKey = "􂳰L";
+export const opKey = "􂳰O";
+export const valKey = "􂳰V";
+export const inputKey = "􂳰I";
+export const linkRefKey = "􂳰R";
+export const packageKey = "􂳰P";
+
 export const lodash = "_";
 
 export const global = "g";
@@ -243,8 +251,8 @@ const unknownColor = `hsl(0${baseColor}`;
 
 export const Link = types
   .model("Link", {
-    id: types.identifier(types.string),
-    link: types.array(Node)
+    linkId: types.identifier(types.string),
+    nodes: types.array(Node)
   })
   .views(self => ({
     derive(nodeVals) {
@@ -267,11 +275,11 @@ export const Link = types
       }
     },
     get val() {
-      const nodeVals = self.link.map(node => node.val);
+      const nodeVals = self.nodes.map(node => node.val);
       return self.derive(nodeVals);
     },
     get isPending() {
-      for (const node of self.link) {
+      for (const node of self.nodes) {
         const nodeType = getType(node);
         if (nodeType === Param || nodeType === Input) {
           return true;
@@ -283,7 +291,7 @@ export const Link = types
       return false;
     },
     with(params) {
-      const nodeVals = self.link.map(node => node.with(params));
+      const nodeVals = self.nodes.map(node => node.with(params));
 
       const holes = nodeVals.filter(val => val instanceof Hole);
 
@@ -299,12 +307,12 @@ export const Link = types
       // TODO: move to separate model!
       let { group, x, y, nextIsRef, isLast, path } = base;
       // path = path || [self.id];
-      const { link } = self;
-      group = group || self.id;
+      const { nodes } = self;
+      group = group || self.linkId;
 
       let allNodes = [];
-      for (let i = 0; i < link.length; i++) {
-        const node = link[i];
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
         const nodeType = getType(node);
         const base = {
           group,
@@ -343,14 +351,14 @@ export const Link = types
             break;
           case LinkRef:
             const innerGroup = `${group}-${i}`;
-            const isLast = i === link.length - 1;
-            const innerPath = [...path, node.ref.id];
+            const isLast = i === nodes.length - 1;
+            const innerPath = [...path, node.ref.linkId];
             const refChildNodes = node.ref.display(state, {
               group: innerGroup,
               path: innerPath,
               x,
               y: y - 1,
-              nextIsRef: !isLast && getType(link[i + 1]) === LinkRef,
+              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
               isLast
             });
             allNodes.push(...refChildNodes);
@@ -364,7 +372,7 @@ export const Link = types
         }
       }
 
-      const label = resolveIdentifier(Label, self, self.id);
+      const label = resolveIdentifier(Label, self, self.linkId);
 
       const thisSize = nextIsRef
         ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
@@ -379,7 +387,7 @@ export const Link = types
         y,
         size: thisSize,
         color: pendingColor, //self.isPending ? pendingColor : valColor,
-        text: (label && label.label) || `(${self.id})`,
+        text: (label && label.label) || `(${self.linkId})`,
         link: true
       };
       allNodes.push(thisNode);
@@ -403,7 +411,7 @@ export const LinkRef = types
 
 export const Call = types
   .model("Call", {
-    id: types.identifier(types.string),
+    call: types.identifier(types.string),
     link: types.reference(Link),
     params: types.optional(types.map(Node), {})
   })
@@ -418,7 +426,7 @@ export const Call = types
           const newParamEntries = newParams.map((param, i) => [holeParamIds[i], param]);
           const allParamEntries = [...paramEntries, ...newParamEntries];
           const allParams = new Map(allParamEntries);
-          return self.link.with(allParams);
+          return self.nodes.with(allParams);
         };
       }
 
@@ -495,6 +503,19 @@ export const Post = types.model("Post", {
   linkRef: types.reference(Link)
 });
 
+export const Viewport = types
+  .model("Viewport", {
+    rootLink: types.reference(Link),
+    expandedNodes: types.map(types.boolean)
+  })
+  .views(self => ({
+    tree(rootLink = self.rootLink, base, path) {
+      const linkRefs = rootLink.nodes.filter(node => node.ref);
+      if (linkRefs.length) {
+      }
+    }
+  }));
+
 export const Graph = types
   .model("Graph", {
     packages: types.optional(types.map(Package), {}),
@@ -504,20 +525,6 @@ export const Graph = types
     labels: types.optional(types.map(Label), {})
     // viewport: Viewport
   })
-  .views(self => ({
-    dependents(linkId) {
-      const dependents = new Map();
-      self.links.forEach(linkRecord => {
-        if (linkRecord.link.some(node => node.ref && node.ref.id == linkId)) {
-          dependents.set(linkRecord.id, linkRecord);
-        }
-      });
-      return dependents;
-    },
-    get display() {
-      return "hhmmm not yet";
-    }
-  }))
   .actions(self => {
     return {
       expandSub(subId, baseId, ...params) {
@@ -526,7 +533,7 @@ export const Graph = types
 
         let inputCounter = 0;
         sub.forEach((subLink, i) => {
-          const link = subLink.map(node => {
+          const nodes = subLink.map(node => {
             const nodeType = getType(node);
             const { val } = node;
             switch (nodeType) {
@@ -542,7 +549,7 @@ export const Graph = types
             }
           });
 
-          links.put({ id: `${baseId}-${i}`, link });
+          links.put({ link: `${baseId}-${i}`, nodes });
         });
       }
     };

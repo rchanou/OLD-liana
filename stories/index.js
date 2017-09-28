@@ -13,14 +13,14 @@ const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
 const simple = L.Graph.create({
   links: {
-    0: { id: "0", link: [{ op: "g" }, { val: "Math" }] },
-    1: { id: "1", link: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
-    2: { id: "2", link: [{ ref: "1" }, { in: "n" }, { val: 2 }] },
-    3: { id: "3", link: [{ ref: "2" }, { val: 5 }] },
-    4: { id: "4", link: [{ ref: "2" }, { val: 12 }] },
-    5: { id: "5", link: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
-    6: { id: "6", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
-    7: { id: "7", link: [{ ref: "6" }, { ref: "5" }] }
+    0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
+    1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
+    2: { linkId: "2", nodes: [{ ref: "1" }, { in: "n" }, { val: 2 }] },
+    3: { linkId: "3", nodes: [{ ref: "2" }, { val: 5 }] },
+    4: { linkId: "4", nodes: [{ ref: "2" }, { val: 12 }] },
+    5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
+    6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
+    7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
   labels: {
     0: { id: "0", label: "Math" },
@@ -36,14 +36,14 @@ const simple = L.Graph.create({
 
 const withCalls = L.Graph.create({
   links: {
-    0: { id: "0", link: [{ op: "g" }, { val: "Math" }] },
-    1: { id: "1", link: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
-    2: { id: "2", link: [{ ref: "1" }, { param: "0" }, { val: 2 }] },
-    3: { id: "3", link: "2", params: { 0: { val: 7 } } },
-    4: { id: "4", link: [{ ref: "2" }, { val: 12 }] },
-    5: { id: "5", link: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
-    6: { id: "6", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
-    7: { id: "7", link: [{ ref: "6" }, { ref: "5" }] }
+    0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
+    1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
+    2: { linkId: "2", nodes: [{ ref: "1" }, { param: "0" }, { val: 2 }] },
+    3: { call: "3", link: "2", params: { 0: { val: 7 } } },
+    4: { linkId: "4", nodes: [{ ref: "2" }, { val: 12 }] },
+    5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
+    6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
+    7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
   labels: {
     0: { id: "0", label: "Math" },
@@ -63,81 +63,81 @@ const graph = L.Graph.create(
       0: { id: 0, path: testDep }
     },
     links: {
-      0: { id: "0", link: [{ op: "g" }, { val: "Math" }] },
-      1: { id: "1", link: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
-      2: { id: "2", link: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
-      3: { id: "3", link: [{ op: "g" }, { val: "console" }] },
-      "3b": { id: "3b", link: [{ op: "." }, { ref: "3" }, { val: "log" }] },
-      "3a": { id: "3a", link: [{ ref: "3b" }, { val: "hello world" }] },
+      0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
+      1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
+      2: { linkId: "2", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
+      3: { linkId: "3", nodes: [{ op: "g" }, { val: "console" }] },
+      "3b": { linkId: "3b", nodes: [{ op: "." }, { ref: "3" }, { val: "log" }] },
+      "3a": { linkId: "3a", nodes: [{ ref: "3b" }, { val: "hello world" }] },
       4: {
-        id: "4",
-        link: [{ subRef: "0" }, { in: "a" }, { val: null }, { in: "a" }]
+        linkId: "4",
+        nodes: [{ subRef: "0" }, { in: "a" }, { val: null }, { in: "a" }]
       },
       5: {
-        id: "5",
-        link: [{ op: "[" }, { val: 1 }, { val: 3 }, { val: 5 }]
+        linkId: "5",
+        nodes: [{ op: "[" }, { val: 1 }, { val: 3 }, { val: 5 }]
       },
-      6: { id: "6", link: [{ ref: "4" }, { op: "+" }] },
-      7: { id: "7", link: [{ ref: "1" }, { val: 3 }, { val: 2 }] },
-      8: { id: "8", link: [{ ref: "1" }, { in: "a" }, { val: 4 }] },
-      9: { id: "9", link: [{ ref: "8" }, { val: 3 }] },
-      11: { id: "11", link: [{ val: 4 }] },
+      6: { linkId: "6", nodes: [{ ref: "4" }, { op: "+" }] },
+      7: { linkId: "7", nodes: [{ ref: "1" }, { val: 3 }, { val: 2 }] },
+      8: { linkId: "8", nodes: [{ ref: "1" }, { in: "a" }, { val: 4 }] },
+      9: { linkId: "9", nodes: [{ ref: "8" }, { val: 3 }] },
+      11: { linkId: "11", nodes: [{ val: 4 }] },
       12: {
-        id: "12",
-        link: [{ ref: "1" }, { ref: "11" }, { ref: "11" }]
+        linkId: "12",
+        nodes: [{ ref: "1" }, { ref: "11" }, { ref: "11" }]
       },
-      13: { id: "13", link: [{ op: "+" }, { val: 3 }, { val: 5.4 }] },
+      13: { linkId: "13", nodes: [{ op: "+" }, { val: 3 }, { val: 5.4 }] },
       14: {
-        id: "14",
-        link: [{ op: "+" }, { in: "n" }, { in: "n" }, { in: "n" }]
+        linkId: "14",
+        nodes: [{ op: "+" }, { in: "n" }, { in: "n" }, { in: "n" }]
       },
       15: {
-        id: "15",
-        link: [{ ref: 14 }, { val: 4.3 }, { val: 1.7 }, { val: 2.2 }]
+        linkId: "15",
+        nodes: [{ ref: 14 }, { val: 4.3 }, { val: 1.7 }, { val: 2.2 }]
       },
       16: {
-        id: "16",
-        link: [{ op: "[" }, { val: 3 }, { val: 5 }, { val: 7 }]
+        linkId: "16",
+        nodes: [{ op: "[" }, { val: 3 }, { val: 5 }, { val: 7 }]
       },
-      17: { id: "17", link: [{ op: "_" }] },
+      17: { linkId: "17", nodes: [{ op: "_" }] },
       18: {
-        id: "18",
-        link: [{ op: "." }, { ref: "17" }, { val: "map" }]
+        linkId: "18",
+        nodes: [{ op: "." }, { ref: "17" }, { val: "map" }]
       },
-      19: { id: "19", link: [{ op: "+" }, { in: "a" }, { val: 5.4 }] },
+      19: { linkId: "19", nodes: [{ op: "+" }, { in: "a" }, { val: 5.4 }] },
       20: {
-        id: "20",
-        link: [{ ref: "18" }, { ref: "5" }, { ref: "19" }]
+        linkId: "20",
+        nodes: [{ ref: "18" }, { ref: "5" }, { ref: "19" }]
       },
-      21: { id: "21", link: [{ ref: "1" }, { in: "a" }, { val: 2 }] },
+      21: { linkId: "21", nodes: [{ ref: "1" }, { in: "a" }, { val: 2 }] },
       22: {
-        id: "22",
-        link: [{ op: "." }, { ref: "17" }, { val: "spread" }]
+        linkId: "22",
+        nodes: [{ op: "." }, { ref: "17" }, { val: "spread" }]
       },
-      23: { id: "23", link: [{ ref: "22" }, { op: "+" }] },
-      24: { id: "24", link: [{ op: "+" }, { in: "a" }, { val: 1 }] },
-      25: { id: "25", link: [{ op: "+" }, { in: "a" }, { val: -1 }] },
-      26: { id: "26", link: [{ op: "." }, { in: "a" }, { val: "type" }] },
+      23: { linkId: "23", nodes: [{ ref: "22" }, { op: "+" }] },
+      24: { linkId: "24", nodes: [{ op: "+" }, { in: "a" }, { val: 1 }] },
+      25: { linkId: "25", nodes: [{ op: "+" }, { in: "a" }, { val: -1 }] },
+      26: { linkId: "26", nodes: [{ op: "." }, { in: "a" }, { val: "type" }] },
       27: {
-        id: "27",
-        link: [{ op: "s" }, { ref: "26" }, { val: "INCREMENT" }, { ref: "24" }, { val: "DECREMENT" }, { ref: "25" }]
+        linkId: "27",
+        nodes: [{ op: "s" }, { ref: "26" }, { val: "INCREMENT" }, { ref: "24" }, { val: "DECREMENT" }, { ref: "25" }]
       },
-      28: { id: "28", link: [{ ref: "27" }, { in: "a" }] },
-      29: { id: "29", link: [{ op: "==" }, { in: "a" }, { val: null }] },
+      28: { linkId: "28", nodes: [{ ref: "27" }, { in: "a" }] },
+      29: { linkId: "29", nodes: [{ op: "==" }, { in: "a" }, { val: null }] },
       30: {
-        id: "30",
-        link: [{ op: "?" }, { ref: "29" }, { val: 0 }, { ref: "28" }]
+        linkId: "30",
+        nodes: [{ op: "?" }, { ref: "29" }, { val: 0 }, { ref: "28" }]
       },
-      31: { id: "31", link: [{ op: "+" }, { param: "a" }, { val: 13 }] },
-      32: { id: "32", link: [{ val: 14 }] }
+      31: { linkId: "31", nodes: [{ op: "+" }, { param: "a" }, { val: 13 }] },
+      32: { linkId: "32", nodes: [{ val: 14 }] }
     },
     calls: {
       0: {
-        id: "0",
+        call: "0",
         link: "31",
         params: { a: { val: 14 } }
       },
-      1: { id: "1", link: "31", params: {} }
+      1: { call: "1", link: "31", params: {} }
     },
     subs: {
       0: {
@@ -157,7 +157,7 @@ const graph = L.Graph.create(
 const { links } = withCalls;
 console.log("hmm", links.get(2).val(12));
 console.log("hmm", links.get(3).val);
-console.log("dep", simple.dependents("2"));
+// console.log("dep", simple.dependents("2"));
 // const getVal = id => graph.links.get(id).val;
 // const a = getVal(18);
 // const b = getVal(5);
