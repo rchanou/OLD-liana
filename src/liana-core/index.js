@@ -250,7 +250,7 @@ export const Link = types
       const [head, ...nodeInputs] = nodeVals;
 
       if (typeof head === "function") {
-        const inputs = nodeInputs.filter(input => input === Input || input === Input);
+        const inputs = nodeInputs.filter(input => input === Input);
         if (inputs.length) {
           const curried = curry(head, nodeInputs.length);
           return ary(curried(...nodeInputs), inputs.length);
@@ -267,7 +267,7 @@ export const Link = types
     get isPending() {
       for (const node of self.nodes) {
         const nodeType = getType(node);
-        if (nodeType === Input || nodeType === Input) {
+        if (nodeType === Input) {
           return true;
         }
         if (nodeType === LinkRef && node.ref.isPending) {
@@ -393,7 +393,7 @@ export const LinkRef = types
 
 export const Call = types
   .model("Call", {
-    call: types.identifier(types.string),
+    callId: types.identifier(types.string),
     link: types.reference(Link),
     inputs: types.optional(types.map(Node), {})
   })
@@ -419,13 +419,13 @@ export const Call = types
     }
   }));
 
-export const SubInput = types
-  .model("SubInput", {
-    input: types.number
+export const SubParam = types
+  .model("SubParam", {
+    param: types.number
   })
   .views(self => ({
     get val() {
-      return self.input;
+      return self.param;
     },
     with() {
       return self.val;
@@ -445,12 +445,12 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, Input, LinkRef, SubInput, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(Val, Op, Input, LinkRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
-    id: types.identifier(types.string),
-    sub: types.map(types.array(SubNode))
+    subId: types.identifier(types.string),
+    nodes: types.map(types.array(SubNode))
   })
   .views(self => ({
     get val() {
@@ -509,29 +509,29 @@ export const Graph = types
   })
   .actions(self => {
     return {
-      expandSub(subId, baseId, ...inputs) {
-        const { sub } = self.subs.get(subId);
+      expandSub(subId, baseId, ...params) {
+        const { nodes } = self.subs.get(subId);
         const { links } = self;
 
         let inputCounter = 0;
-        sub.forEach((subLink, i) => {
+        nodes.forEach((subLink, i) => {
           const nodes = subLink.map(node => {
             const nodeType = getType(node);
             const { val } = node;
             switch (nodeType) {
-              case SubInput:
-                return inputs[val];
+              case SubParam:
+                return params[val];
               case SubLink:
                 return { ref: `${baseId}-${val}` };
               case LinkRef:
-                const retVal = { ref: node.ref.id };
+                const retVal = { ref: node.ref.linkId };
                 return retVal;
               default:
                 return val;
             }
           });
 
-          links.put({ link: `${baseId}-${i}`, nodes });
+          links.put({ linkId: `${baseId}-${i}`, nodes });
         });
       }
     };

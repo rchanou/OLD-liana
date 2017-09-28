@@ -39,7 +39,7 @@ const withCalls = L.Graph.create({
     0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
     2: { linkId: "2", nodes: [{ ref: "1" }, { input: "0" }, { val: 2 }] },
-    3: { call: "3", link: "2", inputs: { 0: { val: 7 } } },
+    3: { callId: "3", link: "2", inputs: { 0: { val: 7 } } },
     4: { linkId: "4", nodes: [{ ref: "2" }, { val: 12 }] },
     5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
@@ -133,17 +133,17 @@ const graph = L.Graph.create(
     },
     calls: {
       0: {
-        call: "0",
+        callId: "0",
         link: "31",
         inputs: { a: { val: 14 } }
       },
-      1: { call: "1", link: "31", inputs: {} }
+      1: { callId: "1", link: "31", inputs: {} }
     },
     subs: {
       0: {
-        id: "0",
-        sub: {
-          0: [{ ref: "18" }, { input: 0 }, { ref: "21" }],
+        subId: "0",
+        nodes: {
+          0: [{ ref: "18" }, { param: 0 }, { ref: "21" }],
           1: [{ ref: "23" }, { subLink: 0 }],
           2: [{ ref: "2" }, { subLink: 1 }]
         }
@@ -158,16 +158,16 @@ const { links } = withCalls;
 console.log("hmm", links.get(2).val(12));
 console.log("hmm", links.get(3).val);
 // console.log("dep", simple.dependents("2"));
-// const getVal = id => graph.links.get(id).val;
+const getVal = id => graph.links.get(id).val;
 // const a = getVal(18);
 // const b = getVal(5);
 // const c = getVal(19);
 // const d = getVal(23);
 // const subLink = graph.subs.get(0).sub.get(0)[0].ref.link;
 // console.log(subLink, 'le link')
-// graph.expandSub("0", "24", { ref: "5" });
-// const e = getVal("24-2");
-// console.log(e);
+graph.expandSub("0", "24", { ref: "5" });
+const e = getVal("24-2");
+console.log(e);
 // console.log(getVal("32"));
 // const f = graph.calls.get(0).val;
 // console.log("fff", f);
