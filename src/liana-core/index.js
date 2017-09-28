@@ -182,69 +182,55 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const ParamType = types.enumeration("ParamType", [stringType, numType, boolType, anyType]);
+export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
 
 // is there a better way of doing this?
 class Hole {
-  constructor(...paramSets) {
-    this.params = {};
+  constructor(...inputSets) {
+    this.inputs = {};
 
-    for (const paramSet of paramSets) {
-      for (const param in paramSet) {
-        this.params[param] = true;
+    for (const inputSet of inputSets) {
+      for (const input in inputSet) {
+        this.inputs[input] = true;
       }
     }
   }
 }
 
-export const Param = types
-  .model("Param", {
-    param: types.identifier(types.string),
-    type: types.maybe(ParamType, anyType)
+export const Input = types
+  .model("Input", {
+    input: types.identifier(types.string),
+    type: types.maybe(InputType, anyType)
   })
   .views(self => ({
     get val() {
-      return Param;
+      return Input;
     },
-    with(params) {
-      const { param } = self;
-      if (params && params.has(param)) {
-        const mapValue = params.get(param);
-        if (isObservableMap(params)) {
+    with(inputs) {
+      const { input } = self;
+      if (inputs && inputs.has(input)) {
+        const mapValue = inputs.get(input);
+        if (isObservableMap(inputs)) {
           return mapValue.val;
         } else {
           return mapValue;
         }
       } else {
-        return new Hole({ [param]: true });
+        return new Hole({ [input]: true });
       }
     }
   }));
 
-export const Input = types
-  .model("Input", {
-    in: ParamType
-  })
-  .views(self => ({
-    get val() {
-      return Param;
-    },
-    with() {
-      return self.val;
-    }
-  }));
+curry.placeholder = Input;
 
-curry.placeholder = Param;
-
-export const Node = types.union(Val, Op, Input, Param, types.late(() => LinkRef), types.late(() => SubRef), PackageRef);
+export const Node = types.union(Val, Op, Input, types.late(() => LinkRef), types.late(() => SubRef), PackageRef);
 
 const identity = x => x;
 
 const baseColor = ",66%,55%)";
-const opColor = `hsl(120${baseColor}`;
+const opColor = `hsl(150${baseColor}`;
 const valColor = `hsl(210${baseColor}`;
-const inputColor = `hsl(30${baseColor}`;
-const paramColor = `hsl(,${baseColor}`;
+const inputColor = `hsl(25${baseColor}`;
 const packageColor = `hsl(315${baseColor}`;
 const pendingColor = `hsl(270${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
@@ -261,15 +247,15 @@ export const Link = types
         return Package;
       }
 
-      const [head, ...nodeParams] = nodeVals;
+      const [head, ...nodeInputs] = nodeVals;
 
       if (typeof head === "function") {
-        const inputs = nodeParams.filter(param => param === Param || param === Input);
+        const inputs = nodeInputs.filter(input => input === Input || input === Input);
         if (inputs.length) {
-          const curried = curry(head, nodeParams.length);
-          return ary(curried(...nodeParams), inputs.length);
+          const curried = curry(head, nodeInputs.length);
+          return ary(curried(...nodeInputs), inputs.length);
         }
-        return head(...nodeParams);
+        return head(...nodeInputs);
       } else {
         return head;
       }
@@ -281,7 +267,7 @@ export const Link = types
     get isPending() {
       for (const node of self.nodes) {
         const nodeType = getType(node);
-        if (nodeType === Param || nodeType === Input) {
+        if (nodeType === Input || nodeType === Input) {
           return true;
         }
         if (nodeType === LinkRef && node.ref.isPending) {
@@ -290,13 +276,13 @@ export const Link = types
       }
       return false;
     },
-    with(params) {
-      const nodeVals = self.nodes.map(node => node.with(params));
+    with(inputs) {
+      const nodeVals = self.nodes.map(node => node.with(inputs));
 
       const holes = nodeVals.filter(val => val instanceof Hole);
 
       if (holes.length) {
-        return new Hole(...holes.map(hole => hole.params));
+        return new Hole(...holes.map(hole => hole.inputs));
       }
 
       return self.derive(nodeVals);
@@ -338,11 +324,7 @@ export const Link = types
             x += 1;
             break;
           case Input:
-            allNodes.push({ ...base, color: inputColor, text: node.in });
-            x += 1;
-            break;
-          case Param:
-            allNodes.push({ ...base, color: paramColor, text: node.param });
+            allNodes.push({ ...base, color: inputColor, text: node.input });
             x += 1;
             break;
           case PackageRef:
@@ -413,20 +395,20 @@ export const Call = types
   .model("Call", {
     call: types.identifier(types.string),
     link: types.reference(Link),
-    params: types.optional(types.map(Node), {})
+    inputs: types.optional(types.map(Node), {})
   })
   .views(self => ({
     get val() {
-      const linkVal = self.link.with(self.params);
+      const linkVal = self.link.with(self.inputs);
       if (linkVal instanceof Hole) {
-        const paramEntries = self.params.entries().slice();
-        const holeParamIds = Object.keys(linkVal.params);
+        const inputEntries = self.inputs.entries().slice();
+        const holeInputIds = Object.keys(linkVal.inputs);
 
-        return (...newParams) => {
-          const newParamEntries = newParams.map((param, i) => [holeParamIds[i], param]);
-          const allParamEntries = [...paramEntries, ...newParamEntries];
-          const allParams = new Map(allParamEntries);
-          return self.nodes.with(allParams);
+        return (...newInputs) => {
+          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
+          const allInputEntries = [...inputEntries, ...newInputEntries];
+          const allInputs = new Map(allInputEntries);
+          return self.nodes.with(allInputs);
         };
       }
 
@@ -437,13 +419,13 @@ export const Call = types
     }
   }));
 
-export const SubParam = types
+export const SubInput = types
   .model("SubInput", {
-    param: types.number
+    input: types.number
   })
   .views(self => ({
     get val() {
-      return self.param;
+      return self.input;
     },
     with() {
       return self.val;
@@ -463,7 +445,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, Input, LinkRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(Val, Op, Input, LinkRef, SubInput, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
@@ -527,7 +509,7 @@ export const Graph = types
   })
   .actions(self => {
     return {
-      expandSub(subId, baseId, ...params) {
+      expandSub(subId, baseId, ...inputs) {
         const { sub } = self.subs.get(subId);
         const { links } = self;
 
@@ -537,8 +519,8 @@ export const Graph = types
             const nodeType = getType(node);
             const { val } = node;
             switch (nodeType) {
-              case SubParam:
-                return params[val];
+              case SubInput:
+                return inputs[val];
               case SubLink:
                 return { ref: `${baseId}-${val}` };
               case LinkRef:
