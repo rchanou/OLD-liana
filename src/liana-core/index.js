@@ -511,11 +511,10 @@ export const Graph = types
     return {
       expandSub(subId, baseId, ...params) {
         const { nodes } = self.subs.get(subId);
-        const { links } = self;
 
         let inputCounter = 0;
         nodes.forEach((subLink, i) => {
-          const nodes = subLink.map(node => {
+          const linkNodes = subLink.map(node => {
             const nodeType = getType(node);
             const { val } = node;
             switch (nodeType) {
@@ -531,7 +530,7 @@ export const Graph = types
             }
           });
 
-          links.put({ linkId: `${baseId}-${i}`, nodes });
+          self.links.put({ linkId: `${baseId}-${i}`, nodes: linkNodes });
         });
       }
     };
