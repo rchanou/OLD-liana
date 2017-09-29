@@ -289,9 +289,20 @@ export const Link = types
     }
   }))
   .views(self => ({
-    display(state, base = { group: undefined, x: 0, y: 10, nextIsRef: false, isLast: true, path: [] }, root = true) {
+    display(
+      state,
+      base = {
+        group: undefined,
+        x: 0,
+        y: 10,
+        nextIsRef: false,
+        isLast: true,
+        path: undefined
+      },
+      root = true
+    ) {
       // TODO: move to separate model!
-      let { group, x, y, nextIsRef, isLast, path } = base;
+      let { group, x, y, nextIsRef, isLast, path = [self.linkId] } = base;
       // path = path || [self.id];
       const { nodes } = self;
       group = group || self.linkId;
@@ -302,7 +313,7 @@ export const Link = types
         const nodeType = getType(node);
         const base = {
           group,
-          // path,
+          path: [...path, `I${i}`],
           index: i,
           x,
           y: y - 1,
@@ -311,26 +322,37 @@ export const Link = types
 
         switch (nodeType) {
           case Op:
-            allNodes.push({ ...base, path: [...path, i], color: opColor, text: node.op });
-            x += 1;
+            allNodes.push({
+              ...base,
+              color: opColor,
+              text: node.op
+            });
+            x++;
             break;
           case Val:
             const { val } = node;
             allNodes.push({
               ...base,
-              path: [...path, i],
               color: valColor,
               text: typeof val === "string" ? `"${val}"` : val
             });
-            x += 1;
+            x++;
             break;
           case Input:
-            allNodes.push({ ...base, path: [...path, i], color: inputColor, text: node.input });
-            x += 1;
+            allNodes.push({
+              ...base,
+              color: inputColor,
+              text: node.input
+            });
+            x++;
             break;
           case PackageRef:
-            allNodes.push({ ...base, path: [...path, i], color: packageColor, text: node.path });
-            x += 1;
+            allNodes.push({
+              ...base,
+              color: packageColor,
+              text: node.path
+            });
+            x++;
             break;
           case LinkRef:
             const innerGroup = `${group}-${i}`;
@@ -350,8 +372,8 @@ export const Link = types
             x += size;
             break;
           default:
-            allNodes.push({ ...base, path: [...path, i], color: unknownColor });
-            x += 1;
+            allNodes.push({ ...base, color: unknownColor });
+            x++;
         }
       }
 
