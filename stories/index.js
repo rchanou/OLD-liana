@@ -193,6 +193,19 @@ console.table(
   }))
 );
 
+// const nodes2 = simple.links.get(5).display();
+// console.table(
+//   nodes2.map(n => ({
+//     key: n.key,
+//     grp: n.group,
+//     path: n.path.join(","),
+//     // path: [...n.path, n.index].join("-"),
+//     i: n.index,
+//     text: n.text,
+//     link: n.link
+//   }))
+// );
+
 class Test extends React.Component {
   constructor(props) {
     super(props);

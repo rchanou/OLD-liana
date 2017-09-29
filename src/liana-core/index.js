@@ -292,20 +292,16 @@ export const Link = types
     display(
       state,
       base = {
-        group: undefined,
         x: 0,
         y: 10,
         nextIsRef: false,
-        isLast: true,
-        path: undefined
+        isLast: true
       },
       root = true
     ) {
       // TODO: move to separate model!
-      let { group, x, y, nextIsRef, isLast, path = [self.linkId] } = base;
-      // path = path || [self.id];
-      const { nodes } = self;
-      group = group || self.linkId;
+      const { linkId, nodes } = self;
+      let { group = linkId, x, y, nextIsRef, isLast, path = [linkId] } = base;
 
       let allNodes = [];
       for (let i = 0; i < nodes.length; i++) {
