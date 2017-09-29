@@ -302,7 +302,7 @@ export const Link = types
         const nodeType = getType(node);
         const base = {
           group,
-          path,
+          // path,
           index: i,
           x,
           y: y - 1,
@@ -311,24 +311,25 @@ export const Link = types
 
         switch (nodeType) {
           case Op:
-            allNodes.push({ ...base, color: opColor, text: node.op });
+            allNodes.push({ ...base, path: [...path, i], color: opColor, text: node.op });
             x += 1;
             break;
           case Val:
             const { val } = node;
             allNodes.push({
               ...base,
+              path: [...path, i],
               color: valColor,
               text: typeof val === "string" ? `"${val}"` : val
             });
             x += 1;
             break;
           case Input:
-            allNodes.push({ ...base, color: inputColor, text: node.input });
+            allNodes.push({ ...base, path: [...path, i], color: inputColor, text: node.input });
             x += 1;
             break;
           case PackageRef:
-            allNodes.push({ ...base, color: packageColor, text: node.path });
+            allNodes.push({ ...base, path: [...path, i], color: packageColor, text: node.path });
             x += 1;
             break;
           case LinkRef:
@@ -349,7 +350,7 @@ export const Link = types
             x += size;
             break;
           default:
-            allNodes.push({ ...base, color: unknownColor });
+            allNodes.push({ ...base, path: [...path, i], color: unknownColor });
             x += 1;
         }
       }
@@ -376,18 +377,18 @@ export const Link = types
 
       if (root) {
         const existingKeys = {};
-        // for (const node of allNodes){
         let i = allNodes.length;
         while (i--) {
-          console.log(i);
           const node = allNodes[i];
-          let currentKeyTokens = [];
-          let j = node.path.length - 1;
-          while (existingKeys[currentKeyTokens.join("/")]) {
-            currentKeyTokens.push(node.path[j--]);
+          const { path } = node;
+          let j = path.length - 1;
+          let currentKey = "" + (j in path ? path[j] : "");
+          while (existingKeys[currentKey]) {
+            j--;
+            currentKey += "/" + (j in path ? path[j] : "");
           }
-          existingKeys[currentKeyTokens.join("/")] = true;
-          node.key = currentKeyTokens.join("/");
+          existingKeys[currentKey] = true;
+          node.key = currentKey;
         }
       }
 

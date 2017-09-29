@@ -185,7 +185,8 @@ console.table(
   nodes.map(n => ({
     key: n.key,
     grp: n.group,
-    path: [...n.path, n.index].join("-"),
+    path: n.path.join(","),
+    // path: [...n.path, n.index].join("-"),
     i: n.index,
     text: n.text,
     link: n.link
