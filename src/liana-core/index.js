@@ -68,6 +68,7 @@ const opFuncs = {
     return items;
   },
   [lodash]() {
+    // TODO: remove
     return _;
   },
   ifOp(condition, trueVal, falseVal) {
@@ -381,7 +382,6 @@ export const Label = types.model("Label", {
   label: optionalString,
   set: optionalString,
   targetId: optionalString
-  // linkRef: types.reference(Link)
 });
 
 export const Post = types.model("Post", {
@@ -389,18 +389,6 @@ export const Post = types.model("Post", {
   text: optionalString,
   targetId: optionalString
 });
-
-const getRefPaths = refs => {};
-
-const getLinkDependents = (links, link) => {
-  const dependents = new Map();
-  links.forEach(linkToCheck => {
-    if (linkToCheck.node.some(node => node.ref === linkToCheck)) {
-      dependents.set(linkToCheck.linkId, true);
-    }
-  });
-  return dependents;
-};
 
 export const Viewport = types
   .model("Viewport", {
@@ -548,7 +536,6 @@ export const Repo = types
     subs: optionalMap(Sub),
     linkLabels: optionalMap(Label),
     linkPosts: optionalMap(Post)
-    // viewport: Viewport
   })
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
@@ -576,5 +563,3 @@ export const Repo = types
       });
     }
   }));
-
-const RefToLink = types.maybe(types.reference(Link));
