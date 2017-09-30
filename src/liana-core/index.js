@@ -2,6 +2,9 @@ import { types, getEnv, getRoot, getType, resolveIdentifier, process } from "mob
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
+const optionalString = types.optional(types.string, "");
+const optionalMap = type => types.optional(types.map(type), {});
+
 export const reserved = "􂳰";
 export const linkKey = "􂳰L";
 export const opKey = "􂳰O";
@@ -294,7 +297,7 @@ export const Call = types
   .model("Call", {
     callId: types.identifier(types.string),
     link: types.reference(Link),
-    inputs: types.optional(types.map(Node), {})
+    inputs: optionalMap(Node)
   })
   .views(self => ({
     get val() {
@@ -374,14 +377,17 @@ export const SubRef = types
   }));
 
 export const Label = types.model("Label", {
-  id: types.identifier(types.string), // TODO: labels should have own id, not that of link!
-  label: types.string
-  // linkRef: types.reference(Link) // TODO: use this for link id
+  labelId: types.identifier(types.string), // TODO: labels should have own id, not that of link!
+  label: optionalString,
+  set: optionalString,
+  targetId: optionalString
+  // linkRef: types.reference(Link)
 });
 
 export const Post = types.model("Post", {
-  id: types.identifier(types.string),
-  linkRef: types.reference(Link)
+  postId: types.identifier(types.string),
+  text: optionalString,
+  targetId: optionalString
 });
 
 const getRefPaths = refs => {};
@@ -399,7 +405,7 @@ const getLinkDependents = (links, link) => {
 export const Viewport = types
   .model("Viewport", {
     rootLink: types.string,
-    expandedLinks: types.optional(types.map(types.boolean), {})
+    expandedLinks: optionalMap(types.boolean)
   })
   .views(self => ({
     get isPending() {
@@ -415,8 +421,8 @@ export const Viewport = types
       return false;
     },
     display(
-      domain,
-      link = domain.links.get(self.rootLink),
+      repo,
+      link = repo.links.get(self.rootLink),
       base = {
         x: 0,
         y: 10,
@@ -479,7 +485,7 @@ export const Viewport = types
             const isLast = i === nodes.length - 1;
             const innerPath = [...path, node.ref.linkId];
             console.log("dat ref doe", node.ref);
-            const refChildNodes = self.display(domain, node.ref, {
+            const refChildNodes = self.display(repo, node.ref, {
               path: innerPath,
               x,
               y: y - 1,
@@ -535,13 +541,13 @@ export const Viewport = types
     }
   }));
 
-export const Graph = types
-  .model("Graph", {
-    packages: types.optional(types.map(Package), {}),
-    links: types.optional(types.map(types.union(Link, Call)), {}),
-    calls: types.optional(types.map(Call), {}),
-    subs: types.optional(types.map(Sub), {}),
-    labels: types.optional(types.map(Label), {})
+export const Repo = types
+  .model("Repo", {
+    packages: optionalMap(Package),
+    links: optionalMap(types.union(Link, Call)),
+    subs: optionalMap(Sub),
+    linkLabels: optionalMap(Label),
+    linkPosts: optionalMap(Post)
     // viewport: Viewport
   })
   .actions(self => ({

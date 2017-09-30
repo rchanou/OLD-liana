@@ -23,20 +23,20 @@ const simpleSnapshot = {
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
   labels: {
-    0: { id: "0", label: "Math" },
-    1: { id: "1", label: "power" },
-    2: { id: "2", label: "square" },
-    3: { id: "3", label: "5²" },
-    4: { id: "4", label: "12²" },
-    5: { id: "5", label: "5² + 12²" },
-    6: { id: "6", label: "√" },
-    7: { id: "7", label: "hypotenuse for 5 and 12" }
+    0: { labelId: "0", label: "Math" },
+    1: { labelId: "1", label: "power" },
+    2: { labelId: "2", label: "square" },
+    3: { labelId: "3", label: "5²" },
+    4: { labelId: "4", label: "12²" },
+    5: { labelId: "5", label: "5² + 12²" },
+    6: { labelId: "6", label: "√" },
+    7: { labelId: "7", label: "hypotenuse for 5 and 12" }
   }
 };
 
-const simple = L.Graph.create(simpleSnapshot);
+const simple = L.Repo.create(simpleSnapshot);
 
-const withCalls = L.Graph.create({
+const withCalls = L.Repo.create({
   links: {
     0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
@@ -48,18 +48,18 @@ const withCalls = L.Graph.create({
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
   labels: {
-    0: { id: "0", label: "Math" },
-    1: { id: "1", label: "power" },
-    2: { id: "2", label: "square" },
-    3: { id: "3", label: "square of 5" },
-    4: { id: "4", label: "square of 12" },
-    5: { id: "5", label: "sum of squares of 5 and 12" },
-    6: { id: "6", label: "square root" },
-    7: { id: "7", label: "hypotenuse of 5 and 12" }
+    0: { labelId: "0", label: "Math" },
+    1: { labelId: "1", label: "power" },
+    2: { labelId: "2", label: "square" },
+    3: { labelId: "3", label: "square of 5" },
+    4: { labelId: "4", label: "square of 12" },
+    5: { labelId: "5", label: "sum of squares of 5 and 12" },
+    6: { labelId: "6", label: "square root" },
+    7: { labelId: "7", label: "hypotenuse of 5 and 12" }
   }
 });
 
-const graph = L.Graph.create(
+const graph = L.Repo.create(
   {
     packages: {
       0: { id: 0, path: testDep }
@@ -131,15 +131,13 @@ const graph = L.Graph.create(
         nodes: [{ op: "?" }, { ref: "29" }, { val: 0 }, { ref: "28" }]
       },
       31: { linkId: "31", nodes: [{ op: "+" }, { input: "a" }, { val: 13 }] },
-      32: { linkId: "32", nodes: [{ val: 14 }] }
-    },
-    calls: {
-      0: {
-        callId: "0",
+      32: { linkId: "32", nodes: [{ val: 14 }] },
+      33: {
+        callId: "33",
         link: "31",
         inputs: { a: { val: 14 } }
       },
-      1: { callId: "1", link: "31", inputs: {} }
+      34: { callId: "34", link: "31", inputs: {} }
     },
     subs: {
       0: {
