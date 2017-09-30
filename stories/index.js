@@ -172,7 +172,7 @@ const e = getVal("24-2");
 console.log(e);
 
 const simpleView = L.Viewport.create({
-  ...simpleSnapshot,
+  // ...simpleSnapshot,
   rootLink: "7",
   expandedLinks: {}
 });
@@ -189,7 +189,7 @@ const simpleView = L.Viewport.create({
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simpleView.display();
+const nodes = simpleView.display(simple);
 
 console.table(
   nodes.map(n => ({

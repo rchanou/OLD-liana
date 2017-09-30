@@ -398,10 +398,8 @@ const getLinkDependents = (links, link) => {
 
 export const Viewport = types
   .model("Viewport", {
-    links: types.optional(types.map(types.union(Link, Call)), {}),
-    rootLink: types.reference(Link),
-    expandedLinks: types.optional(types.map(types.reference(Link)), {}),
-    labels: types.optional(types.map(Label), {})
+    rootLink: types.string,
+    expandedLinks: types.optional(types.map(types.boolean), {})
   })
   .views(self => ({
     get isPending() {
@@ -417,7 +415,8 @@ export const Viewport = types
       return false;
     },
     display(
-      link = self.rootLink,
+      domain,
+      link = domain.links.get(self.rootLink),
       base = {
         x: 0,
         y: 10,
@@ -477,10 +476,10 @@ export const Viewport = types
             x++;
             break;
           case LinkRef:
-            console.log(node.ref);
             const isLast = i === nodes.length - 1;
             const innerPath = [...path, node.ref.linkId];
-            const refChildNodes = self.display(node.ref, {
+            console.log("dat ref doe", node.ref);
+            const refChildNodes = self.display(domain, node.ref, {
               path: innerPath,
               x,
               y: y - 1,
