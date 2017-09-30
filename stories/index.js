@@ -11,7 +11,7 @@ import { Tree } from "../src/liana-explorer";
 
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
-const simple = L.Graph.create({
+const simpleSnapshot = {
   links: {
     0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
@@ -32,7 +32,9 @@ const simple = L.Graph.create({
     6: { id: "6", label: "√" },
     7: { id: "7", label: "hypotenuse for 5 and 12" }
   }
-});
+};
+
+const simple = L.Graph.create(simpleSnapshot);
 
 const withCalls = L.Graph.create({
   links: {
@@ -168,6 +170,13 @@ const getVal = id => graph.links.get(id).val;
 graph.expandSub("0", "24", { ref: "5" });
 const e = getVal("24-2");
 console.log(e);
+
+const simpleView = L.Viewport.create({
+  ...simpleSnapshot,
+  rootLink: "7",
+  expandedLinks: {}
+});
+
 // console.log(getVal("32"));
 // const f = graph.calls.get(0).val;
 // console.log("fff", f);
@@ -180,7 +189,8 @@ console.log(e);
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simple.links.get(7).display();
+const nodes = simpleView.display();
+
 console.table(
   nodes.map(n => ({
     key: n.key,

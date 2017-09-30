@@ -26,6 +26,19 @@ it("does stuff", async () => {
     valuation: types.number
   });
 
+  const View = types
+    .model({
+      selectedPeep: types.reference(Peep)
+    })
+    .views(self => ({
+      muhPeeps(peeps) {
+        return self.selectedPeep;
+      }
+    }));
+
+  const view = View.create({ selectedPeep: "0" });
+  console.log(view.muhPeeps());
+
   const createStartup = ({ peeps, valuation }) => {
     // const projectPeeps = new Map(Object.keys(peeps).map(k => [k, k]));
     const projectPeeps = {};

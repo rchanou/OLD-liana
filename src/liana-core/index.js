@@ -264,18 +264,6 @@ export const Link = types
       const nodeVals = self.nodes.map(node => node.val);
       return self.derive(nodeVals);
     },
-    get isPending() {
-      for (const node of self.nodes) {
-        const nodeType = getType(node);
-        if (nodeType === Input) {
-          return true;
-        }
-        if (nodeType === LinkRef && node.ref.isPending) {
-          return true;
-        }
-      }
-      return false;
-    },
     with(inputs) {
       const nodeVals = self.nodes.map(node => node.with(inputs));
 
@@ -286,125 +274,6 @@ export const Link = types
       }
 
       return self.derive(nodeVals);
-    }
-  }))
-  .views(self => ({
-    display(
-      state,
-      base = {
-        x: 0,
-        y: 10,
-        nextIsRef: false,
-        isLast: true,
-        root: true
-      }
-    ) {
-      // TODO: move to separate model!
-      const { linkId, nodes } = self;
-      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
-
-      let allNodes = [];
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const nodeType = getType(node);
-        const base = {
-          path: [...path, `I${i}`],
-          x,
-          y: y - 1,
-          size: 1,
-          root: false
-        };
-
-        switch (nodeType) {
-          case Op:
-            allNodes.push({
-              ...base,
-              color: opColor,
-              text: node.op
-            });
-            x++;
-            break;
-          case Val:
-            const { val } = node;
-            allNodes.push({
-              ...base,
-              color: valColor,
-              text: typeof val === "string" ? `"${val}"` : val
-            });
-            x++;
-            break;
-          case Input:
-            allNodes.push({
-              ...base,
-              color: inputColor,
-              text: node.input
-            });
-            x++;
-            break;
-          case PackageRef:
-            allNodes.push({
-              ...base,
-              color: packageColor,
-              text: node.path
-            });
-            x++;
-            break;
-          case LinkRef:
-            const isLast = i === nodes.length - 1;
-            const innerPath = [...path, node.ref.linkId];
-            const refChildNodes = node.ref.display(state, {
-              path: innerPath,
-              x,
-              y: y - 1,
-              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-              isLast
-            });
-            allNodes.push(...refChildNodes);
-
-            const { size } = refChildNodes[refChildNodes.length - 1];
-            x += size;
-            break;
-          default:
-            allNodes.push({ ...base, color: unknownColor });
-            x++;
-        }
-      }
-
-      const label = resolveIdentifier(Label, self, self.linkId);
-
-      const thisSize = nextIsRef
-        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
-        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
-
-      const thisNode = {
-        path,
-        x: base.x,
-        y,
-        size: thisSize,
-        color: pendingColor, //self.isPending ? pendingColor : valColor,
-        text: (label && label.label) || `(${self.linkId})`,
-        link: true
-      };
-      allNodes.push(thisNode);
-
-      if (root) {
-        const existingKeys = {};
-        let i = allNodes.length;
-        while (i--) {
-          const node = allNodes[i];
-          const { path } = node;
-          let j = path.length - 1;
-          let currentKey = "" + (j in path ? path[j] : "");
-          while (existingKeys[currentKey]) {
-            j--;
-            currentKey += "/" + (j in path ? path[j] : "");
-          }
-          existingKeys[currentKey] = true;
-          node.key = currentKey;
-        }
-      }
-
-      return allNodes;
     }
   }));
 
@@ -529,12 +398,141 @@ const getLinkDependents = (links, link) => {
 
 export const Viewport = types
   .model("Viewport", {
+    links: types.optional(types.map(types.union(Link, Call)), {}),
     rootLink: types.reference(Link),
-    expandedLinks: types.map(types.reference(Link))
+    expandedLinks: types.optional(types.map(types.reference(Link)), {}),
+    labels: types.optional(types.map(Label), {})
   })
   .views(self => ({
-    get display() {
-      return rootLink.display();
+    get isPending() {
+      for (const node of self.nodes) {
+        const nodeType = getType(node);
+        if (nodeType === Input) {
+          return true;
+        }
+        if (nodeType === LinkRef && node.ref.isPending) {
+          return true;
+        }
+      }
+      return false;
+    },
+    display(
+      link = self.rootLink,
+      base = {
+        x: 0,
+        y: 10,
+        nextIsRef: false,
+        isLast: true,
+        root: true
+      }
+    ) {
+      // TODO: move to separate model!
+      const { linkId, nodes } = link;
+      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
+
+      let allNodes = [];
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const nodeType = getType(node);
+        const base = {
+          path: [...path, `I${i}`],
+          x,
+          y: y - 1,
+          size: 1,
+          root: false
+        };
+
+        switch (nodeType) {
+          case Op:
+            allNodes.push({
+              ...base,
+              color: opColor,
+              text: node.op
+            });
+            x++;
+            break;
+          case Val:
+            const { val } = node;
+            allNodes.push({
+              ...base,
+              color: valColor,
+              text: typeof val === "string" ? `"${val}"` : val
+            });
+            x++;
+            break;
+          case Input:
+            allNodes.push({
+              ...base,
+              color: inputColor,
+              text: node.input
+            });
+            x++;
+            break;
+          case PackageRef:
+            allNodes.push({
+              ...base,
+              color: packageColor,
+              text: node.path
+            });
+            x++;
+            break;
+          case LinkRef:
+            console.log(node.ref);
+            const isLast = i === nodes.length - 1;
+            const innerPath = [...path, node.ref.linkId];
+            const refChildNodes = self.display(node.ref, {
+              path: innerPath,
+              x,
+              y: y - 1,
+              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
+              isLast
+            });
+            allNodes.push(...refChildNodes);
+
+            const { size } = refChildNodes[refChildNodes.length - 1];
+            x += size;
+            break;
+          default:
+            allNodes.push({ ...base, color: unknownColor });
+            x++;
+        }
+      }
+
+      const label = resolveIdentifier(Label, link, link.linkId);
+
+      const thisSize = nextIsRef
+        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
+        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
+
+      const thisNode = {
+        path,
+        x: base.x,
+        y,
+        size: thisSize,
+        color: pendingColor, //self.isPending ? pendingColor : valColor,
+        text: (label && label.label) || `(${self.linkId})`,
+        link: true
+      };
+      allNodes.push(thisNode);
+
+      if (root) {
+        const existingKeys = {};
+        let i = allNodes.length;
+        while (i--) {
+          const node = allNodes[i];
+          const { path } = node;
+          let j = path.length - 1;
+          let currentKey = "" + (j in path ? path[j] : "");
+          while (existingKeys[currentKey]) {
+            j--;
+            currentKey += "/" + (j in path ? path[j] : "");
+          }
+          existingKeys[currentKey] = true;
+          node.key = currentKey;
+        }
+      }
+
+      return allNodes;
     }
   }));
 
