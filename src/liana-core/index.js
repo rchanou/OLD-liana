@@ -295,25 +295,24 @@ export const Link = types
         x: 0,
         y: 10,
         nextIsRef: false,
-        isLast: true
-      },
-      root = true
+        isLast: true,
+        root: true
+      }
     ) {
       // TODO: move to separate model!
       const { linkId, nodes } = self;
-      let { group = linkId, x, y, nextIsRef, isLast, path = [linkId] } = base;
+      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
 
       let allNodes = [];
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         const nodeType = getType(node);
         const base = {
-          group,
           path: [...path, `I${i}`],
-          index: i,
           x,
           y: y - 1,
-          size: 1
+          size: 1,
+          root: false
         };
 
         switch (nodeType) {
@@ -351,11 +350,9 @@ export const Link = types
             x++;
             break;
           case LinkRef:
-            const innerGroup = `${group}-${i}`;
             const isLast = i === nodes.length - 1;
             const innerPath = [...path, node.ref.linkId];
             const refChildNodes = node.ref.display(state, {
-              group: innerGroup,
               path: innerPath,
               x,
               y: y - 1,
@@ -380,10 +377,7 @@ export const Link = types
         : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
 
       const thisNode = {
-        // key: self.id,
-        group,
         path,
-        index: "",
         x: base.x,
         y,
         size: thisSize,
@@ -536,12 +530,11 @@ const getLinkDependents = (links, link) => {
 export const Viewport = types
   .model("Viewport", {
     rootLink: types.reference(Link),
-    expandedNodes: types.map(types.boolean)
+    expandedLinks: types.map(types.reference(Link))
   })
   .views(self => ({
-    tree(rootLink = self.rootLink, path, currentMap = {}) {
-      const linkRefs = rootLink.nodes.filter(node => node.ref);
-      // const refPaths = linkRefs.map(getRefPath)
+    get display() {
+      return rootLink.display();
     }
   }));
 
@@ -554,33 +547,31 @@ export const Graph = types
     labels: types.optional(types.map(Label), {})
     // viewport: Viewport
   })
-  .actions(self => {
-    return {
-      expandSub(subId, baseId, ...params) {
-        const { nodes } = self.subs.get(subId);
+  .actions(self => ({
+    expandSub(subId, baseId, ...params) {
+      const { nodes } = self.subs.get(subId);
 
-        let inputCounter = 0;
-        nodes.forEach((subLink, i) => {
-          const linkNodes = subLink.map(node => {
-            const nodeType = getType(node);
-            const { val } = node;
-            switch (nodeType) {
-              case SubParam:
-                return params[val];
-              case SubLink:
-                return { ref: `${baseId}-${val}` };
-              case LinkRef:
-                const retVal = { ref: node.ref.linkId };
-                return retVal;
-              default:
-                return val;
-            }
-          });
-
-          self.links.put({ linkId: `${baseId}-${i}`, nodes: linkNodes });
+      let inputCounter = 0;
+      nodes.forEach((subLink, i) => {
+        const linkNodes = subLink.map(node => {
+          const nodeType = getType(node);
+          const { val } = node;
+          switch (nodeType) {
+            case SubParam:
+              return params[val];
+            case SubLink:
+              return { ref: `${baseId}-${val}` };
+            case LinkRef:
+              const retVal = { ref: node.ref.linkId };
+              return retVal;
+            default:
+              return val;
+          }
         });
-      }
-    };
-  });
+
+        self.links.put({ linkId: `${baseId}-${i}`, nodes: linkNodes });
+      });
+    }
+  }));
 
 const RefToLink = types.maybe(types.reference(Link));

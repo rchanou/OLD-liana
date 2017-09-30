@@ -37,9 +37,7 @@ const lineStyle = {
 };
 
 export const Tree = observer(({ nodes }) => {
-  const test = [];
-
-  const displayNodes = nodes.map(({ x, y, size, color, key, group, index, form, text, link }) => {
+  const displayNodes = nodes.map(({ x, y, size, color, key, form, text, link }) => {
     const style = {
       ...nodeStyle,
       top: y * unit,
@@ -48,11 +46,9 @@ export const Tree = observer(({ nodes }) => {
       background: color
     };
 
-    const finalKey = key || `${group}-${index}`;
-    test.push(finalKey);
     const connector = link ? (
       <div
-        key={`${finalKey}L`}
+        key={`${key}L`}
         style={{
           ...lineStyle,
           left: unit * (x + 0.5) - 3 * spacer,
@@ -63,7 +59,7 @@ export const Tree = observer(({ nodes }) => {
 
     return [
       connector,
-      <div key={finalKey} style={style}>
+      <div key={key} style={style}>
         {text}
       </div>
     ];
