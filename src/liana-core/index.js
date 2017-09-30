@@ -379,7 +379,7 @@ export const SubRef = types
 
 export const Label = types.model("Label", {
   labelId: types.identifier(types.string), // TODO: labels should have own id, not that of link!
-  label: optionalString,
+  text: optionalString,
   set: optionalString,
   targetId: optionalString
 });
@@ -472,7 +472,6 @@ export const Viewport = types
           case LinkRef:
             const isLast = i === nodes.length - 1;
             const innerPath = [...path, node.ref.linkId];
-            console.log("dat ref doe", node.ref);
             const refChildNodes = self.display(repo, node.ref, {
               path: innerPath,
               x,
@@ -491,8 +490,7 @@ export const Viewport = types
         }
       }
 
-      const label = resolveIdentifier(Label, link, link.linkId);
-
+      const label = resolveIdentifier(Label, repo, link.linkId);
       const thisSize = nextIsRef
         ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
         : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
@@ -503,7 +501,7 @@ export const Viewport = types
         y,
         size: thisSize,
         color: pendingColor, //self.isPending ? pendingColor : valColor,
-        text: (label && label.label) || `(${self.linkId})`,
+        text: (label && label.text) || `(${self.linkId})`,
         link: true
       };
       allNodes.push(thisNode);
@@ -535,7 +533,11 @@ export const Repo = types
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
     linkLabels: optionalMap(Label),
-    linkPosts: optionalMap(Post)
+    linkPosts: optionalMap(Post),
+    subLabels: optionalMap(Label),
+    subPosts: optionalMap(Post),
+    branchLabels: optionalMap(Label),
+    branchPosts: optionalMap(Post)
   })
   .actions(self => ({
     expandSub(subId, baseId, ...params) {

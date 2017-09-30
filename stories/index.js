@@ -22,15 +22,15 @@ const simpleSnapshot = {
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
-  labels: {
-    0: { labelId: "0", label: "Math" },
-    1: { labelId: "1", label: "power" },
-    2: { labelId: "2", label: "square" },
-    3: { labelId: "3", label: "5²" },
-    4: { labelId: "4", label: "12²" },
-    5: { labelId: "5", label: "5² + 12²" },
-    6: { labelId: "6", label: "√" },
-    7: { labelId: "7", label: "hypotenuse for 5 and 12" }
+  linkLabels: {
+    0: { labelId: "0", text: "Math" },
+    1: { labelId: "1", text: "power" },
+    2: { labelId: "2", text: "square" },
+    3: { labelId: "3", text: "5²" },
+    4: { labelId: "4", text: "12²" },
+    5: { labelId: "5", text: "5² + 12²" },
+    6: { labelId: "6", text: "√" },
+    7: { labelId: "7", text: "hypotenuse for 5 and 12" }
   }
 };
 
@@ -47,15 +47,15 @@ const withCalls = L.Repo.create({
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
-  labels: {
-    0: { labelId: "0", label: "Math" },
-    1: { labelId: "1", label: "power" },
-    2: { labelId: "2", label: "square" },
-    3: { labelId: "3", label: "square of 5" },
-    4: { labelId: "4", label: "square of 12" },
-    5: { labelId: "5", label: "sum of squares of 5 and 12" },
-    6: { labelId: "6", label: "square root" },
-    7: { labelId: "7", label: "hypotenuse of 5 and 12" }
+  linkLabels: {
+    0: { labelId: "0", text: "Math" },
+    1: { labelId: "1", text: "power" },
+    2: { labelId: "2", text: "square" },
+    3: { labelId: "3", text: "square of 5" },
+    4: { labelId: "4", text: "square of 12" },
+    5: { labelId: "5", text: "sum of squares of 5 and 12" },
+    6: { labelId: "6", text: "square root" },
+    7: { labelId: "7", text: "hypotenuse of 5 and 12" }
   }
 });
 
