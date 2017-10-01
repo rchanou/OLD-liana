@@ -176,6 +176,8 @@ console.log(e);
 const simpleView = L.RepoView.create({
   // ...simpleSnapshot,
   rootLink: "7",
+  selectedLink: "6",
+  selectedNode: 0,
   expandedLinks: {}
 });
 
@@ -198,6 +200,7 @@ console.table(
     key: n.key,
     path: n.path.join(","),
     text: n.text,
+    selected: n.selected,
     link: n.link
   }))
 );

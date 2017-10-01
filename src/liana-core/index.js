@@ -400,6 +400,7 @@ export const RepoView = types
   .model("RepoView", {
     rootLink: types.string,
     selectedLink: types.maybe(types.string),
+    selectedNode: types.maybe(types.number, 0),
     expandedLinks: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard")
   })
@@ -427,7 +428,7 @@ export const RepoView = types
         root: true
       }
     ) {
-      // TODO: move to separate model!
+      const { selectedLink, selectedNode } = self;
       const { linkId, nodes } = link;
       let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
 
@@ -440,7 +441,8 @@ export const RepoView = types
           x,
           y: y - 1,
           size: 1,
-          root: false
+          root: false,
+          selected: linkId == selectedLink && i !== null && i === selectedNode
         };
 
         switch (nodeType) {
