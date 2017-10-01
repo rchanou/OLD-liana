@@ -396,182 +396,192 @@ const dirDown = "DOWN";
 const dirLeft = "LEFT";
 const dirRight = "RIGHT";
 
-export const RepoView = types
-  .model("RepoView", {
-    rootLink: types.string,
-    selectedLink: types.maybe(types.string),
-    selectedNode: types.maybe(types.number, 0),
-    expandedLinks: optionalMap(types.boolean),
-    labelGroup: types.optional(types.string, "standard")
-  })
-  .views(self => ({
-    get isPending() {
-      for (const node of self.nodes) {
-        const nodeType = getType(node);
-        if (nodeType === Input) {
-          return true;
-        }
-        if (nodeType === LinkRef && node.ref.isPending) {
-          return true;
-        }
-      }
-      return false;
-    },
-    display(
-      repo,
-      link = repo.links.get(self.rootLink),
-      base = {
-        x: 0,
-        y: 10,
-        nextIsRef: false,
-        isLast: true,
-        root: true
-      }
-    ) {
-      const { selectedLink, selectedNode } = self;
-      const { linkId, nodes } = link;
-      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
-
-      let allNodes = [];
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const nodeType = getType(node);
-        const base = {
-          path: [...path, `I${i}`],
-          x,
-          y: y - 1,
-          size: 1,
-          root: false,
-          selected: linkId == selectedLink && i !== null && i === selectedNode
-        };
-
-        switch (nodeType) {
-          case Op:
-            allNodes.push({
-              ...base,
-              color: opColor,
-              text: node.op
-            });
-            x++;
-            break;
-          case Val:
-            const { val } = node;
-            allNodes.push({
-              ...base,
-              color: valColor,
-              text: typeof val === "string" ? `"${val}"` : val
-            });
-            x++;
-            break;
-          case Input:
-            allNodes.push({
-              ...base,
-              color: inputColor,
-              text: node.input
-            });
-            x++;
-            break;
-          case PackageRef:
-            allNodes.push({
-              ...base,
-              color: packageColor,
-              text: node.path
-            });
-            x++;
-            break;
-          case LinkRef:
-            const isLast = i === nodes.length - 1;
-            const innerPath = [...path, node.ref.linkId];
-            const refChildNodes = self.display(repo, node.ref, {
-              path: innerPath,
-              x,
-              y: y - 1,
-              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-              isLast
-            });
-            allNodes.push(...refChildNodes);
-
-            const { size } = refChildNodes[refChildNodes.length - 1];
-            x += size;
-            break;
-          default:
-            allNodes.push({ ...base, color: unknownColor });
-            x++;
-        }
-      }
-
-      const label = resolveIdentifier(Label, repo, link.linkId);
-      const thisSize = nextIsRef
-        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
-        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
-
-      const thisNode = {
-        path,
-        x: base.x,
-        y,
-        size: thisSize,
-        color: pendingColor, //self.isPending ? pendingColor : valColor,
-        text: (label && label.text) || `(${self.linkId})`,
-        link: true
-      };
-      allNodes.push(thisNode);
-
-      if (root) {
-        const existingKeys = {};
-        let i = allNodes.length;
-        while (i--) {
-          const node = allNodes[i];
-          const { path } = node;
-          let j = path.length - 1;
-          let currentKey = "" + (j in path ? path[j] : "");
-          while (existingKeys[currentKey]) {
-            j--;
-            currentKey += "/" + (j in path ? path[j] : "");
+export const makeRepoViewModel = repo =>
+  types
+    .model("RepoView", {
+      rootLink: types.string,
+      selectedLink: types.maybe(types.string),
+      selectedNode: types.maybe(types.number, 0),
+      expandedLinks: optionalMap(types.boolean),
+      labelGroup: types.optional(types.string, "standard")
+    })
+    .views(self => ({
+      get isPending() {
+        for (const node of self.nodes) {
+          const nodeType = getType(node);
+          if (nodeType === Input) {
+            return true;
           }
-          existingKeys[currentKey] = true;
-          node.key = currentKey;
+          if (nodeType === LinkRef && node.ref.isPending) {
+            return true;
+          }
         }
-      }
-
-      return allNodes;
-    }
-  }))
-  .actions(self => ({
-    move(dir) {},
-    up() {},
-    down() {}
-  }))
-  .actions(self => {
-    const handleKeyUp = e => {
-      const { keyCode } = e;
-      switch (keyCode) {
-        case 37: // LEFT
-          e.preventDefault();
-          self.move(-1);
-          break;
-        case 39: // RIGHT
-          e.preventDefault();
-          self.move(+1);
-          break;
-        case 38: // UP
-          e.preventDefault();
-          self.up();
-          break;
-        case 40: // DOWN
-          e.preventDefault();
-          self.down();
-      }
-    };
-
-    return {
-      afterCreate() {
-        document.addEventListener("keyup", handleKeyUp);
+        return false;
       },
-      beforeDestroy() {
-        document.removeEventListener("keyup", handleKeyUp);
+      display(
+        link = repo.links.get(self.rootLink),
+        base = {
+          x: 0,
+          y: 10,
+          nextIsRef: false,
+          isLast: true,
+          root: true
+        }
+      ) {
+        const { selectedLink, selectedNode } = self;
+        const { linkId, nodes } = link;
+        let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
+
+        let allNodes = [];
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          const nodeType = getType(node);
+          const base = {
+            path: [...path, `I${i}`],
+            x,
+            y: y - 1,
+            size: 1,
+            root: false,
+            selected: linkId == selectedLink && i !== null && i === selectedNode
+          };
+
+          switch (nodeType) {
+            case Op:
+              allNodes.push({
+                ...base,
+                color: opColor,
+                text: node.op
+              });
+              x++;
+              break;
+            case Val:
+              const { val } = node;
+              allNodes.push({
+                ...base,
+                color: valColor,
+                text: typeof val === "string" ? `"${val}"` : val
+              });
+              x++;
+              break;
+            case Input:
+              allNodes.push({
+                ...base,
+                color: inputColor,
+                text: node.input
+              });
+              x++;
+              break;
+            case PackageRef:
+              allNodes.push({
+                ...base,
+                color: packageColor,
+                text: node.path
+              });
+              x++;
+              break;
+            case LinkRef:
+              const isLast = i === nodes.length - 1;
+              const innerPath = [...path, node.ref.linkId];
+              const refChildNodes = self.display(node.ref, {
+                path: innerPath,
+                x,
+                y: y - 1,
+                nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
+                isLast
+              });
+              allNodes.push(...refChildNodes);
+
+              const { size } = refChildNodes[refChildNodes.length - 1];
+              x += size;
+              break;
+            default:
+              allNodes.push({ ...base, color: unknownColor });
+              x++;
+          }
+        }
+
+        const label = resolveIdentifier(Label, repo, link.linkId);
+        const thisSize = nextIsRef
+          ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
+          : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
+
+        const thisNode = {
+          path,
+          x: base.x,
+          y,
+          size: thisSize,
+          color: pendingColor, //self.isPending ? pendingColor : valColor,
+          text: (label && label.text) || `(${self.linkId})`,
+          link: true
+        };
+        allNodes.push(thisNode);
+
+        if (root) {
+          const existingKeys = {};
+          let i = allNodes.length;
+          while (i--) {
+            const node = allNodes[i];
+            const { path } = node;
+            let j = path.length - 1;
+            let currentKey = "" + (j in path ? path[j] : "");
+            while (existingKeys[currentKey]) {
+              j--;
+              currentKey += "/" + (j in path ? path[j] : "");
+            }
+            existingKeys[currentKey] = true;
+            node.key = currentKey;
+          }
+        }
+
+        return allNodes;
       }
-    };
-  });
+    }))
+    .actions(self => ({
+      move(dir) {
+        const selectedLinkNodes = repo.links.get(self.selectedLink).nodes;
+        let newSelectedNode = self.selectedNode + dir;
+        if (newSelectedNode < 0) {
+          newSelectedNode = selectedLinkNodes.length - 1;
+        } else if (newSelectedNode > selectedLinkNodes.length - 1) {
+          newSelectedNode = 0;
+        }
+        self.selectedNode = newSelectedNode;
+        console.log(self.selectedNode);
+      },
+      up() {},
+      down() {}
+    }))
+    .actions(self => {
+      const handleKeyUp = e => {
+        const { keyCode } = e;
+        switch (keyCode) {
+          case 37: // LEFT
+            e.preventDefault();
+            self.move(-1);
+            break;
+          case 39: // RIGHT
+            e.preventDefault();
+            self.move(+1);
+            break;
+          case 38: // UP
+            e.preventDefault();
+            self.up();
+            break;
+          case 40: // DOWN
+            e.preventDefault();
+            self.down();
+        }
+      };
+
+      return {
+        afterCreate() {
+          document.addEventListener("keyup", handleKeyUp);
+        },
+        beforeDestroy() {
+          document.removeEventListener("keyup", handleKeyUp);
+        }
+      };
+    });
 
 export const Repo = types
   .model("Repo", {

@@ -1,5 +1,6 @@
 import React from "react";
 import { autorun } from "mobx";
+import { Observer } from "mobx-react";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
@@ -173,7 +174,7 @@ graph.expandSub("0", "24", { ref: "5" });
 const e = getVal("24-2");
 console.log(e);
 
-const simpleView = L.RepoView.create({
+const simpleView = L.makeRepoViewModel(simple).create({
   // ...simpleSnapshot,
   rootLink: "7",
   selectedLink: "6",
@@ -193,7 +194,7 @@ const simpleView = L.RepoView.create({
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simpleView.display(simple);
+const nodes = simpleView.display();
 
 console.table(
   nodes.map(n => ({
@@ -224,7 +225,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <Tree nodes={nodes} />;
+    return <Observer>{() => <Tree nodes={simpleView.display()} />}</Observer>;
   }
 }
 
