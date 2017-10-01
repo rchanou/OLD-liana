@@ -537,8 +537,41 @@ export const RepoView = types
     }
   }))
   .actions(self => ({
-    move(dir) {}
-  }));
+    move(dir) {},
+    up() {},
+    down() {}
+  }))
+  .actions(self => {
+    const handleKeyUp = e => {
+      const { keyCode } = e;
+      switch (keyCode) {
+        case 37: // LEFT
+          e.preventDefault();
+          self.move(-1);
+          break;
+        case 39: // RIGHT
+          e.preventDefault();
+          self.move(+1);
+          break;
+        case 38: // UP
+          e.preventDefault();
+          self.up();
+          break;
+        case 40: // DOWN
+          e.preventDefault();
+          self.down();
+      }
+    };
+
+    return {
+      afterCreate() {
+        document.addEventListener("keyup", handleKeyUp);
+      },
+      beforeDestroy() {
+        document.removeEventListener("keyup", handleKeyUp);
+      }
+    };
+  });
 
 export const Repo = types
   .model("Repo", {
