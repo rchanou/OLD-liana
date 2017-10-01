@@ -2,6 +2,9 @@ import { types, getEnv, getRoot, getType, resolveIdentifier, process } from "mob
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
+const optionalString = types.optional(types.string, "");
+const optionalMap = type => types.optional(types.map(type), {});
+
 export const reserved = "􂳰";
 export const linkKey = "􂳰L";
 export const opKey = "􂳰O";
@@ -65,6 +68,7 @@ const opFuncs = {
     return items;
   },
   [lodash]() {
+    // TODO: remove
     return _;
   },
   ifOp(condition, trueVal, falseVal) {
@@ -264,18 +268,6 @@ export const Link = types
       const nodeVals = self.nodes.map(node => node.val);
       return self.derive(nodeVals);
     },
-    get isPending() {
-      for (const node of self.nodes) {
-        const nodeType = getType(node);
-        if (nodeType === Input) {
-          return true;
-        }
-        if (nodeType === LinkRef && node.ref.isPending) {
-          return true;
-        }
-      }
-      return false;
-    },
     with(inputs) {
       const nodeVals = self.nodes.map(node => node.with(inputs));
 
@@ -286,125 +278,6 @@ export const Link = types
       }
 
       return self.derive(nodeVals);
-    }
-  }))
-  .views(self => ({
-    display(
-      state,
-      base = {
-        x: 0,
-        y: 10,
-        nextIsRef: false,
-        isLast: true,
-        root: true
-      }
-    ) {
-      // TODO: move to separate model!
-      const { linkId, nodes } = self;
-      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
-
-      let allNodes = [];
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const nodeType = getType(node);
-        const base = {
-          path: [...path, `I${i}`],
-          x,
-          y: y - 1,
-          size: 1,
-          root: false
-        };
-
-        switch (nodeType) {
-          case Op:
-            allNodes.push({
-              ...base,
-              color: opColor,
-              text: node.op
-            });
-            x++;
-            break;
-          case Val:
-            const { val } = node;
-            allNodes.push({
-              ...base,
-              color: valColor,
-              text: typeof val === "string" ? `"${val}"` : val
-            });
-            x++;
-            break;
-          case Input:
-            allNodes.push({
-              ...base,
-              color: inputColor,
-              text: node.input
-            });
-            x++;
-            break;
-          case PackageRef:
-            allNodes.push({
-              ...base,
-              color: packageColor,
-              text: node.path
-            });
-            x++;
-            break;
-          case LinkRef:
-            const isLast = i === nodes.length - 1;
-            const innerPath = [...path, node.ref.linkId];
-            const refChildNodes = node.ref.display(state, {
-              path: innerPath,
-              x,
-              y: y - 1,
-              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-              isLast
-            });
-            allNodes.push(...refChildNodes);
-
-            const { size } = refChildNodes[refChildNodes.length - 1];
-            x += size;
-            break;
-          default:
-            allNodes.push({ ...base, color: unknownColor });
-            x++;
-        }
-      }
-
-      const label = resolveIdentifier(Label, self, self.linkId);
-
-      const thisSize = nextIsRef
-        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
-        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
-
-      const thisNode = {
-        path,
-        x: base.x,
-        y,
-        size: thisSize,
-        color: pendingColor, //self.isPending ? pendingColor : valColor,
-        text: (label && label.label) || `(${self.linkId})`,
-        link: true
-      };
-      allNodes.push(thisNode);
-
-      if (root) {
-        const existingKeys = {};
-        let i = allNodes.length;
-        while (i--) {
-          const node = allNodes[i];
-          const { path } = node;
-          let j = path.length - 1;
-          let currentKey = "" + (j in path ? path[j] : "");
-          while (existingKeys[currentKey]) {
-            j--;
-            currentKey += "/" + (j in path ? path[j] : "");
-          }
-          existingKeys[currentKey] = true;
-          node.key = currentKey;
-        }
-      }
-
-      return allNodes;
     }
   }));
 
@@ -425,7 +298,7 @@ export const Call = types
   .model("Call", {
     callId: types.identifier(types.string),
     link: types.reference(Link),
-    inputs: types.optional(types.map(Node), {})
+    inputs: optionalMap(Node)
   })
   .views(self => ({
     get val() {
@@ -505,47 +378,179 @@ export const SubRef = types
   }));
 
 export const Label = types.model("Label", {
-  id: types.identifier(types.string), // TODO: labels should have own id, not that of link!
-  label: types.string
-  // linkRef: types.reference(Link) // TODO: use this for link id
+  labelId: types.identifier(types.string), // TODO: labels should have own id, not that of link!
+  text: optionalString,
+  targetId: optionalString,
+  groupId: optionalString,
+  locale: optionalString
 });
 
-export const Post = types.model("Post", {
-  id: types.identifier(types.string),
-  linkRef: types.reference(Link)
+export const Comment = types.model("Post", {
+  postId: types.identifier(types.string),
+  text: optionalString,
+  targetId: optionalString
 });
 
-const getRefPaths = refs => {};
+const dirUp = "UP";
+const dirDown = "DOWN";
+const dirLeft = "LEFT";
+const dirRight = "RIGHT";
 
-const getLinkDependents = (links, link) => {
-  const dependents = new Map();
-  links.forEach(linkToCheck => {
-    if (linkToCheck.node.some(node => node.ref === linkToCheck)) {
-      dependents.set(linkToCheck.linkId, true);
-    }
-  });
-  return dependents;
-};
-
-export const Viewport = types
-  .model("Viewport", {
-    rootLink: types.reference(Link),
-    expandedLinks: types.map(types.reference(Link))
+export const RepoView = types
+  .model("RepoView", {
+    rootLink: types.string,
+    selectedLink: types.maybe(types.string),
+    selectedNode: types.maybe(types.number, 0),
+    expandedLinks: optionalMap(types.boolean),
+    labelGroup: types.optional(types.string, "standard")
   })
   .views(self => ({
-    get display() {
-      return rootLink.display();
+    get isPending() {
+      for (const node of self.nodes) {
+        const nodeType = getType(node);
+        if (nodeType === Input) {
+          return true;
+        }
+        if (nodeType === LinkRef && node.ref.isPending) {
+          return true;
+        }
+      }
+      return false;
+    },
+    display(
+      repo,
+      link = repo.links.get(self.rootLink),
+      base = {
+        x: 0,
+        y: 10,
+        nextIsRef: false,
+        isLast: true,
+        root: true
+      }
+    ) {
+      const { selectedLink, selectedNode } = self;
+      const { linkId, nodes } = link;
+      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
+
+      let allNodes = [];
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const nodeType = getType(node);
+        const base = {
+          path: [...path, `I${i}`],
+          x,
+          y: y - 1,
+          size: 1,
+          root: false,
+          selected: linkId == selectedLink && i !== null && i === selectedNode
+        };
+
+        switch (nodeType) {
+          case Op:
+            allNodes.push({
+              ...base,
+              color: opColor,
+              text: node.op
+            });
+            x++;
+            break;
+          case Val:
+            const { val } = node;
+            allNodes.push({
+              ...base,
+              color: valColor,
+              text: typeof val === "string" ? `"${val}"` : val
+            });
+            x++;
+            break;
+          case Input:
+            allNodes.push({
+              ...base,
+              color: inputColor,
+              text: node.input
+            });
+            x++;
+            break;
+          case PackageRef:
+            allNodes.push({
+              ...base,
+              color: packageColor,
+              text: node.path
+            });
+            x++;
+            break;
+          case LinkRef:
+            const isLast = i === nodes.length - 1;
+            const innerPath = [...path, node.ref.linkId];
+            const refChildNodes = self.display(repo, node.ref, {
+              path: innerPath,
+              x,
+              y: y - 1,
+              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
+              isLast
+            });
+            allNodes.push(...refChildNodes);
+
+            const { size } = refChildNodes[refChildNodes.length - 1];
+            x += size;
+            break;
+          default:
+            allNodes.push({ ...base, color: unknownColor });
+            x++;
+        }
+      }
+
+      const label = resolveIdentifier(Label, repo, link.linkId);
+      const thisSize = nextIsRef
+        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
+        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
+
+      const thisNode = {
+        path,
+        x: base.x,
+        y,
+        size: thisSize,
+        color: pendingColor, //self.isPending ? pendingColor : valColor,
+        text: (label && label.text) || `(${self.linkId})`,
+        link: true
+      };
+      allNodes.push(thisNode);
+
+      if (root) {
+        const existingKeys = {};
+        let i = allNodes.length;
+        while (i--) {
+          const node = allNodes[i];
+          const { path } = node;
+          let j = path.length - 1;
+          let currentKey = "" + (j in path ? path[j] : "");
+          while (existingKeys[currentKey]) {
+            j--;
+            currentKey += "/" + (j in path ? path[j] : "");
+          }
+          existingKeys[currentKey] = true;
+          node.key = currentKey;
+        }
+      }
+
+      return allNodes;
     }
+  }))
+  .actions(self => ({
+    move(dir) {}
   }));
 
-export const Graph = types
-  .model("Graph", {
-    packages: types.optional(types.map(Package), {}),
-    links: types.optional(types.map(types.union(Link, Call)), {}),
-    calls: types.optional(types.map(Call), {}),
-    subs: types.optional(types.map(Sub), {}),
-    labels: types.optional(types.map(Label), {})
-    // viewport: Viewport
+export const Repo = types
+  .model("Repo", {
+    packages: optionalMap(Package),
+    links: optionalMap(types.union(Link, Call)),
+    subs: optionalMap(Sub),
+    linkLabelSets: optionalMap(optionalMap(Label)),
+    linkComments: optionalMap(Comment),
+    subLabels: optionalMap(Label),
+    subComments: optionalMap(Comment),
+    branchLabels: optionalMap(Label),
+    branchComments: optionalMap(Comment)
   })
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
@@ -573,5 +578,3 @@ export const Graph = types
       });
     }
   }));
-
-const RefToLink = types.maybe(types.reference(Link));

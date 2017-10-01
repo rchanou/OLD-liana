@@ -37,13 +37,14 @@ const lineStyle = {
 };
 
 export const Tree = observer(({ nodes }) => {
-  const displayNodes = nodes.map(({ x, y, size, color, key, form, text, link }) => {
+  const displayNodes = nodes.map(({ x, y, size, color, key, form, text, link, selected }) => {
     const style = {
       ...nodeStyle,
       top: y * unit,
       left: x * unit,
       width: size * unit + 0.5 * spacer,
-      background: color
+      background: color,
+      ...(selected ? { borderWidth: 3, borderColor: "yellow" } : {})
     };
 
     const connector = link ? (

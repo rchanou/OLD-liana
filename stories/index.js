@@ -11,7 +11,7 @@ import { Tree } from "../src/liana-explorer";
 
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
-const simple = L.Graph.create({
+const simpleSnapshot = {
   links: {
     0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
@@ -22,19 +22,23 @@ const simple = L.Graph.create({
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
-  labels: {
-    0: { id: "0", label: "Math" },
-    1: { id: "1", label: "power" },
-    2: { id: "2", label: "square" },
-    3: { id: "3", label: "5²" },
-    4: { id: "4", label: "12²" },
-    5: { id: "5", label: "5² + 12²" },
-    6: { id: "6", label: "√" },
-    7: { id: "7", label: "hypotenuse for 5 and 12" }
+  linkLabelSets: {
+    standard: {
+      0: { labelId: "0", targetId: "0", groupId: "standard", text: "Math" },
+      1: { labelId: "1", targetId: "1", groupId: "standard", text: "power" },
+      2: { labelId: "2", targetId: "2", groupId: "standard", text: "square" },
+      3: { labelId: "3", targetId: "3", groupId: "standard", text: "5²" },
+      4: { labelId: "4", targetId: "4", groupId: "standard", text: "12²" },
+      5: { labelId: "5", targetId: "5", groupId: "standard", text: "5² + 12²" },
+      6: { labelId: "6", targetId: "6", groupId: "standard", text: "√" },
+      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" }
+    }
   }
-});
+};
 
-const withCalls = L.Graph.create({
+const simple = L.Repo.create(simpleSnapshot);
+
+const withCalls = L.Repo.create({
   links: {
     0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
@@ -45,19 +49,21 @@ const withCalls = L.Graph.create({
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
-  labels: {
-    0: { id: "0", label: "Math" },
-    1: { id: "1", label: "power" },
-    2: { id: "2", label: "square" },
-    3: { id: "3", label: "square of 5" },
-    4: { id: "4", label: "square of 12" },
-    5: { id: "5", label: "sum of squares of 5 and 12" },
-    6: { id: "6", label: "square root" },
-    7: { id: "7", label: "hypotenuse of 5 and 12" }
+  linkLabelSets: {
+    standard: {
+      0: { labelId: "0", text: "Math" },
+      1: { labelId: "1", text: "power" },
+      2: { labelId: "2", text: "square" },
+      3: { labelId: "3", text: "square of 5" },
+      4: { labelId: "4", text: "square of 12" },
+      5: { labelId: "5", text: "sum of squares of 5 and 12" },
+      6: { labelId: "6", text: "square root" },
+      7: { labelId: "7", text: "hypotenuse of 5 and 12" }
+    }
   }
 });
 
-const graph = L.Graph.create(
+const graph = L.Repo.create(
   {
     packages: {
       0: { id: 0, path: testDep }
@@ -129,15 +135,13 @@ const graph = L.Graph.create(
         nodes: [{ op: "?" }, { ref: "29" }, { val: 0 }, { ref: "28" }]
       },
       31: { linkId: "31", nodes: [{ op: "+" }, { input: "a" }, { val: 13 }] },
-      32: { linkId: "32", nodes: [{ val: 14 }] }
-    },
-    calls: {
-      0: {
-        callId: "0",
+      32: { linkId: "32", nodes: [{ val: 14 }] },
+      33: {
+        callId: "33",
         link: "31",
         inputs: { a: { val: 14 } }
       },
-      1: { callId: "1", link: "31", inputs: {} }
+      34: { callId: "34", link: "31", inputs: {} }
     },
     subs: {
       0: {
@@ -168,6 +172,15 @@ const getVal = id => graph.links.get(id).val;
 graph.expandSub("0", "24", { ref: "5" });
 const e = getVal("24-2");
 console.log(e);
+
+const simpleView = L.RepoView.create({
+  // ...simpleSnapshot,
+  rootLink: "7",
+  selectedLink: "6",
+  selectedNode: 0,
+  expandedLinks: {}
+});
+
 // console.log(getVal("32"));
 // const f = graph.calls.get(0).val;
 // console.log("fff", f);
@@ -180,12 +193,14 @@ console.log(e);
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simple.links.get(7).display();
+const nodes = simpleView.display(simple);
+
 console.table(
   nodes.map(n => ({
     key: n.key,
     path: n.path.join(","),
     text: n.text,
+    selected: n.selected,
     link: n.link
   }))
 );
