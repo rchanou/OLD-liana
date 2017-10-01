@@ -380,20 +380,28 @@ export const SubRef = types
 export const Label = types.model("Label", {
   labelId: types.identifier(types.string), // TODO: labels should have own id, not that of link!
   text: optionalString,
-  set: optionalString,
-  targetId: optionalString
+  targetId: optionalString,
+  groupId: optionalString,
+  locale: optionalString
 });
 
-export const Post = types.model("Post", {
+export const Comment = types.model("Post", {
   postId: types.identifier(types.string),
   text: optionalString,
   targetId: optionalString
 });
 
-export const Viewport = types
-  .model("Viewport", {
+const dirUp = "UP";
+const dirDown = "DOWN";
+const dirLeft = "LEFT";
+const dirRight = "RIGHT";
+
+export const RepoView = types
+  .model("RepoView", {
     rootLink: types.string,
-    expandedLinks: optionalMap(types.boolean)
+    selectedLink: types.maybe(types.string),
+    expandedLinks: optionalMap(types.boolean),
+    labelGroup: types.optional(types.string, "standard")
   })
   .views(self => ({
     get isPending() {
@@ -525,6 +533,9 @@ export const Viewport = types
 
       return allNodes;
     }
+  }))
+  .actions(self => ({
+    move(dir) {}
   }));
 
 export const Repo = types
@@ -532,12 +543,12 @@ export const Repo = types
     packages: optionalMap(Package),
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
-    linkLabels: optionalMap(Label),
-    linkPosts: optionalMap(Post),
+    linkLabelSets: optionalMap(optionalMap(Label)),
+    linkComments: optionalMap(Comment),
     subLabels: optionalMap(Label),
-    subPosts: optionalMap(Post),
+    subComments: optionalMap(Comment),
     branchLabels: optionalMap(Label),
-    branchPosts: optionalMap(Post)
+    branchComments: optionalMap(Comment)
   })
   .actions(self => ({
     expandSub(subId, baseId, ...params) {

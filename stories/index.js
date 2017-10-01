@@ -22,15 +22,17 @@ const simpleSnapshot = {
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
-  linkLabels: {
-    0: { labelId: "0", text: "Math" },
-    1: { labelId: "1", text: "power" },
-    2: { labelId: "2", text: "square" },
-    3: { labelId: "3", text: "5²" },
-    4: { labelId: "4", text: "12²" },
-    5: { labelId: "5", text: "5² + 12²" },
-    6: { labelId: "6", text: "√" },
-    7: { labelId: "7", text: "hypotenuse for 5 and 12" }
+  linkLabelSets: {
+    standard: {
+      0: { labelId: "0", targetId: "0", groupId: "standard", text: "Math" },
+      1: { labelId: "1", targetId: "1", groupId: "standard", text: "power" },
+      2: { labelId: "2", targetId: "2", groupId: "standard", text: "square" },
+      3: { labelId: "3", targetId: "3", groupId: "standard", text: "5²" },
+      4: { labelId: "4", targetId: "4", groupId: "standard", text: "12²" },
+      5: { labelId: "5", targetId: "5", groupId: "standard", text: "5² + 12²" },
+      6: { labelId: "6", targetId: "6", groupId: "standard", text: "√" },
+      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" }
+    }
   }
 };
 
@@ -47,15 +49,17 @@ const withCalls = L.Repo.create({
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
   },
-  linkLabels: {
-    0: { labelId: "0", text: "Math" },
-    1: { labelId: "1", text: "power" },
-    2: { labelId: "2", text: "square" },
-    3: { labelId: "3", text: "square of 5" },
-    4: { labelId: "4", text: "square of 12" },
-    5: { labelId: "5", text: "sum of squares of 5 and 12" },
-    6: { labelId: "6", text: "square root" },
-    7: { labelId: "7", text: "hypotenuse of 5 and 12" }
+  linkLabelSets: {
+    standard: {
+      0: { labelId: "0", text: "Math" },
+      1: { labelId: "1", text: "power" },
+      2: { labelId: "2", text: "square" },
+      3: { labelId: "3", text: "square of 5" },
+      4: { labelId: "4", text: "square of 12" },
+      5: { labelId: "5", text: "sum of squares of 5 and 12" },
+      6: { labelId: "6", text: "square root" },
+      7: { labelId: "7", text: "hypotenuse of 5 and 12" }
+    }
   }
 });
 
@@ -169,7 +173,7 @@ graph.expandSub("0", "24", { ref: "5" });
 const e = getVal("24-2");
 console.log(e);
 
-const simpleView = L.Viewport.create({
+const simpleView = L.RepoView.create({
   // ...simpleSnapshot,
   rootLink: "7",
   expandedLinks: {}
