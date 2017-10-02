@@ -403,7 +403,8 @@ export const makeRepoViewModel = repo =>
       selectedLink: types.maybe(types.string),
       selectedNode: types.maybe(types.number, 0),
       expandedLinks: optionalMap(types.boolean),
-      labelGroup: types.optional(types.string, "standard")
+      labelGroup: types.optional(types.string, "standard"),
+      selectedPath: types.optional(types.array(types.union(types.string, types.number)), [])
     })
     .views(self => ({
       get isPending() {
