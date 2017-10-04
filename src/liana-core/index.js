@@ -438,12 +438,12 @@ export const makeRepoViewModel = repo =>
           const node = nodes[i];
           const nodeType = getType(node);
           const base = {
-            path: [...path, `I${i}`],
+            path: [...path, i],
             x,
             y: y - 1,
             size: 1,
             root: false,
-            selected: linkId == selectedLink && i !== null && i === selectedNode
+            selected: linkId == selectedLink && selectedNode !== null && i === selectedNode
           };
 
           switch (nodeType) {
@@ -513,7 +513,8 @@ export const makeRepoViewModel = repo =>
           size: thisSize,
           color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.text) || `(${self.linkId})`,
-          link: true
+          link: true,
+          selected: linkId == selectedLink && selectedNode === null
         };
         allNodes.push(thisNode);
 
@@ -524,7 +525,11 @@ export const makeRepoViewModel = repo =>
             const node = allNodes[i];
             const { path } = node;
             let j = path.length - 1;
-            let currentKey = "" + (j in path ? path[j] : "");
+            let currentKey = "" + (j in path ? (node.link ? path[j] : `I${path[j]}`) : "");
+            if (!node.link) {
+              j--;
+              currentKey += "/" + (j in path ? path[j] : "");
+            }
             while (existingKeys[currentKey]) {
               j--;
               currentKey += "/" + (j in path ? path[j] : "");
@@ -547,7 +552,6 @@ export const makeRepoViewModel = repo =>
           newSelectedNode = 0;
         }
         self.selectedNode = newSelectedNode;
-        console.log(self.selectedNode);
       },
       up() {},
       down() {}
