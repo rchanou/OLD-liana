@@ -180,7 +180,7 @@ const simpleView = L.makeRepoViewModel(simple).create({
   selectedLink: "6",
   selectedNode: 0,
   expandedLinks: {},
-  selectedPath: ["7", "6"],
+  selectedPath: ["7"],
   selectedIndex: 0
 });
 
