@@ -400,8 +400,6 @@ export const makeRepoViewModel = repo =>
   types
     .model("RepoView", {
       rootLink: types.string,
-      selectedLink: types.maybe(types.string),
-      selectedNode: types.maybe(types.number, 0),
       expandedLinks: optionalMap(types.boolean),
       labelGroup: types.optional(types.string, "standard"),
       selectedPath: types.optional(types.array(types.union(types.string, types.number)), []),
@@ -459,7 +457,7 @@ export const makeRepoViewModel = repo =>
           siblingCount: 1
         }
       ) {
-        const { selectedLink, selectedNode, selectedPath, selectedIndex } = self;
+        const { selectedPath, selectedIndex } = self;
         const { linkId, nodes } = link;
         let { x, y, nextIsRef, isLast, path = [linkId], linkPath = [linkId], root, selected, siblingCount } = base;
 
@@ -585,7 +583,6 @@ export const makeRepoViewModel = repo =>
     }))
     .actions(self => ({
       move(dir) {
-        // const selectedLinkNodes = repo.links.get(self.selectedLink).nodes;
         const { siblings } = self.selectedBox;
         let newSelectedIndex = self.selectedIndex + dir;
         if (newSelectedIndex < 0) {
