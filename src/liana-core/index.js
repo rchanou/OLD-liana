@@ -404,7 +404,8 @@ export const makeRepoViewModel = repo =>
       selectedNode: types.maybe(types.number, 0),
       expandedLinks: optionalMap(types.boolean),
       labelGroup: types.optional(types.string, "standard"),
-      selectedPath: types.optional(types.array(types.union(types.string, types.number)), [])
+      selectedPath: types.optional(types.array(types.union(types.string, types.number)), []),
+      selectedIndex: types.maybe(types.number, 0)
     })
     .views(self => ({
       get isPending() {
@@ -429,9 +430,11 @@ export const makeRepoViewModel = repo =>
           root: true
         }
       ) {
-        const { selectedLink, selectedNode } = self;
+        const { selectedLink, selectedNode, selectedPath, selectedIndex } = self;
         const { linkId, nodes } = link;
         let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
+
+        const sameAsSelectedPath = selectedPath.length === path.length && selectedPath.every((x, j) => x === path[j]);
 
         let allNodes = [];
         for (let i = 0; i < nodes.length; i++) {
@@ -443,7 +446,7 @@ export const makeRepoViewModel = repo =>
             y: y - 1,
             size: 1,
             root: false,
-            selected: linkId == selectedLink && selectedNode !== null && i === selectedNode
+            selected: sameAsSelectedPath && selectedIndex === i
           };
 
           switch (nodeType) {
@@ -514,7 +517,7 @@ export const makeRepoViewModel = repo =>
           color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.text) || `(${self.linkId})`,
           link: true,
-          selected: linkId == selectedLink && selectedNode === null
+          selected: sameAsSelectedPath && selectedIndex === null
         };
         allNodes.push(thisNode);
 
