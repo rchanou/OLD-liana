@@ -427,12 +427,13 @@ export const makeRepoViewModel = repo =>
           y: 10,
           nextIsRef: false,
           isLast: true,
-          root: true
+          root: true,
+          selected: false
         }
       ) {
         const { selectedLink, selectedNode, selectedPath, selectedIndex } = self;
         const { linkId, nodes } = link;
-        let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
+        let { x, y, nextIsRef, isLast, path = [linkId], root, selected } = base;
 
         const sameAsSelectedPath = selectedPath.length === path.length && selectedPath.every((x, j) => x === path[j]);
 
@@ -491,7 +492,8 @@ export const makeRepoViewModel = repo =>
                 x,
                 y: y - 1,
                 nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-                isLast
+                isLast,
+                selected: sameAsSelectedPath && selectedIndex === i
               });
               allNodes.push(...refChildNodes);
 
@@ -517,7 +519,7 @@ export const makeRepoViewModel = repo =>
           color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.text) || `(${self.linkId})`,
           link: true,
-          selected: sameAsSelectedPath && selectedIndex === null
+          selected: selected || (sameAsSelectedPath && selectedIndex === null)
         };
         allNodes.push(thisNode);
 
@@ -548,15 +550,18 @@ export const makeRepoViewModel = repo =>
     .actions(self => ({
       move(dir) {
         const selectedLinkNodes = repo.links.get(self.selectedLink).nodes;
-        let newSelectedNode = self.selectedNode + dir;
-        if (newSelectedNode < 0) {
-          newSelectedNode = selectedLinkNodes.length - 1;
-        } else if (newSelectedNode > selectedLinkNodes.length - 1) {
-          newSelectedNode = 0;
+        let newSelectedIndex = self.selectedIndex + dir;
+        if (newSelectedIndex < 0) {
+          newSelectedIndex = selectedLinkNodes.length - 1;
+        } else if (newSelectedIndex > selectedLinkNodes.length - 1) {
+          newSelectedIndex = 0;
         }
-        self.selectedNode = newSelectedNode;
+        self.selectedIndex = newSelectedIndex;
       },
-      up() {},
+      up() {
+        const { selectedPath } = self;
+        // if ()
+      },
       down() {}
     }))
     .actions(self => {
