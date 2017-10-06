@@ -428,7 +428,7 @@ export const makeRepoViewModel = repo =>
         return false;
       },
       get selectedBox() {
-        const { selectedPath, selectedIndex, display } = self;
+        const { selectedPath, selectedIndex, boxes } = self;
 
         if (selectedIndex === null) return true;
 
@@ -438,12 +438,21 @@ export const makeRepoViewModel = repo =>
           return false;
         }
 
-        return display().find(
+        return boxes().find(
           box =>
             box.path.length === selectedPathLength + 1 &&
             selectedPath.every((x, i) => x === box.path[i]) &&
             box.path[selectedPathLength] === selectedIndex
         );
+      },
+      get isLinkSelected() {
+        const { selectedBox } = self;
+
+        if (!selectedBox) {
+          return false;
+        }
+
+        return selectedBox.category === Link;
       },
       boxes(link, opts = {}) {
         const { links } = repo;
@@ -498,7 +507,7 @@ export const makeRepoViewModel = repo =>
                 isLast,
                 selected: sameAsSelectedPath && selectedIndex === i,
                 siblingCount: siblings,
-                open: openLinks.get(linkPath.join("/"))
+                open: openLinks.has(linkPath.join("/"))
               });
               allBoxes.push(...refChildNodes);
 
@@ -551,156 +560,13 @@ export const makeRepoViewModel = repo =>
 
         const thisNode = {
           path,
+          upPath: linkPath,
           x,
           y,
           size: thisSize,
           color: pendingColor, //self.isPending ? pendingColor : valColor,
           text: (label && label.text) || `(${self.linkId})`,
-          link: true,
-          selected: selected || (sameAsSelectedPath && selectedIndex === null),
-          siblings: siblingCount
-        };
-        allBoxes.push(thisNode);
-
-        if (root) {
-          const existingKeys = {};
-          let i = allBoxes.length;
-          while (i--) {
-            const box = allBoxes[i];
-            const { path } = box;
-            let j = path.length - 1;
-            let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
-            if (!box.link) {
-              j--;
-              currentKey += "/" + (j in path ? path[j] : "");
-            }
-            while (existingKeys[currentKey]) {
-              j--;
-              currentKey += "/" + (j in path ? path[j] : "");
-            }
-            existingKeys[currentKey] = true;
-            box.key = currentKey;
-          }
-        }
-
-        return allBoxes;
-      },
-      get isLinkSelected() {
-        const { selectedBox } = self;
-
-        if (!selectedBox) {
-          return false;
-        }
-
-        return selectedBox.link;
-      },
-      display(
-        link = repo.links.get(self.rootLink),
-        base = {
-          x: 0,
-          y: 10,
-          nextIsRef: false,
-          isLast: true,
-          root: true,
-          selected: false,
-          siblingCount: 1
-        }
-      ) {
-        const { selectedPath, selectedIndex } = self;
-        const { linkId, nodes } = link;
-        let { x, y, nextIsRef, isLast, path = [linkId], linkPath = [linkId], root, selected, siblingCount } = base;
-
-        const sameAsSelectedPath =
-          selectedPath.length === linkPath.length && selectedPath.every((x, j) => x === linkPath[j]);
-
-        let allBoxes = [];
-        const siblings = nodes.length;
-        for (let i = 0; i < siblings; i++) {
-          const node = nodes[i];
-          const nodeType = getType(node);
-          const defaultBox = {
-            path: [...linkPath, i],
-            x,
-            y: y - 1,
-            size: 1,
-            root: false,
-            selected: sameAsSelectedPath && selectedIndex === i,
-            link: false,
-            siblings
-          };
-
-          switch (nodeType) {
-            case Op:
-              allBoxes.push({
-                ...defaultBox,
-                color: opColor,
-                text: node.op
-              });
-              x++;
-              break;
-            case Val:
-              const { val } = node;
-              allBoxes.push({
-                ...defaultBox,
-                color: valColor,
-                text: typeof val === "string" ? `"${val}"` : val
-              });
-              x++;
-              break;
-            case Input:
-              allBoxes.push({
-                ...defaultBox,
-                color: inputColor,
-                text: node.input
-              });
-              x++;
-              break;
-            case PackageRef:
-              allBoxes.push({
-                ...defaultBox,
-                color: packageColor,
-                text: node.path
-              });
-              x++;
-              break;
-            case LinkRef:
-              const isLast = i === nodes.length - 1;
-              const innerPath = [...linkPath, node.ref.linkId];
-              const refChildNodes = self.display(node.ref, {
-                // path: innerPath,
-                path: [...linkPath, i],
-                linkPath: innerPath,
-                x,
-                y: y - 1,
-                nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-                isLast,
-                selected: sameAsSelectedPath && selectedIndex === i,
-                siblingCount: siblings
-              });
-              allBoxes.push(...refChildNodes);
-
-              const { size } = refChildNodes[refChildNodes.length - 1];
-              x += size;
-              break;
-            default:
-              allBoxes.push({ ...defaultBox, color: unknownColor });
-              x++;
-          }
-        }
-
-        const label = resolveIdentifier(Label, repo, link.linkId);
-        const thisSize = nextIsRef
-          ? Math.max(...allBoxes.map(n => n.x)) - base.x + 2
-          : isLast ? Math.max(...allBoxes.map(n => n.x + n.size)) - base.x : 1;
-
-        const thisNode = {
-          path,
-          x: base.x,
-          y,
-          size: thisSize,
-          color: pendingColor, //self.isPending ? pendingColor : valColor,
-          text: (label && label.text) || `(${self.linkId})`,
-          link: true,
+          category: Link,
           selected: selected || (sameAsSelectedPath && selectedIndex === null),
           siblings: siblingCount
         };
@@ -742,11 +608,12 @@ export const makeRepoViewModel = repo =>
         self.selectedIndex = newSelectedIndex;
       },
       up() {
-        const { selectedPath, isLinkSelected } = self;
-        if (isLinkSelected) {
+        const { selectedBox } = self;
+        const { upPath } = selectedBox;
+        if (upPath) {
+          self.selectedPath = upPath;
+          self.selectedIndex = 0;
         }
-        console.log(isLinkSelected);
-        // if ()
       },
       down() {}
     }))

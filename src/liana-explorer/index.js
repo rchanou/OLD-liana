@@ -1,6 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { Link } from "../liana-core";
+
 const containerStyle = {
   position: "absolute",
   height: "100vh",
@@ -37,7 +39,7 @@ const lineStyle = {
 };
 
 export const Tree = observer(({ nodes }) => {
-  const displayNodes = nodes.map(({ x, y, size, color, key, form, text, link, selected }) => {
+  const displayNodes = nodes.map(({ x, y, size, color, key, form, text, category, selected }) => {
     const style = {
       ...nodeStyle,
       top: `calc(100vh - ${y * unit}px)`,
@@ -47,16 +49,17 @@ export const Tree = observer(({ nodes }) => {
       ...(selected ? { borderWidth: 3, borderColor: "yellow" } : {})
     };
 
-    const connector = link ? (
-      <div
-        key={`${key}L`}
-        style={{
-          ...lineStyle,
-          left: unit * (x + 0.5) - 3 * spacer,
-          top: `calc(100vh - ${y * unit + 3 * spacer}px)`
-        }}
-      />
-    ) : null;
+    const connector =
+      category === Link ? (
+        <div
+          key={`${key}L`}
+          style={{
+            ...lineStyle,
+            left: unit * (x + 0.5) - 3 * spacer,
+            top: `calc(100vh - ${y * unit + 3 * spacer}px)`
+          }}
+        />
+      ) : null;
 
     return [
       connector,

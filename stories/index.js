@@ -207,8 +207,8 @@ console.table(
     size: n.size,
     path: n.path.join(","),
     text: n.text,
-    selected: n.selected,
-    link: n.category === L.LinkRef
+    selected: n.selected ? "X" : null,
+    link: n.category === L.Link ? n.upPath.join(",") : null
   }))
 );
 
