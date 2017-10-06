@@ -177,7 +177,10 @@ console.log(e);
 const simpleView = L.makeRepoViewModel(simple).create({
   // ...simpleSnapshot,
   rootLink: "7",
-  expandedLinks: {},
+  openBoxes: {
+    7: true,
+    "7/6": true
+  },
   selectedPath: ["7"],
   selectedIndex: 0
 });

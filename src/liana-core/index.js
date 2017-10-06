@@ -396,13 +396,22 @@ const dirDown = "DOWN";
 const dirLeft = "LEFT";
 const dirRight = "RIGHT";
 
+const Path = types.array(types.union(types.string, types.number));
+
+const Box = types.model("Box", {
+  x: types.number,
+  y: types.number,
+  path: Path,
+  dependents: types.map(Path)
+});
+
 export const makeRepoViewModel = repo =>
   types
     .model("RepoView", {
       rootLink: types.string,
-      expandedLinks: optionalMap(types.boolean),
+      openLinks: optionalMap(types.boolean),
       labelGroup: types.optional(types.string, "standard"),
-      selectedPath: types.optional(types.array(types.union(types.string, types.number)), []),
+      selectedPath: types.optional(Path, []),
       selectedIndex: types.maybe(types.number, 0)
     })
     .views(self => ({
@@ -436,6 +445,143 @@ export const makeRepoViewModel = repo =>
             box.path[selectedPathLength] === selectedIndex
         );
       },
+      boxes(link = repo.links.get(self.rootLink), opts) {
+        const { links } = repo;
+        const { rootLink, openLinks } = self;
+        const { linkId, nodes } = link;
+        let {
+          x = 0,
+          y = 0,
+          nextIsRef = false,
+          isLast = true,
+          path = [linkId],
+          linkPath = [linkId],
+          root = true,
+          selected = false,
+          siblingCount = 1,
+          open = true
+        } = opts;
+
+        let allBoxes = [];
+
+        const sameAsSelectedPath =
+          selectedPath.length === linkPath.length && selectedPath.every((x, j) => x === linkPath[j]);
+
+        const label = resolveIdentifier(Label, repo, link.linkId);
+        const thisSize = nextIsRef
+          ? Math.max(...allBoxes.map(n => n.x)) - base.x + 2
+          : isLast ? Math.max(...allBoxes.map(n => n.x + n.size)) - base.x : 1;
+
+        const thisNode = {
+          path,
+          x: base.x,
+          y,
+          size: thisSize,
+          color: pendingColor, //self.isPending ? pendingColor : valColor,
+          text: (label && label.text) || `(${self.linkId})`,
+          link: true,
+          selected: selected || (sameAsSelectedPath && selectedIndex === null),
+          siblings: siblingCount
+        };
+        allBoxes.push(thisNode);
+
+        const siblings = nodes.length;
+        for (let i = 0; i < siblings; i++) {
+          const node = nodes[i];
+          const nodeType = getType(node);
+          const defaultBox = {
+            path: [...linkPath, i],
+            x,
+            y: y - 1,
+            size: 1,
+            root: false,
+            selected: sameAsSelectedPath && selectedIndex === i,
+            link: false,
+            siblings
+          };
+
+          switch (nodeType) {
+            case LinkRef:
+              const isLast = i === nodes.length - 1;
+              const innerPath = [...linkPath, node.ref.linkId];
+              const refChildNodes = self.display(node.ref, {
+                path: [...linkPath, i],
+                linkPath: innerPath,
+                x,
+                y: y - 1,
+                nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
+                isLast,
+                selected: sameAsSelectedPath && selectedIndex === i,
+                siblingCount: siblings,
+                open: openLinks.get(linkPath.join("/"))
+              });
+              allBoxes.push(...refChildNodes);
+
+              const { size } = refChildNodes[refChildNodes.length - 1];
+              x += size;
+              break;
+            case Op:
+              allBoxes.push({
+                ...defaultBox,
+                color: opColor,
+                text: node.op
+              });
+              x++;
+              break;
+            case Val:
+              const { val } = node;
+              allBoxes.push({
+                ...defaultBox,
+                color: valColor,
+                text: typeof val === "string" ? `"${val}"` : val
+              });
+              x++;
+              break;
+            case Input:
+              allBoxes.push({
+                ...defaultBox,
+                color: inputColor,
+                text: node.input
+              });
+              x++;
+              break;
+            case PackageRef:
+              allBoxes.push({
+                ...defaultBox,
+                color: packageColor,
+                text: node.path
+              });
+              x++;
+              break;
+            default:
+              allBoxes.push({ ...defaultBox, color: unknownColor });
+              x++;
+          }
+        }
+
+        if (root) {
+          const existingKeys = {};
+          let i = allBoxes.length;
+          while (i--) {
+            const box = allBoxes[i];
+            const { path } = box;
+            let j = path.length - 1;
+            let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+            if (!box.link) {
+              j--;
+              currentKey += "/" + (j in path ? path[j] : "");
+            }
+            while (existingKeys[currentKey]) {
+              j--;
+              currentKey += "/" + (j in path ? path[j] : "");
+            }
+            existingKeys[currentKey] = true;
+            box.key = currentKey;
+          }
+        }
+
+        return allBoxes;
+      },
       get isLinkSelected() {
         const { selectedBox } = self;
 
@@ -445,6 +591,7 @@ export const makeRepoViewModel = repo =>
 
         return selectedBox.link;
       },
+
       display(
         link = repo.links.get(self.rootLink),
         base = {
