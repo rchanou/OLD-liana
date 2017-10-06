@@ -396,182 +396,258 @@ const dirDown = "DOWN";
 const dirLeft = "LEFT";
 const dirRight = "RIGHT";
 
-export const RepoView = types
-  .model("RepoView", {
-    rootLink: types.string,
-    selectedLink: types.maybe(types.string),
-    selectedNode: types.maybe(types.number, 0),
-    expandedLinks: optionalMap(types.boolean),
-    labelGroup: types.optional(types.string, "standard")
-  })
-  .views(self => ({
-    get isPending() {
-      for (const node of self.nodes) {
-        const nodeType = getType(node);
-        if (nodeType === Input) {
-          return true;
-        }
-        if (nodeType === LinkRef && node.ref.isPending) {
-          return true;
-        }
-      }
-      return false;
-    },
-    display(
-      repo,
-      link = repo.links.get(self.rootLink),
-      base = {
-        x: 0,
-        y: 10,
-        nextIsRef: false,
-        isLast: true,
-        root: true
-      }
-    ) {
-      const { selectedLink, selectedNode } = self;
-      const { linkId, nodes } = link;
-      let { x, y, nextIsRef, isLast, path = [linkId], root } = base;
+const Path = types.array(types.union(types.string, types.number));
 
-      let allNodes = [];
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const nodeType = getType(node);
-        const base = {
-          path: [...path, `I${i}`],
-          x,
-          y: y - 1,
-          size: 1,
-          root: false,
-          selected: linkId == selectedLink && i !== null && i === selectedNode
-        };
+const Box = types.model("Box", {
+  x: types.number,
+  y: types.number,
+  path: Path,
+  dependents: types.map(Path)
+});
 
-        switch (nodeType) {
-          case Op:
-            allNodes.push({
-              ...base,
-              color: opColor,
-              text: node.op
-            });
-            x++;
-            break;
-          case Val:
-            const { val } = node;
-            allNodes.push({
-              ...base,
-              color: valColor,
-              text: typeof val === "string" ? `"${val}"` : val
-            });
-            x++;
-            break;
-          case Input:
-            allNodes.push({
-              ...base,
-              color: inputColor,
-              text: node.input
-            });
-            x++;
-            break;
-          case PackageRef:
-            allNodes.push({
-              ...base,
-              color: packageColor,
-              text: node.path
-            });
-            x++;
-            break;
-          case LinkRef:
-            const isLast = i === nodes.length - 1;
-            const innerPath = [...path, node.ref.linkId];
-            const refChildNodes = self.display(repo, node.ref, {
-              path: innerPath,
-              x,
-              y: y - 1,
-              nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-              isLast
-            });
-            allNodes.push(...refChildNodes);
-
-            const { size } = refChildNodes[refChildNodes.length - 1];
-            x += size;
-            break;
-          default:
-            allNodes.push({ ...base, color: unknownColor });
-            x++;
-        }
-      }
-
-      const label = resolveIdentifier(Label, repo, link.linkId);
-      const thisSize = nextIsRef
-        ? Math.max(...allNodes.map(n => n.x)) - base.x + 2
-        : isLast ? Math.max(...allNodes.map(n => n.x + n.size)) - base.x : 1;
-
-      const thisNode = {
-        path,
-        x: base.x,
-        y,
-        size: thisSize,
-        color: pendingColor, //self.isPending ? pendingColor : valColor,
-        text: (label && label.text) || `(${self.linkId})`,
-        link: true
-      };
-      allNodes.push(thisNode);
-
-      if (root) {
-        const existingKeys = {};
-        let i = allNodes.length;
-        while (i--) {
-          const node = allNodes[i];
-          const { path } = node;
-          let j = path.length - 1;
-          let currentKey = "" + (j in path ? path[j] : "");
-          while (existingKeys[currentKey]) {
-            j--;
-            currentKey += "/" + (j in path ? path[j] : "");
+export const makeRepoViewModel = repo =>
+  types
+    .model("RepoView", {
+      rootLink: types.string,
+      openLinks: optionalMap(types.boolean),
+      labelGroup: types.optional(types.string, "standard"),
+      selectedPath: types.optional(Path, []),
+      selectedIndex: types.maybe(types.number, 0)
+    })
+    .views(self => ({
+      get isPending() {
+        for (const node of self.nodes) {
+          const nodeType = getType(node);
+          if (nodeType === Input) {
+            return true;
           }
-          existingKeys[currentKey] = true;
-          node.key = currentKey;
+          if (nodeType === LinkRef && node.ref.isPending) {
+            return true;
+          }
         }
-      }
-
-      return allNodes;
-    }
-  }))
-  .actions(self => ({
-    move(dir) {},
-    up() {},
-    down() {}
-  }))
-  .actions(self => {
-    const handleKeyUp = e => {
-      const { keyCode } = e;
-      switch (keyCode) {
-        case 37: // LEFT
-          e.preventDefault();
-          self.move(-1);
-          break;
-        case 39: // RIGHT
-          e.preventDefault();
-          self.move(+1);
-          break;
-        case 38: // UP
-          e.preventDefault();
-          self.up();
-          break;
-        case 40: // DOWN
-          e.preventDefault();
-          self.down();
-      }
-    };
-
-    return {
-      afterCreate() {
-        document.addEventListener("keyup", handleKeyUp);
+        return false;
       },
-      beforeDestroy() {
-        document.removeEventListener("keyup", handleKeyUp);
+      get selectedBox() {
+        const { selectedPath, selectedIndex, boxes } = self;
+
+        if (selectedIndex === null) return true;
+
+        const selectedPathLength = selectedPath.length;
+
+        if (!selectedPathLength) {
+          return false;
+        }
+
+        return boxes().find(
+          box =>
+            box.path.length === selectedPathLength + 1 &&
+            selectedPath.every((x, i) => x === box.path[i]) &&
+            box.path[selectedPathLength] === selectedIndex
+        );
+      },
+      get isLinkSelected() {
+        const { selectedBox } = self;
+
+        if (!selectedBox) {
+          return false;
+        }
+
+        return selectedBox.category === Link;
+      },
+      boxes(link, opts = {}) {
+        const { links } = repo;
+        const { rootLink, openLinks, selectedPath, selectedIndex } = self;
+        link = link || links.get(rootLink);
+        const { linkId, nodes } = link;
+        const {
+          x = 0,
+          y = 0,
+          nextIsRef = false,
+          isLast = true,
+          path = [linkId],
+          linkPath = [linkId],
+          root = true,
+          selected = false,
+          siblingCount = 1,
+          open = true
+        } = opts;
+
+        const allBoxes = [];
+
+        const sameAsSelectedPath =
+          selectedPath.length === linkPath.length && selectedPath.every((token, j) => token === linkPath[j]);
+
+        let currentX = x;
+
+        const siblings = nodes.length;
+        for (let i = 0; i < siblings; i++) {
+          const node = nodes[i];
+          const category = getType(node);
+          const defaultBox = {
+            path: [...linkPath, i],
+            x: currentX,
+            y: y + 1,
+            size: 1,
+            root: false,
+            selected: sameAsSelectedPath && selectedIndex === i,
+            category,
+            siblings
+          };
+
+          switch (category) {
+            case LinkRef:
+              const isLast = i === nodes.length - 1;
+              const innerPath = [...linkPath, node.ref.linkId];
+              const refChildNodes = self.boxes(node.ref, {
+                path: [...linkPath, i],
+                linkPath: innerPath,
+                x: currentX,
+                y: y + 1,
+                nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
+                isLast,
+                selected: sameAsSelectedPath && selectedIndex === i,
+                siblingCount: siblings,
+                open: openLinks.has(linkPath.join("/"))
+              });
+              allBoxes.push(...refChildNodes);
+
+              const { size } = refChildNodes[refChildNodes.length - 1];
+              currentX += size;
+              break;
+            case Op:
+              allBoxes.push({
+                ...defaultBox,
+                color: opColor,
+                text: node.op
+              });
+              currentX++;
+              break;
+            case Val:
+              const { val } = node;
+              allBoxes.push({
+                ...defaultBox,
+                color: valColor,
+                text: typeof val === "string" ? `"${val}"` : val
+              });
+              currentX++;
+              break;
+            case Input:
+              allBoxes.push({
+                ...defaultBox,
+                color: inputColor,
+                text: node.input
+              });
+              currentX++;
+              break;
+            case PackageRef:
+              allBoxes.push({
+                ...defaultBox,
+                color: packageColor,
+                text: node.path
+              });
+              currentX++;
+              break;
+            default:
+              allBoxes.push({ ...defaultBox, color: unknownColor });
+              currentX++;
+          }
+        }
+
+        const label = resolveIdentifier(Label, repo, link.linkId);
+        const thisSize = nextIsRef
+          ? Math.max(...allBoxes.map(n => n.x)) - x + 2
+          : isLast ? Math.max(...allBoxes.map(n => n.x + n.size)) - x : 1;
+
+        const thisNode = {
+          path,
+          upPath: linkPath,
+          x,
+          y,
+          size: thisSize,
+          color: pendingColor, //self.isPending ? pendingColor : valColor,
+          text: (label && label.text) || `(${self.linkId})`,
+          category: Link,
+          selected: selected || (sameAsSelectedPath && selectedIndex === null),
+          siblings: siblingCount
+        };
+        allBoxes.push(thisNode);
+
+        if (root) {
+          const existingKeys = {};
+          let i = allBoxes.length;
+          while (i--) {
+            const box = allBoxes[i];
+            const { path } = box;
+            let j = path.length - 1;
+            let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+            if (!box.link) {
+              j--;
+              currentKey += "/" + (j in path ? path[j] : "");
+            }
+            while (existingKeys[currentKey]) {
+              j--;
+              currentKey += "/" + (j in path ? path[j] : "");
+            }
+            existingKeys[currentKey] = true;
+            box.key = currentKey;
+          }
+        }
+
+        return allBoxes;
       }
-    };
-  });
+    }))
+    .actions(self => ({
+      move(dir) {
+        const { siblings } = self.selectedBox;
+        let newSelectedIndex = self.selectedIndex + dir;
+        if (newSelectedIndex < 0) {
+          newSelectedIndex = siblings - 1;
+        } else if (newSelectedIndex > siblings - 1) {
+          newSelectedIndex = 0;
+        }
+        self.selectedIndex = newSelectedIndex;
+      },
+      up() {
+        const { selectedBox } = self;
+        const { upPath } = selectedBox;
+        if (upPath) {
+          self.selectedPath = upPath;
+          self.selectedIndex = 0;
+        }
+      },
+      down() {}
+    }))
+    .actions(self => {
+      const handleKeyUp = e => {
+        const { keyCode } = e;
+        switch (keyCode) {
+          case 37: // LEFT
+            e.preventDefault();
+            self.move(-1);
+            break;
+          case 39: // RIGHT
+            e.preventDefault();
+            self.move(+1);
+            break;
+          case 38: // UP
+            e.preventDefault();
+            self.up();
+            break;
+          case 40: // DOWN
+            e.preventDefault();
+            self.down();
+        }
+      };
+
+      return {
+        afterCreate() {
+          document.addEventListener("keyup", handleKeyUp);
+        },
+        beforeDestroy() {
+          document.removeEventListener("keyup", handleKeyUp);
+        }
+      };
+    });
 
 export const Repo = types
   .model("Repo", {

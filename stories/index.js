@@ -1,5 +1,6 @@
 import React from "react";
 import { autorun } from "mobx";
+import { Observer } from "mobx-react";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
@@ -173,12 +174,15 @@ graph.expandSub("0", "24", { ref: "5" });
 const e = getVal("24-2");
 console.log(e);
 
-const simpleView = L.RepoView.create({
+const simpleView = L.makeRepoViewModel(simple).create({
   // ...simpleSnapshot,
   rootLink: "7",
-  selectedLink: "6",
-  selectedNode: 0,
-  expandedLinks: {}
+  openLinks: {
+    7: true,
+    "7/6": true
+  },
+  selectedPath: ["7"],
+  selectedIndex: 0
 });
 
 // console.log(getVal("32"));
@@ -193,15 +197,18 @@ const simpleView = L.RepoView.create({
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simpleView.display(simple);
+const nodes = simpleView.boxes();
 
 console.table(
   nodes.map(n => ({
     key: n.key,
+    x: n.x,
+    y: n.y,
+    size: n.size,
     path: n.path.join(","),
     text: n.text,
-    selected: n.selected,
-    link: n.link
+    selected: n.selected ? "X" : null,
+    link: n.category === L.Link ? n.upPath.join(",") : null
   }))
 );
 
@@ -224,7 +231,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <Tree nodes={nodes} />;
+    return <Observer>{() => <Tree nodes={simpleView.boxes()} />}</Observer>;
   }
 }
 
