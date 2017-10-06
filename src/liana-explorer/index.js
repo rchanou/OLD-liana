@@ -40,7 +40,7 @@ export const Tree = observer(({ nodes }) => {
   const displayNodes = nodes.map(({ x, y, size, color, key, form, text, link, selected }) => {
     const style = {
       ...nodeStyle,
-      top: y * unit,
+      top: `calc(100vh - ${y * unit}px)`,
       left: x * unit,
       width: size * unit + 0.5 * spacer,
       background: color,
@@ -53,7 +53,7 @@ export const Tree = observer(({ nodes }) => {
         style={{
           ...lineStyle,
           left: unit * (x + 0.5) - 3 * spacer,
-          top: y * unit - 4 * spacer
+          top: `calc(100vh - ${y * unit + 3 * spacer}px)`
         }}
       />
     ) : null;

@@ -177,7 +177,7 @@ console.log(e);
 const simpleView = L.makeRepoViewModel(simple).create({
   // ...simpleSnapshot,
   rootLink: "7",
-  openBoxes: {
+  openLinks: {
     7: true,
     "7/6": true
   },
@@ -197,15 +197,18 @@ const simpleView = L.makeRepoViewModel(simple).create({
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simpleView.display();
+const nodes = simpleView.boxes();
 
 console.table(
   nodes.map(n => ({
     key: n.key,
+    x: n.x,
+    y: n.y,
+    size: n.size,
     path: n.path.join(","),
     text: n.text,
     selected: n.selected,
-    link: n.link
+    link: n.category === L.LinkRef
   }))
 );
 
@@ -228,7 +231,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <Observer>{() => <Tree nodes={simpleView.display()} />}</Observer>;
+    return <Observer>{() => <Tree nodes={simpleView.boxes()} />}</Observer>;
   }
 }
 
