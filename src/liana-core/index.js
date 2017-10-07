@@ -391,11 +391,6 @@ export const Comment = types.model("Post", {
   targetId: optionalString
 });
 
-const dirUp = "UP";
-const dirDown = "DOWN";
-const dirLeft = "LEFT";
-const dirRight = "RIGHT";
-
 const Path = types.array(types.union(types.string, types.number));
 
 const Box = types.model("Box", {
@@ -491,16 +486,16 @@ export const makeRepoViewModel = repo =>
             root: false,
             selected: sameAsSelectedPath && selectedIndex === i,
             category,
-            siblings
+            siblings,
+            downPath: linkPath.slice(0, -1)
           };
 
           switch (category) {
             case LinkRef:
               const isLast = i === nodes.length - 1;
-              const innerPath = [...linkPath, node.ref.linkId];
               const refChildNodes = self.boxes(node.ref, {
                 path: [...linkPath, i],
-                linkPath: innerPath,
+                linkPath: [...linkPath, node.ref.linkId],
                 x: currentX,
                 y: y + 1,
                 nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
@@ -561,6 +556,7 @@ export const makeRepoViewModel = repo =>
         const thisNode = {
           path,
           upPath: linkPath,
+          ...(root ? {} : { downPath: linkPath.slice(0, -2) }),
           x,
           y,
           size: thisSize,
@@ -615,7 +611,14 @@ export const makeRepoViewModel = repo =>
           self.selectedIndex = 0;
         }
       },
-      down() {}
+      down() {
+        const { selectedBox } = self;
+        const { downPath } = selectedBox;
+        if (downPath) {
+          self.selectedPath = downPath;
+          self.selectedIndex = 0;
+        }
+      }
     }))
     .actions(self => {
       const handleKeyUp = e => {
