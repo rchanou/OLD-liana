@@ -621,24 +621,29 @@ export const makeRepoViewModel = repo =>
       }
     }))
     .actions(self => {
+      const { keyMap } = getEnv(self);
+
       const handleKeyUp = e => {
         const { keyCode } = e;
-        switch (keyCode) {
-          case 37: // LEFT
+        switch (keyMap[keyCode]) {
+          case "left":
             e.preventDefault();
             self.move(-1);
             break;
-          case 39: // RIGHT
+          case "right":
             e.preventDefault();
             self.move(+1);
             break;
-          case 38: // UP
+          case "up":
             e.preventDefault();
             self.up();
             break;
-          case 40: // DOWN
+          case "down":
             e.preventDefault();
             self.down();
+            break;
+          default:
+            console.log(keyCode);
         }
       };
 

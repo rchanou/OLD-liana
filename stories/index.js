@@ -174,16 +174,28 @@ graph.expandSub("0", "24", { ref: "5" });
 const e = getVal("24-2");
 console.log(e);
 
-const simpleView = L.makeRepoViewModel(simple).create({
-  // ...simpleSnapshot,
-  rootLink: "7",
-  openLinks: {
-    7: true,
-    "7/6": true
+const config = {
+  keyMap: {
+    70: "up",
+    82: "left",
+    83: "down",
+    84: "right"
+  }
+};
+
+const simpleView = L.makeRepoViewModel(simple).create(
+  {
+    // ...simpleSnapshot,
+    rootLink: "7",
+    openLinks: {
+      7: true,
+      "7/6": true
+    },
+    selectedPath: ["7"],
+    selectedIndex: 0
   },
-  selectedPath: ["7"],
-  selectedIndex: 0
-});
+  config
+);
 
 // console.log(getVal("32"));
 // const f = graph.calls.get(0).val;
