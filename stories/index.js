@@ -179,7 +179,9 @@ const config = {
     70: "up",
     82: "left",
     83: "down",
-    84: "right"
+    84: "right",
+    78: "fold",
+    69: "open"
   }
 };
 
@@ -187,9 +189,8 @@ const simpleView = L.makeRepoViewModel(simple).create(
   {
     // ...simpleSnapshot,
     rootLink: "7",
-    openLinks: {
-      7: true,
-      "7/6": true
+    openPaths: {
+      7: true
     },
     selectedPath: ["7"],
     selectedIndex: 0

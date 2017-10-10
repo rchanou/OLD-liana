@@ -404,7 +404,7 @@ export const makeRepoViewModel = repo =>
   types
     .model("RepoView", {
       rootLink: types.string,
-      openLinks: optionalMap(types.boolean),
+      openPaths: optionalMap(types.boolean),
       labelGroup: types.optional(types.string, "standard"),
       selectedPath: types.optional(Path, []),
       selectedIndex: types.maybe(types.number, 0)
@@ -449,9 +449,12 @@ export const makeRepoViewModel = repo =>
 
         return selectedBox.category === Link;
       },
+      get pathKey() {
+        return self.selectedPath.concat(self.selectedIndex).join("/");
+      },
       boxes(link, opts = {}) {
         const { links } = repo;
-        const { rootLink, openLinks, selectedPath, selectedIndex } = self;
+        const { rootLink, openPaths, selectedPath, selectedIndex } = self;
         link = link || links.get(rootLink);
         const { linkId, nodes } = link;
         const {
@@ -476,10 +479,13 @@ export const makeRepoViewModel = repo =>
 
         const siblings = nodes.length;
         for (let i = 0; i < siblings; i++) {
+          const childPath = [...linkPath, i];
+
           const node = nodes[i];
           const category = getType(node);
+
           const defaultBox = {
-            path: [...linkPath, i],
+            path: childPath,
             x: currentX,
             y: y + 1,
             size: 1,
@@ -492,9 +498,19 @@ export const makeRepoViewModel = repo =>
 
           switch (category) {
             case LinkRef:
+              if (!openPaths.has(childPath.join("/"))) {
+                const label = resolveIdentifier(Label, repo, node.ref.linkId);
+                allBoxes.push({
+                  ...defaultBox,
+                  text: (label && label.text) || `(${self.linkId})`,
+                  color: pendingColor
+                });
+                currentX++;
+                break;
+              }
               const isLast = i === nodes.length - 1;
               const refChildNodes = self.boxes(node.ref, {
-                path: [...linkPath, i],
+                path: childPath,
                 linkPath: [...linkPath, node.ref.linkId],
                 x: currentX,
                 y: y + 1,
@@ -502,7 +518,7 @@ export const makeRepoViewModel = repo =>
                 isLast,
                 selected: sameAsSelectedPath && selectedIndex === i,
                 siblingCount: siblings,
-                open: openLinks.has(linkPath.join("/"))
+                open: openPaths.has(linkPath.join("/"))
               });
               allBoxes.push(...refChildNodes);
 
@@ -618,31 +634,43 @@ export const makeRepoViewModel = repo =>
           self.selectedPath = downPath;
           self.selectedIndex = 0;
         }
+      },
+      open() {
+        const { pathKey } = self;
+        self.openPaths.set(pathKey, true);
+        console.log("le key", pathKey);
       }
     }))
     .actions(self => {
-      const { keyMap } = getEnv(self);
+      const context = getEnv(self);
+      const { keyMap } = context;
 
       const handleKeyUp = e => {
+        e.preventDefault();
+
         const { keyCode } = e;
-        switch (keyMap[keyCode]) {
+        const actionName = keyMap[keyCode];
+        switch (actionName) {
           case "left":
-            e.preventDefault();
             self.move(-1);
             break;
           case "right":
-            e.preventDefault();
             self.move(+1);
             break;
           case "up":
-            e.preventDefault();
             self.up();
             break;
           case "down":
-            e.preventDefault();
             self.down();
             break;
+          case "open":
+            self.open();
+            break;
           default:
+            const action = self[actionName];
+            if (typeof action === "function") {
+              action(context);
+            }
             console.log(keyCode);
         }
       };
