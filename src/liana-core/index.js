@@ -573,7 +573,7 @@ export const makeRepoViewModel = repo =>
         const thisNode = {
           path,
           upPath: linkPath,
-          ...(root ? {} : { downPath: linkPath.slice(0, -23) }),
+          ...(root ? {} : { downPath: linkPath.slice(0, -2) }),
           x,
           y,
           size: thisSize,
