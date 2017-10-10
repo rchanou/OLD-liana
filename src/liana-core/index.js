@@ -498,7 +498,7 @@ export const makeRepoViewModel = repo =>
 
           switch (category) {
             case LinkRef:
-              if (!openPaths.has(childPath.join("/"))) {
+              if (!openPaths.get(childPath.join("/"))) {
                 const label = resolveIdentifier(Label, repo, node.ref.linkId);
                 allBoxes.push({
                   ...defaultBox,
@@ -637,7 +637,8 @@ export const makeRepoViewModel = repo =>
       },
       open() {
         const { pathKey } = self;
-        self.openPaths.set(pathKey, true);
+        const current = self.openPaths.get(pathKey);
+        self.openPaths.set(pathKey, !current);
         console.log("le key", pathKey);
       }
     }))
