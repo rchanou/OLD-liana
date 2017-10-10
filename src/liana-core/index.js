@@ -510,6 +510,7 @@ export const makeRepoViewModel = repo =>
               }
               const isLast = i === nodes.length - 1;
               const refChildNodes = self.boxes(node.ref, {
+                root: false,
                 path: childPath,
                 linkPath: [...linkPath, node.ref.linkId],
                 x: currentX,

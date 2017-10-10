@@ -180,7 +180,7 @@ const config = {
     82: "left",
     83: "down",
     84: "right",
-    78: "fold",
+    78: "open",
     69: "open"
   }
 };
@@ -210,20 +210,22 @@ const simpleView = L.makeRepoViewModel(simple).create(
 //   console.log("le pkg", graph.packages.get(0).with());
 // });
 
-const nodes = simpleView.boxes();
+// const nodes = simpleView.boxes();
 
-console.table(
-  nodes.map(n => ({
-    key: n.key,
-    x: n.x,
-    y: n.y,
-    size: n.size,
-    path: n.path.join(","),
-    text: n.text,
-    selected: n.selected ? "X" : null,
-    link: n.category === L.Link ? n.upPath.join(",") : null
-  }))
-);
+autorun(() => {
+  console.table(
+    simpleView.boxes().map(n => ({
+      key: n.key,
+      // x: n.x,
+      // y: n.y,
+      // size: n.size,
+      path: (n.downPath || n.path).join(","),
+      text: n.text
+      // selected: n.selected ? "X" : null,
+      // link: n.category === L.Link ? n.upPath.join(",") : null
+    }))
+  );
+});
 
 // const nodes2 = simple.links.get(5).display();
 // console.table(
