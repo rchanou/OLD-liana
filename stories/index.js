@@ -13,6 +13,12 @@ import { Tree } from "../src/liana-explorer";
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
 const simpleSnapshot = {
+  dependencies: {
+    0: {
+      depId: "0",
+      path: testDep
+    }
+  },
   links: {
     0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
@@ -21,7 +27,8 @@ const simpleSnapshot = {
     4: { linkId: "4", nodes: [{ ref: "2" }, { val: 12 }] },
     5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
-    7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] }
+    7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] },
+    8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] }
   },
   linkLabelSets: {
     standard: {
@@ -37,7 +44,9 @@ const simpleSnapshot = {
   }
 };
 
-const simple = L.Repo.create(simpleSnapshot);
+const simple = L.Repo.create(simpleSnapshot, {
+  system: SystemJS
+});
 
 const withCalls = L.Repo.create({
   links: {
@@ -66,8 +75,8 @@ const withCalls = L.Repo.create({
 
 const graph = L.Repo.create(
   {
-    packages: {
-      0: { id: 0, path: testDep }
+    dependencies: {
+      0: { depId: "0", path: testDep }
     },
     links: {
       0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
@@ -188,11 +197,11 @@ const config = {
 const simpleView = L.makeRepoViewModel(simple).create(
   {
     // ...simpleSnapshot,
-    rootLink: "7",
+    rootLink: "8",
     openPaths: {
       7: true
     },
-    selectedPath: ["7"],
+    selectedPath: ["8"],
     selectedIndex: 0
   },
   config
@@ -211,6 +220,10 @@ const simpleView = L.makeRepoViewModel(simple).create(
 // });
 
 // const nodes = simpleView.boxes();
+
+autorun(() => {
+  console.log("shooz", simple.dependencies.get("0").val);
+});
 
 autorun(() => {
   console.table(

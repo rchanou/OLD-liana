@@ -135,9 +135,9 @@ export const Op = types
     }
   }));
 
-export const Package = types
-  .model("Package", {
-    id: types.identifier(types.number),
+export const Dependency = types
+  .model("Dependency", {
+    depId: types.identifier(types.string),
     path: types.string,
     resolved: false
   })
@@ -160,7 +160,7 @@ export const Package = types
         if (self.resolved) {
           return system.get(self.path);
         }
-        return Package;
+        return Dependency;
       },
       with() {
         return self.val;
@@ -170,11 +170,11 @@ export const Package = types
 
 export const PackageRef = types
   .model("PackageRef", {
-    pkg: types.reference(Package)
+    dep: types.reference(Dependency)
   })
   .views(self => ({
     get val() {
-      return self.pkg.val;
+      return self.dep.val;
     },
     with() {
       return self.val;
@@ -247,8 +247,8 @@ export const Link = types
   .views(self => ({
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
-      if (nodeVals.indexOf(Package) !== -1) {
-        return Package;
+      if (nodeVals.indexOf(Dependency) !== -1) {
+        return Dependency;
       }
 
       const [head, ...nodeInputs] = nodeVals;
@@ -555,7 +555,7 @@ export const makeRepoViewModel = repo =>
               allBoxes.push({
                 ...defaultBox,
                 color: packageColor,
-                text: node.path
+                text: node.dep.path.replace("https://unpkg.com/", "").slice(0, 9)
               });
               currentX++;
               break;
@@ -573,12 +573,12 @@ export const makeRepoViewModel = repo =>
         const thisNode = {
           path,
           upPath: linkPath,
-          ...(root ? {} : { downPath: linkPath.slice(0, -2) }),
+          ...(root ? {} : { downPath: linkPath.slice(0, -23) }),
           x,
           y,
           size: thisSize,
           color: pendingColor, //self.isPending ? pendingColor : valColor,
-          text: (label && label.text) || `(${self.linkId})`,
+          text: (label && label.text) || `(${link.linkId})`,
           category: Link,
           selected: selected || (sameAsSelectedPath && selectedIndex === null),
           siblings: siblingCount
@@ -689,7 +689,7 @@ export const makeRepoViewModel = repo =>
 
 export const Repo = types
   .model("Repo", {
-    packages: optionalMap(Package),
+    dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
     linkLabelSets: optionalMap(optionalMap(Label)),
