@@ -29,16 +29,17 @@ const simpleSnapshot = {
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] },
     8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] },
-    9: { linkId: "9", nodes: [{ op: "." }, { input: "0" }, { val: "type" }] },
-    10: { linkId: "10", nodes: [{ op: "+" }, { input: "1" }, { val: 1 }] },
+    9: { linkId: "9", nodes: [{ op: "." }, { input: "1" }, { val: "type" }] },
+    10: { linkId: "10", nodes: [{ op: "+" }, { input: "2" }, { val: 1 }] },
     "10a": { callId: "10a", link: "10" },
-    11: { linkId: "11", nodes: [{ op: "+" }, { input: "2" }, { val: -1 }] },
+    11: { linkId: "11", nodes: [{ op: "+" }, { input: "3" }, { val: -1 }] },
     "11a": { callId: "11a", link: "11" },
     12: {
       linkId: "12",
       nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }]
     },
-    13: { linkId: "13", nodes: [{ ref: "12" }, { input: "3" }] }
+    13: { linkId: "13", nodes: [{ ref: "12" }, { input: "0" }] },
+    14: { callId: "14", link: "13" }
   },
   linkLabelSets: {
     standard: {
@@ -217,13 +218,13 @@ const simpleView = L.makeRepoViewModel(simple).create(
 
 const params = new Map(
   Object.entries({
-    0: { type: "INCREMENT" },
-    3: 4
+    0: 4,
+    1: { type: "INCREMENT" }
   })
 );
 
 autorun(() => {
-  console.log("shooz", simple.links.get("13").with(params));
+  window.a = simple.links.get("14").val;
   // console.log("ope", simpleView.openPaths.toJS());
 });
 

@@ -242,7 +242,7 @@ const identity = x => x;
 const baseColor = ",66%,55%)";
 const opColor = `hsl(150${baseColor}`;
 const valColor = `hsl(210${baseColor}`;
-const inputColor = `hsl(25${baseColor}`;
+const inputColor = `hsl(30${baseColor}`;
 const packageColor = `hsl(315${baseColor}`;
 const pendingColor = `hsl(270${baseColor}`;
 const callColor = `hsl(300${baseColor}`;
