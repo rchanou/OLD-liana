@@ -31,11 +31,12 @@ const simpleSnapshot = {
     8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] },
     9: { linkId: "9", nodes: [{ op: "." }, { input: "0" }, { val: "type" }] },
     10: { linkId: "10", nodes: [{ op: "+" }, { input: "1" }, { val: 1 }] },
+    "10a": { callId: "10a", link: "10" },
     11: { linkId: "11", nodes: [{ op: "+" }, { input: "2" }, { val: -1 }] },
     "11a": { callId: "11a", link: "11" },
     12: {
       linkId: "12",
-      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { ref: "10" }, { val: "DECREMENT" }, { ref: "11" }]
+      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }]
     },
     13: { linkId: "13", nodes: [{ ref: "12" }, { input: "3" }] }
   },
@@ -222,7 +223,7 @@ const params = new Map(
 );
 
 autorun(() => {
-  console.log("shooz", simple.links.get("11a").with(params));
+  console.log("shooz", simple.links.get("13").with(params));
   // console.log("ope", simpleView.openPaths.toJS());
 });
 

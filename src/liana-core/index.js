@@ -227,7 +227,15 @@ export const Input = types
 
 curry.placeholder = Input;
 
-export const Node = types.union(Val, Op, Input, types.late(() => LinkRef), types.late(() => SubRef), PackageRef);
+export const Node = types.union(
+  Val,
+  Op,
+  Input,
+  types.late(() => LinkRef),
+  types.late(() => CallRef),
+  types.late(() => SubRef),
+  PackageRef
+);
 
 const identity = x => x;
 
@@ -311,11 +319,24 @@ export const Call = types
           const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
-          return self.nodes.with(allInputs);
+          return self.link.with(allInputs);
         };
       }
 
       return linkVal;
+    },
+    with() {
+      return self.val;
+    }
+  }));
+
+export const CallRef = types
+  .model("CallRef", {
+    call: types.reference(Call)
+  })
+  .views(self => ({
+    get val() {
+      return self.call.val;
     },
     with() {
       return self.val;
@@ -348,7 +369,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, Input, LinkRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(Val, Op, Input, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
