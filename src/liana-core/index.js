@@ -71,10 +71,10 @@ const opFuncs = {
     // TODO: remove
     return _;
   },
-  ifOp(condition, trueVal, falseVal) {
+  [ifOp](condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
-  switchOp(switcher, ...casePairs) {
+  [switchOp](switcher, ...casePairs) {
     for (let i = 0; i < casePairs.length; i += 2) {
       if (switcher === casePairs[i]) {
         return casePairs[i + 1];
@@ -130,7 +130,7 @@ export const Op = types
     get val() {
       return opFuncs[self.op];
     },
-    with() {
+    with(inputs) {
       return self.val;
     }
   }));
@@ -289,8 +289,8 @@ export const LinkRef = types
     get val() {
       return self.ref.val;
     },
-    with() {
-      return self.val;
+    with(inputs) {
+      return self.ref.with(inputs);
     }
   }));
 
