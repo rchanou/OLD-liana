@@ -506,7 +506,7 @@ export const makeRepoViewModel = repo =>
             selected: sameAsSelectedPath && selectedIndex === i,
             category,
             siblings,
-            downPath: linkPath.slice(0, -1)
+            downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
           };
 
           const makeLinkBoxes = linkOrCallRef => {
@@ -619,7 +619,7 @@ export const makeRepoViewModel = repo =>
         const thisNode = {
           path,
           upPath: linkPath,
-          ...(root ? {} : { downPath: linkPath.slice(0, -2) }),
+          ...(root ? {} : { downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2) }),
           x,
           y,
           size: thisSize,
