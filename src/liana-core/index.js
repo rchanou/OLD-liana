@@ -504,9 +504,10 @@ export const makeRepoViewModel = repo =>
                 allBoxes.push({
                   ...defaultBox,
                   text: (label && label.text) || `(${self.linkId})`,
-                  color: pendingColor
+                  color: pendingColor,
+                  size: 2
                 });
-                currentX++;
+                currentX += 2;
                 break;
               }
 
@@ -554,7 +555,7 @@ export const makeRepoViewModel = repo =>
             case Val:
               const { val } = node;
               const isString = typeof val === "string";
-              const boxSize = isString ? 2 : 1;
+              const boxSize = isString ? Math.ceil(val.length / 6) : 1;
               allBoxes.push({
                 ...defaultBox,
                 color: valColor,
@@ -588,7 +589,7 @@ export const makeRepoViewModel = repo =>
         const label = resolveIdentifier(Label, repo, link.linkId);
         const thisSize = nextIsRef
           ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : 1)
-          : isLast ? Math.max(...allBoxes.map(n => n.x + n.size)) - x : 1;
+          : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
         const thisNode = {
           path,
