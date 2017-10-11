@@ -243,7 +243,7 @@ const baseColor = ",66%,55%)";
 const opColor = `hsl(150${baseColor}`;
 const valColor = `hsl(210${baseColor}`;
 const inputColor = `hsl(30${baseColor}`;
-const packageColor = `hsl(315${baseColor}`;
+const packageColor = `hsl(190${baseColor}`;
 const pendingColor = `hsl(270${baseColor}`;
 const callColor = `hsl(300${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
@@ -432,18 +432,6 @@ export const makeRepoViewModel = repo =>
       selectedIndex: types.maybe(types.number, 0)
     })
     .views(self => ({
-      get isPending() {
-        for (const node of self.nodes) {
-          const nodeType = getType(node);
-          if (nodeType === Input) {
-            return true;
-          }
-          if (nodeType === LinkRef && node.ref.isPending) {
-            return true;
-          }
-        }
-        return false;
-      },
       get selectedBox() {
         const { selectedPath, selectedIndex, boxes } = self;
 
@@ -622,8 +610,10 @@ export const makeRepoViewModel = repo =>
         }
 
         const label = resolveIdentifier(Label, repo, link.linkId);
+        // TODO: we need some crazy logic to make this more adaptable
+        // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
         const thisSize = nextIsRef
-          ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : 1)
+          ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
           : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
         const thisNode = {
@@ -633,7 +623,7 @@ export const makeRepoViewModel = repo =>
           x,
           y,
           size: thisSize,
-          color, //self.isPending ? pendingColor : valColor,
+          color,
           text: (label && label.text) || `(${link.linkId})`,
           category: Link,
           selected: selected || (sameAsSelectedPath && selectedIndex === null),

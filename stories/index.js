@@ -39,7 +39,8 @@ const simpleSnapshot = {
       nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }]
     },
     13: { linkId: "13", nodes: [{ ref: "12" }, { input: "0" }] },
-    14: { callId: "14", link: "13" }
+    14: { callId: "14", link: "13" },
+    15: { linkId: "15", nodes: [{ ref: "8" }, { call: "14" }] }
   },
   linkLabelSets: {
     standard: {
@@ -56,7 +57,8 @@ const simpleSnapshot = {
       10: { labelId: "10", targetId: "10", text: "increment", groupId: "standard" },
       11: { labelId: "11", targetId: "11", text: "decrement", groupId: "standard" },
       12: { labelId: "12", targetId: "12", text: "updater", groupId: "standard" },
-      13: { labelId: "13", targetId: "13", text: "next counter state", groupId: "standard" }
+      13: { labelId: "13", targetId: "13", text: "next counter state", groupId: "standard" },
+      15: { labelId: "15", targetId: "15", text: "counter store", groupId: "standard" }
     }
   }
 };
@@ -202,7 +204,7 @@ const config = {
   }
 };
 
-const testRoot = "13";
+const testRoot = "15";
 
 const simpleView = L.makeRepoViewModel(simple).create(
   {
@@ -229,18 +231,19 @@ autorun(() => {
 });
 
 autorun(() => {
-  console.table(
-    simpleView.boxes().map(n => ({
-      key: n.key,
-      // x: n.x,
-      // y: n.y,
-      size: n.size,
-      // path: (n.downPath || n.path).join(","),
-      text: n.text
-      // selected: n.selected ? "X" : null,
-      // link: n.category === L.Link ? n.upPath.join(",") : null
-    }))
-  );
+  0 &&
+    console.table(
+      simpleView.boxes().map(n => ({
+        key: n.key,
+        // x: n.x,
+        // y: n.y,
+        size: n.size,
+        // path: (n.downPath || n.path).join(","),
+        text: n.text
+        // selected: n.selected ? "X" : null,
+        // link: n.category === L.Link ? n.upPath.join(",") : null
+      }))
+    );
 });
 
 // const nodes2 = simple.links.get(5).display();
