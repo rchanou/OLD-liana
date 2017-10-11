@@ -500,6 +500,7 @@ export const makeRepoViewModel = repo =>
         let currentX = x;
 
         const siblings = nodes.length;
+
         for (let i = 0; i < siblings; i++) {
           const childPath = [...linkPath, i];
 
@@ -518,52 +519,60 @@ export const makeRepoViewModel = repo =>
             downPath: linkPath.slice(0, -1)
           };
 
-          switch (category) {
-            case LinkRef:
-              if (!openPaths.get(childPath.join("/"))) {
-                const label = resolveIdentifier(Label, repo, node.ref.linkId);
-                allBoxes.push({
-                  ...defaultBox,
-                  text: (label && label.text) || `(${self.linkId})`,
-                  color: pendingColor,
-                  size: 2
-                });
-                currentX += 2;
+          const makeLinkBoxes = childLink => {
+            if (!openPaths.get(childPath.join("/"))) {
+              const label = resolveIdentifier(Label, repo, childLink.linkId);
+              allBoxes.push({
+                ...defaultBox,
+                text: (label && label.text) || `(${self.linkId})`,
+                color: pendingColor,
+                size: 2
+              });
+              currentX += 2;
+              return;
+            }
+
+            const isLast = i === nodes.length - 1;
+
+            let immediateNextIsRef = false;
+            let nextIsRef = false; // rename to "followedByRef" or something
+            for (let k = i; k < siblings; k++) {
+              // TODO: don't do this in loop, precompute instead
+              const siblingType = getType(nodes[k]);
+              if (siblingType === LinkRef || siblingType === CallRef) {
+                if (k === i + 1) {
+                  immediateNextIsRef = true;
+                }
+                nextIsRef = true;
                 break;
               }
+            }
 
-              const isLast = i === nodes.length - 1;
+            const refChildNodes = self.boxes(childLink, {
+              root: false,
+              path: childPath,
+              linkPath: [...linkPath, childLink.linkId],
+              x: currentX,
+              y: y + 1,
+              immediateNextIsRef,
+              nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
+              isLast,
+              selected: sameAsSelectedPath && selectedIndex === i,
+              siblingCount: siblings,
+              open: openPaths.has(linkPath.join("/"))
+            });
+            allBoxes.push(...refChildNodes);
 
-              let immediateNextIsRef = false;
-              let nextIsRef = false; // rename to "followedByRef" or something
-              for (let k = i; k < siblings; k++) {
-                // TODO: don't do this in loop, precompute instead
-                if (getType(nodes[k]) === LinkRef) {
-                  if (k === i + 1) {
-                    immediateNextIsRef = true;
-                  }
-                  nextIsRef = true;
-                  break;
-                }
-              }
+            const { size } = refChildNodes[refChildNodes.length - 1];
+            currentX += size;
+          };
 
-              const refChildNodes = self.boxes(node.ref, {
-                root: false,
-                path: childPath,
-                linkPath: [...linkPath, node.ref.linkId],
-                x: currentX,
-                y: y + 1,
-                immediateNextIsRef,
-                nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
-                isLast,
-                selected: sameAsSelectedPath && selectedIndex === i,
-                siblingCount: siblings,
-                open: openPaths.has(linkPath.join("/"))
-              });
-              allBoxes.push(...refChildNodes);
-
-              const { size } = refChildNodes[refChildNodes.length - 1];
-              currentX += size;
+          switch (category) {
+            case LinkRef:
+              makeLinkBoxes(node.ref);
+              break;
+            case CallRef:
+              makeLinkBoxes(node.call.link);
               break;
             case Op:
               allBoxes.push({
