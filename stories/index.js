@@ -28,7 +28,15 @@ const simpleSnapshot = {
     5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] },
-    8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] }
+    8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] },
+    9: { linkId: "9", nodes: [{ op: "." }, { input: "0" }, { val: "type" }] },
+    10: { linkId: "10", nodes: [{ op: "+" }, { input: "1" }, { val: 1 }] },
+    11: { linkId: "11", nodes: [{ op: "+" }, { input: "2" }, { val: -1 }] },
+    12: {
+      linkId: "12",
+      nodes: [{ op: "s" }, { ref: "9" }, { val: "increment" }, { ref: "10" }, { val: "decrement" }, { ref: "11" }]
+    },
+    13: { linkId: "13", nodes: [{ ref: "12" }, { input: "2" }] }
   },
   linkLabelSets: {
     standard: {
@@ -39,7 +47,13 @@ const simpleSnapshot = {
       4: { labelId: "4", targetId: "4", groupId: "standard", text: "12²" },
       5: { labelId: "5", targetId: "5", groupId: "standard", text: "5² + 12²" },
       6: { labelId: "6", targetId: "6", groupId: "standard", text: "√" },
-      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" }
+      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" },
+      8: { labelId: "8", targetId: "8", groupId: "standard", text: "create store" },
+      9: { labelId: "9", targetId: "9", groupId: "standard", text: "action type" },
+      10: { labelId: "10", targetId: "10", text: "increment", groupId: "standard" },
+      11: { labelId: "11", targetId: "11", text: "decrement", groupId: "standard" },
+      12: { labelId: "12", targetId: "12", text: "updater", groupId: "standard" },
+      13: { labelId: "13", targetId: "13", text: "next counter state", groupId: "standard" }
     }
   }
 };
@@ -197,11 +211,11 @@ const config = {
 const simpleView = L.makeRepoViewModel(simple).create(
   {
     // ...simpleSnapshot,
-    rootLink: "8",
+    rootLink: "13",
     openPaths: {
       7: true
     },
-    selectedPath: ["8"],
+    selectedPath: ["13"],
     selectedIndex: 0
   },
   config
@@ -222,7 +236,8 @@ const simpleView = L.makeRepoViewModel(simple).create(
 // const nodes = simpleView.boxes();
 
 autorun(() => {
-  console.log("shooz", simple.dependencies.get("0").val);
+  console.log("shooz", simple.links.get("13").val);
+  // console.log("ope", simpleView.openPaths.toJS());
 });
 
 autorun(() => {
@@ -231,8 +246,8 @@ autorun(() => {
       key: n.key,
       // x: n.x,
       // y: n.y,
-      // size: n.size,
-      path: (n.downPath || n.path).join(","),
+      size: n.size,
+      // path: (n.downPath || n.path).join(","),
       text: n.text
       // selected: n.selected ? "X" : null,
       // link: n.category === L.Link ? n.upPath.join(",") : null

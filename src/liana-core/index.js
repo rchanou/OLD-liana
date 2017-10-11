@@ -74,10 +74,10 @@ const opFuncs = {
   ifOp(condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
-  switchOp(context, switcher, ...casePairs) {
+  switchOp(switcher, ...casePairs) {
     for (let i = 0; i < casePairs.length; i += 2) {
       if (switcher === casePairs[i]) {
-        return casePairs[i + 1](context);
+        return casePairs[i + 1];
       }
     }
   }
@@ -460,6 +460,7 @@ export const makeRepoViewModel = repo =>
         const {
           x = 0,
           y = 0,
+          immediateNextIsRef = false,
           nextIsRef = false,
           isLast = true,
           path = [linkId],
@@ -508,14 +509,30 @@ export const makeRepoViewModel = repo =>
                 currentX++;
                 break;
               }
+
               const isLast = i === nodes.length - 1;
+
+              let immediateNextIsRef = false;
+              let nextIsRef = false; // rename to "followedByRef" or something
+              for (let k = i; k < siblings; k++) {
+                // TODO: don't do this in loop, precompute instead
+                if (getType(nodes[k]) === LinkRef) {
+                  if (k === i + 1) {
+                    immediateNextIsRef = true;
+                  }
+                  nextIsRef = true;
+                  break;
+                }
+              }
+
               const refChildNodes = self.boxes(node.ref, {
                 root: false,
                 path: childPath,
                 linkPath: [...linkPath, node.ref.linkId],
                 x: currentX,
                 y: y + 1,
-                nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
+                immediateNextIsRef,
+                nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
                 isLast,
                 selected: sameAsSelectedPath && selectedIndex === i,
                 siblingCount: siblings,
@@ -547,7 +564,7 @@ export const makeRepoViewModel = repo =>
               allBoxes.push({
                 ...defaultBox,
                 color: inputColor,
-                text: node.input
+                text: `{${node.input}}`
               });
               currentX++;
               break;
@@ -567,7 +584,7 @@ export const makeRepoViewModel = repo =>
 
         const label = resolveIdentifier(Label, repo, link.linkId);
         const thisSize = nextIsRef
-          ? Math.max(...allBoxes.map(n => n.x)) - x + 2
+          ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : 1)
           : isLast ? Math.max(...allBoxes.map(n => n.x + n.size)) - x : 1;
 
         const thisNode = {
