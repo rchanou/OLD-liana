@@ -34,9 +34,9 @@ const simpleSnapshot = {
     11: { linkId: "11", nodes: [{ op: "+" }, { input: "2" }, { val: -1 }] },
     12: {
       linkId: "12",
-      nodes: [{ op: "s" }, { ref: "9" }, { val: "increment" }, { ref: "10" }, { val: "decrement" }, { ref: "11" }]
+      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { ref: "10" }, { val: "DECREMENT" }, { ref: "11" }]
     },
-    13: { linkId: "13", nodes: [{ ref: "12" }, { input: "2" }] }
+    13: { linkId: "13", nodes: [{ ref: "12" }, { input: "3" }] }
   },
   linkLabelSets: {
     standard: {
@@ -183,19 +183,10 @@ const graph = L.Repo.create(
 );
 
 const { links } = withCalls;
-console.log("hmm", links.get(2).val(12));
-console.log("hmm", links.get(3).val);
-// console.log("dep", simple.dependents("2"));
 const getVal = id => graph.links.get(id).val;
-// const a = getVal(18);
-// const b = getVal(5);
-// const c = getVal(19);
-// const d = getVal(23);
-// const subLink = graph.subs.get(0).sub.get(0)[0].ref.link;
-// console.log(subLink, 'le link')
-graph.expandSub("0", "24", { ref: "5" });
-const e = getVal("24-2");
-console.log(e);
+// graph.expandSub("0", "24", { ref: "5" });
+// const e = getVal("24-2");
+// console.log(e);
 
 const config = {
   keyMap: {
@@ -208,35 +199,29 @@ const config = {
   }
 };
 
+const testRoot = "13";
+
 const simpleView = L.makeRepoViewModel(simple).create(
   {
-    // ...simpleSnapshot,
-    rootLink: "13",
+    rootLink: testRoot,
     openPaths: {
       7: true
     },
-    selectedPath: ["13"],
+    selectedPath: [testRoot],
     selectedIndex: 0
   },
   config
 );
 
-// console.log(getVal("32"));
-// const f = graph.calls.get(0).val;
-// console.log("fff", f);
-// const g = graph.calls.get(1).val;
-// console.log("say what", g, g(37));
-// const snap = getSnapshot(graph.links);
-// console.log(JSON.stringify(snap));
-// console.log("le test", testPkg);
-// autorun(() => {
-//   console.log("le pkg", graph.packages.get(0).with());
-// });
-
-// const nodes = simpleView.boxes();
+const params = new Map(
+  Object.entries({
+    0: { type: "INCREMENT" },
+    3: 4
+  })
+);
 
 autorun(() => {
-  console.log("shooz", simple.links.get("13").val);
+  console.log("shooz", simple.links.get("13").with(params));
   // console.log("ope", simpleView.openPaths.toJS());
 });
 

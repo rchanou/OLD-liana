@@ -553,12 +553,15 @@ export const makeRepoViewModel = repo =>
               break;
             case Val:
               const { val } = node;
+              const isString = typeof val === "string";
+              const boxSize = isString ? 2 : 1;
               allBoxes.push({
                 ...defaultBox,
                 color: valColor,
-                text: typeof val === "string" ? `"${val}"` : val
+                text: isString ? `"${val}"` : val,
+                size: boxSize
               });
-              currentX++;
+              currentX += boxSize;
               break;
             case Input:
               allBoxes.push({
