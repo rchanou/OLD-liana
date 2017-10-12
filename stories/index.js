@@ -57,7 +57,7 @@ const simpleSnapshot = {
       10: { labelId: "10", targetId: "10", text: "increment", groupId: "standard" },
       11: { labelId: "11", targetId: "11", text: "decrement", groupId: "standard" },
       12: { labelId: "12", targetId: "12", text: "updater", groupId: "standard" },
-      13: { labelId: "13", targetId: "13", text: "next counter state", groupId: "standard" },
+      13: { labelId: "13", targetId: "13", text: "counter reducer", groupId: "standard" },
       15: { labelId: "15", targetId: "15", text: "counter store", groupId: "standard" }
     }
   }

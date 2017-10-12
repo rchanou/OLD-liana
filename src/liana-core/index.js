@@ -400,7 +400,7 @@ export const SubRef = types
   }));
 
 export const Label = types.model("Label", {
-  labelId: types.identifier(types.string), // TODO: labels should have own id, not that of link!
+  labelId: types.identifier(types.string),
   text: optionalString,
   targetId: optionalString,
   groupId: optionalString,
@@ -515,6 +515,7 @@ export const makeRepoViewModel = repo =>
             const color = childNodeType === LinkRef ? pendingColor : callColor;
 
             if (!openPaths.get(childPath.join("/"))) {
+              ttw;
               const label = resolveIdentifier(Label, repo, innerLink.linkId);
               allBoxes.push({
                 ...defaultBox,
@@ -599,9 +600,10 @@ export const makeRepoViewModel = repo =>
               allBoxes.push({
                 ...defaultBox,
                 color: packageColor,
-                text: node.dep.path.replace("https://unpkg.com/", "").slice(0, 9)
+                size: 2,
+                text: node.dep.path.replace("https://unpkg.com/", "").split("/")[0]
               });
-              currentX++;
+              currentX += 2;
               break;
             default:
               allBoxes.push({ ...defaultBox, color: unknownColor });
@@ -739,6 +741,7 @@ export const Repo = types
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
     linkLabelSets: optionalMap(optionalMap(Label)),
+    inputLabelSets: optionalMap(optionalMap(Label)),
     linkComments: optionalMap(Comment),
     subLabels: optionalMap(Label),
     subComments: optionalMap(Comment),
