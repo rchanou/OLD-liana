@@ -1,6 +1,7 @@
-import { types, getEnv, getType, resolveIdentifier } from "mobx-state-tree";
+import { types, getType } from "mobx-state-tree";
 
-import { CallRef, Input, Label, Link, LinkRef, Op, DepRef, Val } from "../core";
+import { Repo, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "../core";
+import { Meta } from "../meta";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
@@ -17,6 +18,9 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
+    repo: Repo,
+    meta: Meta,
+    keyMap: optionalMap(types.string), // this might be better as map of enum
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard"),
@@ -56,7 +60,7 @@ const ViewRepoTree = types
     }
   }))
   .views(self => {
-    const { repo } = getEnv(self);
+    const { repo, meta } = self;
 
     const getBoxes = (link, opts = {}) => {
       const { links } = repo;
@@ -111,7 +115,7 @@ const ViewRepoTree = types
           const color = childNodeType === LinkRef ? pendingColor : callColor;
 
           if (!openPaths.get(childPath.join("/"))) {
-            const label = resolveIdentifier(Label, repo.linkLabelSets, innerLink.linkId);
+            const label = meta.linkLabelSet.get(innerLink.linkId);
             allBoxes.push({
               ...defaultBox,
               text: (label && label.text) || `(${self.linkId})`,
@@ -206,7 +210,7 @@ const ViewRepoTree = types
         }
       }
 
-      const label = resolveIdentifier(Label, repo.linkLabelSets, link.linkId);
+      const label = meta.linkLabelSet.get(link.linkId);
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
@@ -293,14 +297,13 @@ const ViewRepoTree = types
     }
   }))
   .actions(self => {
-    const context = getEnv(self);
-    const { keyMap } = context;
+    const { keyMap } = self;
 
     const handleKeyUp = e => {
       e.preventDefault();
 
       const { keyCode } = e;
-      const actionName = keyMap[keyCode];
+      const actionName = keyMap.get(keyCode);
       switch (actionName) {
         case "left":
           self.move(-1);
@@ -320,7 +323,7 @@ const ViewRepoTree = types
         default:
           const action = self[actionName];
           if (typeof action === "function") {
-            action(context);
+            action(self);
           }
           console.log(keyCode);
       }

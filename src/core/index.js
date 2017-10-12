@@ -1,8 +1,7 @@
-import { types, getEnv, getType, resolveIdentifier, process } from "mobx-state-tree";
+import { types, getEnv, getType, process } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
-const optionalString = types.optional(types.string, "");
 const optionalMap = type => types.optional(types.map(type), {});
 
 export const global = "g";
@@ -373,32 +372,11 @@ export const SubRef = types
     }
   }));
 
-export const Label = types.model("Label", {
-  labelId: types.identifier(types.string),
-  text: optionalString,
-  targetId: optionalString,
-  groupId: optionalString,
-  locale: optionalString
-});
-
-export const Comment = types.model("Post", {
-  postId: types.identifier(types.string),
-  text: optionalString,
-  targetId: optionalString
-});
-
 export const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
-    subs: optionalMap(Sub),
-    linkLabelSets: optionalMap(optionalMap(Label)),
-    inputLabelSets: optionalMap(optionalMap(Label)),
-    linkComments: optionalMap(Comment),
-    subLabels: optionalMap(Label),
-    subComments: optionalMap(Comment),
-    branchLabels: optionalMap(Label),
-    branchComments: optionalMap(Comment)
+    subs: optionalMap(Sub)
   })
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
