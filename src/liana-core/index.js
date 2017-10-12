@@ -515,7 +515,6 @@ export const makeRepoViewModel = repo =>
             const color = childNodeType === LinkRef ? pendingColor : callColor;
 
             if (!openPaths.get(childPath.join("/"))) {
-              ttw;
               const label = resolveIdentifier(Label, repo, innerLink.linkId);
               allBoxes.push({
                 ...defaultBox,
