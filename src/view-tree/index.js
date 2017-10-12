@@ -58,202 +58,203 @@ const ViewRepoTree = types
   .views(self => {
     const { repo } = getEnv(self);
 
-    return {
-      get boxes() {
-        return self.getBoxes();
-      },
-      getBoxes(link, opts = {}) {
-        const { links } = repo;
-        const { rootLink, openPaths, selectedPath, selectedIndex } = self;
-        link = link || links.get(rootLink);
-        const { linkId, nodes } = link;
-        const {
-          x = 0,
-          y = 0,
-          color = pendingColor,
-          immediateNextIsRef = false,
-          nextIsRef = false,
-          isLast = true,
-          path = [linkId],
-          linkPath = [linkId],
-          root = true,
-          selected = false,
-          siblingCount = 1,
-          open = true
-        } = opts;
+    const getBoxes = (link, opts = {}) => {
+      const { links } = repo;
+      const { rootLink, openPaths, selectedPath, selectedIndex } = self;
+      link = link || links.get(rootLink);
+      const { linkId, nodes } = link;
+      const {
+        x = 0,
+        y = 0,
+        color = pendingColor,
+        immediateNextIsRef = false,
+        nextIsRef = false,
+        isLast = true,
+        path = [linkId],
+        linkPath = [linkId],
+        root = true,
+        selected = false,
+        siblingCount = 1,
+        open = true
+      } = opts;
 
-        const allBoxes = [];
+      const allBoxes = [];
 
-        const sameAsSelectedPath =
-          selectedPath.length === linkPath.length && selectedPath.every((token, j) => token === linkPath[j]);
+      const sameAsSelectedPath =
+        selectedPath.length === linkPath.length && selectedPath.every((token, j) => token === linkPath[j]);
 
-        let currentX = x;
+      let currentX = x;
 
-        const siblings = nodes.length;
+      const siblings = nodes.length;
 
-        for (let i = 0; i < siblings; i++) {
-          const childPath = [...linkPath, i];
+      for (let i = 0; i < siblings; i++) {
+        const childPath = [...linkPath, i];
 
-          const node = nodes[i];
-          const category = getType(node);
+        const node = nodes[i];
+        const category = getType(node);
 
-          const defaultBox = {
+        const defaultBox = {
+          path: childPath,
+          x: currentX,
+          y: y + 1,
+          size: 1,
+          root: false,
+          selected: sameAsSelectedPath && selectedIndex === i,
+          category,
+          siblings,
+          downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
+        };
+
+        const makeLinkBoxes = linkOrCallRef => {
+          const childNodeType = getType(linkOrCallRef);
+          const innerLink = childNodeType === LinkRef ? linkOrCallRef.ref : linkOrCallRef.call.link;
+          const color = childNodeType === LinkRef ? pendingColor : callColor;
+
+          if (!openPaths.get(childPath.join("/"))) {
+            const label = resolveIdentifier(Label, repo.linkLabelSets, innerLink.linkId);
+            allBoxes.push({
+              ...defaultBox,
+              text: (label && label.text) || `(${self.linkId})`,
+              color,
+              size: 2
+            });
+            currentX += 2;
+            return;
+          }
+
+          const isLast = i === nodes.length - 1;
+
+          let immediateNextIsRef = false;
+          let nextIsRef = false; // rename to "followedByRef" or something
+          for (let k = i; k < siblings; k++) {
+            // TODO: don't do this in loop, precompute instead
+            const siblingType = getType(nodes[k]);
+            if (siblingType === LinkRef || siblingType === CallRef) {
+              if (k === i + 1) {
+                immediateNextIsRef = true;
+              }
+              nextIsRef = true;
+              break;
+            }
+          }
+
+          const refChildNodes = getBoxes(innerLink, {
+            root: false,
             path: childPath,
+            linkPath: [...linkPath, innerLink.linkId],
             x: currentX,
             y: y + 1,
-            size: 1,
-            root: false,
+            color,
+            immediateNextIsRef,
+            nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
+            isLast,
             selected: sameAsSelectedPath && selectedIndex === i,
-            category,
-            siblings,
-            downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
-          };
+            siblingCount: siblings,
+            open: openPaths.has(linkPath.join("/"))
+          });
+          allBoxes.push(...refChildNodes);
 
-          const makeLinkBoxes = linkOrCallRef => {
-            const childNodeType = getType(linkOrCallRef);
-            const innerLink = childNodeType === LinkRef ? linkOrCallRef.ref : linkOrCallRef.call.link;
-            const color = childNodeType === LinkRef ? pendingColor : callColor;
-
-            if (!openPaths.get(childPath.join("/"))) {
-              const label = resolveIdentifier(Label, repo.linkLabelSets, innerLink.linkId);
-              allBoxes.push({
-                ...defaultBox,
-                text: (label && label.text) || `(${self.linkId})`,
-                color,
-                size: 2
-              });
-              currentX += 2;
-              return;
-            }
-
-            const isLast = i === nodes.length - 1;
-
-            let immediateNextIsRef = false;
-            let nextIsRef = false; // rename to "followedByRef" or something
-            for (let k = i; k < siblings; k++) {
-              // TODO: don't do this in loop, precompute instead
-              const siblingType = getType(nodes[k]);
-              if (siblingType === LinkRef || siblingType === CallRef) {
-                if (k === i + 1) {
-                  immediateNextIsRef = true;
-                }
-                nextIsRef = true;
-                break;
-              }
-            }
-
-            const refChildNodes = self.getBoxes(innerLink, {
-              root: false,
-              path: childPath,
-              linkPath: [...linkPath, innerLink.linkId],
-              x: currentX,
-              y: y + 1,
-              color,
-              immediateNextIsRef,
-              nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
-              isLast,
-              selected: sameAsSelectedPath && selectedIndex === i,
-              siblingCount: siblings,
-              open: openPaths.has(linkPath.join("/"))
-            });
-            allBoxes.push(...refChildNodes);
-
-            const { size } = refChildNodes[refChildNodes.length - 1];
-            currentX += size;
-          };
-
-          switch (category) {
-            case LinkRef:
-            case CallRef:
-              makeLinkBoxes(node);
-              break;
-            case Op:
-              allBoxes.push({
-                ...defaultBox,
-                color: opColor,
-                text: node.op
-              });
-              currentX++;
-              break;
-            case Val:
-              const { val } = node;
-              const isString = typeof val === "string";
-              const boxSize = isString ? Math.ceil(val.length / 6) : 1;
-              allBoxes.push({
-                ...defaultBox,
-                color: valColor,
-                text: isString ? `"${val}"` : val,
-                size: boxSize
-              });
-              currentX += boxSize;
-              break;
-            case Input:
-              allBoxes.push({
-                ...defaultBox,
-                color: inputColor,
-                text: `{${node.input}}`
-              });
-              currentX++;
-              break;
-            case DepRef:
-              allBoxes.push({
-                ...defaultBox,
-                color: packageColor,
-                size: 2,
-                text: node.dep.path.replace("https://unpkg.com/", "").split("/")[0]
-              });
-              currentX += 2;
-              break;
-            default:
-              allBoxes.push({ ...defaultBox, color: unknownColor });
-              currentX++;
-          }
-        }
-
-        const label = resolveIdentifier(Label, repo.linkLabelSets, link.linkId);
-        // TODO: we need some crazy logic to make this more adaptable
-        // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
-        const thisSize = nextIsRef
-          ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
-          : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
-
-        const thisNode = {
-          path,
-          upPath: linkPath,
-          ...(root ? {} : { downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2) }),
-          x,
-          y,
-          size: thisSize,
-          color,
-          text: (label && label.text) || `(${link.linkId})`,
-          category: Link,
-          selected: selected || (sameAsSelectedPath && selectedIndex === null),
-          siblings: siblingCount
+          const { size } = refChildNodes[refChildNodes.length - 1];
+          currentX += size;
         };
-        allBoxes.push(thisNode);
 
-        if (root) {
-          const existingKeys = {};
-          let i = allBoxes.length;
-          while (i--) {
-            const box = allBoxes[i];
-            const { path } = box;
-            let j = path.length - 1;
-            let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
-            if (!box.link) {
-              j--;
-              currentKey += "/" + (j in path ? path[j] : "");
-            }
-            while (existingKeys[currentKey]) {
-              j--;
-              currentKey += "/" + (j in path ? path[j] : "");
-            }
-            existingKeys[currentKey] = true;
-            box.key = currentKey;
-          }
+        switch (category) {
+          case LinkRef:
+          case CallRef:
+            makeLinkBoxes(node);
+            break;
+          case Op:
+            allBoxes.push({
+              ...defaultBox,
+              color: opColor,
+              text: node.op
+            });
+            currentX++;
+            break;
+          case Val:
+            const { val } = node;
+            const isString = typeof val === "string";
+            const boxSize = isString ? Math.ceil(val.length / 6) : 1;
+            allBoxes.push({
+              ...defaultBox,
+              color: valColor,
+              text: isString ? `"${val}"` : val,
+              size: boxSize
+            });
+            currentX += boxSize;
+            break;
+          case Input:
+            allBoxes.push({
+              ...defaultBox,
+              color: inputColor,
+              text: `{${node.input}}`
+            });
+            currentX++;
+            break;
+          case DepRef:
+            allBoxes.push({
+              ...defaultBox,
+              color: packageColor,
+              size: 2,
+              text: node.dep.path.replace("https://unpkg.com/", "").split("/")[0]
+            });
+            currentX += 2;
+            break;
+          default:
+            allBoxes.push({ ...defaultBox, color: unknownColor });
+            currentX++;
         }
+      }
 
-        return allBoxes;
+      const label = resolveIdentifier(Label, repo.linkLabelSets, link.linkId);
+      // TODO: we need some crazy logic to make this more adaptable
+      // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
+      const thisSize = nextIsRef
+        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
+
+      const thisNode = {
+        path,
+        upPath: linkPath,
+        ...(root ? {} : { downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2) }),
+        x,
+        y,
+        size: thisSize,
+        color,
+        text: (label && label.text) || `(${link.linkId})`,
+        category: Link,
+        selected: selected || (sameAsSelectedPath && selectedIndex === null),
+        siblings: siblingCount
+      };
+      allBoxes.push(thisNode);
+
+      if (root) {
+        const existingKeys = {};
+        let i = allBoxes.length;
+        while (i--) {
+          const box = allBoxes[i];
+          const { path } = box;
+          let j = path.length - 1;
+          let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+          if (!box.link) {
+            j--;
+            currentKey += "/" + (j in path ? path[j] : "");
+          }
+          while (existingKeys[currentKey]) {
+            j--;
+            currentKey += "/" + (j in path ? path[j] : "");
+          }
+          existingKeys[currentKey] = true;
+          box.key = currentKey;
+        }
+      }
+
+      return allBoxes;
+    };
+
+    return {
+      get boxes() {
+        return getBoxes();
       }
     };
   })
