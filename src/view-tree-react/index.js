@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { Link } from "../liana-core";
+import { Link } from "../core";
 
 const containerStyle = {
   position: "absolute",

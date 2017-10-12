@@ -7,8 +7,10 @@ import { action } from "@storybook/addon-actions";
 // import { linkTo } from "@storybook/addon-links";
 // import { Button, Welcome } from "@storybook/react/demo";
 
-import * as L from "../src/liana-core";
-import { Tree } from "../src/liana-explorer";
+import * as L from "../src/core";
+import makeRepoViewModel from "../src/view-tree";
+
+import { Tree } from "../src/view-tree-react";
 
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
@@ -95,7 +97,8 @@ const withCalls = L.Repo.create({
 const graph = L.Repo.create(
   {
     dependencies: {
-      0: { depId: "0", path: testDep }
+      0: { depId: "0", path: testDep },
+      1: { depId: "1", path: "https://unpkg.com/lodash@4.17.4/lodash.js" }
     },
     links: {
       0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
@@ -134,10 +137,9 @@ const graph = L.Repo.create(
         linkId: "16",
         nodes: [{ op: "[" }, { val: 3 }, { val: 5 }, { val: 7 }]
       },
-      17: { linkId: "17", nodes: [{ op: "_" }] },
       18: {
         linkId: "18",
-        nodes: [{ op: "." }, { ref: "17" }, { val: "map" }]
+        nodes: [{ op: "." }, { dep: "1" }, { val: "map" }]
       },
       19: { linkId: "19", nodes: [{ op: "+" }, { input: "a" }, { val: 5.4 }] },
       20: {
@@ -206,7 +208,7 @@ const config = {
 
 const testRoot = "15";
 
-const simpleView = L.makeRepoViewModel(simple).create(
+const simpleView = makeRepoViewModel(simple).create(
   {
     rootLink: testRoot,
     openPaths: {
