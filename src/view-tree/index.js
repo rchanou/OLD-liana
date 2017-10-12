@@ -2,7 +2,7 @@ import { types, getEnv, getType, resolveIdentifier } from "mobx-state-tree";
 
 import * as L from "../core";
 
-const { CallRef, Input, Label, Link, LinkRef, Op, PackageRef, Val } = L;
+const { CallRef, Input, Label, Link, LinkRef, Op, DepRef, Val } = L;
 
 const optionalMap = type => types.optional(types.map(type), {});
 
@@ -197,7 +197,7 @@ const makeRepoViewModel = repo =>
               });
               currentX++;
               break;
-            case PackageRef:
+            case DepRef:
               allBoxes.push({
                 ...defaultBox,
                 color: packageColor,

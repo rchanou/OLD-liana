@@ -153,8 +153,8 @@ export const Dependency = types
     };
   });
 
-export const PackageRef = types
-  .model("PackageRef", {
+export const DepRef = types
+  .model("DepRef", {
     dep: types.reference(Dependency)
   })
   .views(self => ({
@@ -219,7 +219,7 @@ export const Node = types.union(
   types.late(() => LinkRef),
   types.late(() => CallRef),
   types.late(() => SubRef),
-  PackageRef
+  DepRef
 );
 
 export const Link = types
