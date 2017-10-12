@@ -1,19 +1,10 @@
 import { types, getEnv, getType, resolveIdentifier } from "mobx-state-tree";
 
-import * as L from "../core";
-
-const { CallRef, Input, Label, Link, LinkRef, Op, DepRef, Val } = L;
+import { CallRef, Input, Label, Link, LinkRef, Op, DepRef, Val } from "../core";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
 const Path = types.array(types.union(types.string, types.number));
-
-const Box = types.model("Box", {
-  x: types.number,
-  y: types.number,
-  path: Path,
-  dependents: types.map(Path)
-});
 
 const baseColor = ",66%,55%)";
 const opColor = `hsl(150${baseColor}`;

@@ -1,4 +1,4 @@
-import { types, getEnv, getRoot, getType, resolveIdentifier, process } from "mobx-state-tree";
+import { types, getEnv, getType, resolveIdentifier, process } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
