@@ -24,46 +24,50 @@ const pendingColor = `hsl(270${baseColor}`;
 const callColor = `hsl(300${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
 
-const makeRepoViewModel = repo =>
-  types
-    .model("RepoView", {
-      rootLink: types.string,
-      openPaths: optionalMap(types.boolean),
-      labelGroup: types.optional(types.string, "standard"),
-      selectedPath: types.optional(Path, []),
-      selectedIndex: types.maybe(types.number, 0)
-    })
-    .views(self => ({
-      get selectedBox() {
-        const { selectedPath, selectedIndex, boxes } = self;
+const ViewRepoTree = types
+  .model("ViewRepoTree", {
+    rootLink: types.string,
+    openPaths: optionalMap(types.boolean),
+    labelGroup: types.optional(types.string, "standard"),
+    selectedPath: types.optional(Path, []),
+    selectedIndex: types.maybe(types.number, 0)
+  })
+  .views(self => ({
+    get selectedBox() {
+      const { selectedPath, selectedIndex, boxes } = self;
 
-        if (selectedIndex === null) return true;
+      if (selectedIndex === null) return true;
 
-        const selectedPathLength = selectedPath.length;
+      const selectedPathLength = selectedPath.length;
 
-        if (!selectedPathLength) {
-          return false;
-        }
+      if (!selectedPathLength) {
+        return false;
+      }
 
-        return boxes().find(
-          box =>
-            box.path.length === selectedPathLength + 1 &&
-            selectedPath.every((x, i) => x === box.path[i]) &&
-            box.path[selectedPathLength] === selectedIndex
-        );
-      },
-      get isLinkSelected() {
-        const { selectedBox } = self;
+      return boxes().find(
+        box =>
+          box.path.length === selectedPathLength + 1 &&
+          selectedPath.every((x, i) => x === box.path[i]) &&
+          box.path[selectedPathLength] === selectedIndex
+      );
+    },
+    get isLinkSelected() {
+      const { selectedBox } = self;
 
-        if (!selectedBox) {
-          return false;
-        }
+      if (!selectedBox) {
+        return false;
+      }
 
-        return selectedBox.category === Link;
-      },
-      get pathKey() {
-        return self.selectedPath.concat(self.selectedIndex).join("/");
-      },
+      return selectedBox.category === Link;
+    },
+    get pathKey() {
+      return self.selectedPath.concat(self.selectedIndex).join("/");
+    }
+  }))
+  .views(self => {
+    const { repo } = getEnv(self);
+
+    return {
       boxes(link, opts = {}) {
         const { links } = repo;
         const { rootLink, openPaths, selectedPath, selectedIndex } = self;
@@ -257,83 +261,84 @@ const makeRepoViewModel = repo =>
 
         return allBoxes;
       }
-    }))
-    .actions(self => ({
-      move(dir) {
-        const { siblings } = self.selectedBox;
-        let newSelectedIndex = self.selectedIndex + dir;
-        if (newSelectedIndex < 0) {
-          newSelectedIndex = siblings - 1;
-        } else if (newSelectedIndex > siblings - 1) {
-          newSelectedIndex = 0;
-        }
-        self.selectedIndex = newSelectedIndex;
-      },
-      up() {
-        const { selectedBox } = self;
-        const { upPath } = selectedBox;
-        if (upPath) {
-          self.selectedPath = upPath;
-          self.selectedIndex = 0;
-        }
-      },
-      down() {
-        const { selectedBox } = self;
-        const { downPath } = selectedBox;
-        if (downPath) {
-          self.selectedPath = downPath;
-          self.selectedIndex = 0;
-        }
-      },
-      open() {
-        const { pathKey } = self;
-        const current = self.openPaths.get(pathKey);
-        self.openPaths.set(pathKey, !current);
-        console.log("le key", pathKey);
+    };
+  })
+  .actions(self => ({
+    move(dir) {
+      const { siblings } = self.selectedBox;
+      let newSelectedIndex = self.selectedIndex + dir;
+      if (newSelectedIndex < 0) {
+        newSelectedIndex = siblings - 1;
+      } else if (newSelectedIndex > siblings - 1) {
+        newSelectedIndex = 0;
       }
-    }))
-    .actions(self => {
-      const context = getEnv(self);
-      const { keyMap } = context;
+      self.selectedIndex = newSelectedIndex;
+    },
+    up() {
+      const { selectedBox } = self;
+      const { upPath } = selectedBox;
+      if (upPath) {
+        self.selectedPath = upPath;
+        self.selectedIndex = 0;
+      }
+    },
+    down() {
+      const { selectedBox } = self;
+      const { downPath } = selectedBox;
+      if (downPath) {
+        self.selectedPath = downPath;
+        self.selectedIndex = 0;
+      }
+    },
+    open() {
+      const { pathKey } = self;
+      const current = self.openPaths.get(pathKey);
+      self.openPaths.set(pathKey, !current);
+      console.log("le key", pathKey);
+    }
+  }))
+  .actions(self => {
+    const context = getEnv(self);
+    const { keyMap } = context;
 
-      const handleKeyUp = e => {
-        e.preventDefault();
+    const handleKeyUp = e => {
+      e.preventDefault();
 
-        const { keyCode } = e;
-        const actionName = keyMap[keyCode];
-        switch (actionName) {
-          case "left":
-            self.move(-1);
-            break;
-          case "right":
-            self.move(+1);
-            break;
-          case "up":
-            self.up();
-            break;
-          case "down":
-            self.down();
-            break;
-          case "open":
-            self.open();
-            break;
-          default:
-            const action = self[actionName];
-            if (typeof action === "function") {
-              action(context);
-            }
-            console.log(keyCode);
-        }
-      };
+      const { keyCode } = e;
+      const actionName = keyMap[keyCode];
+      switch (actionName) {
+        case "left":
+          self.move(-1);
+          break;
+        case "right":
+          self.move(+1);
+          break;
+        case "up":
+          self.up();
+          break;
+        case "down":
+          self.down();
+          break;
+        case "open":
+          self.open();
+          break;
+        default:
+          const action = self[actionName];
+          if (typeof action === "function") {
+            action(context);
+          }
+          console.log(keyCode);
+      }
+    };
 
-      return {
-        afterCreate() {
-          document.addEventListener("keyup", handleKeyUp);
-        },
-        beforeDestroy() {
-          document.removeEventListener("keyup", handleKeyUp);
-        }
-      };
-    });
+    return {
+      afterCreate() {
+        document.addEventListener("keyup", handleKeyUp);
+      },
+      beforeDestroy() {
+        document.removeEventListener("keyup", handleKeyUp);
+      }
+    };
+  });
 
-export default makeRepoViewModel;
+export default ViewRepoTree;

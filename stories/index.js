@@ -8,7 +8,7 @@ import { action } from "@storybook/addon-actions";
 // import { Button, Welcome } from "@storybook/react/demo";
 
 import * as L from "../src/core";
-import makeRepoViewModel from "../src/view-tree";
+import ViewRepoTree from "../src/view-tree";
 
 import { Tree } from "../src/view-tree-react";
 
@@ -196,6 +196,7 @@ const getVal = id => graph.links.get(id).val;
 // console.log(e);
 
 const config = {
+  repo: simple,
   keyMap: {
     70: "up",
     82: "left",
@@ -208,7 +209,7 @@ const config = {
 
 const testRoot = "15";
 
-const simpleView = makeRepoViewModel(simple).create(
+const simpleView = ViewRepoTree.create(
   {
     rootLink: testRoot,
     openPaths: {
