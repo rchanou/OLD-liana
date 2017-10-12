@@ -35,7 +35,7 @@ const ViewRepoTree = types
         return false;
       }
 
-      return boxes().find(
+      return self.boxes.find(
         box =>
           box.path.length === selectedPathLength + 1 &&
           selectedPath.every((x, i) => x === box.path[i]) &&
@@ -59,7 +59,10 @@ const ViewRepoTree = types
     const { repo } = getEnv(self);
 
     return {
-      boxes(link, opts = {}) {
+      get boxes() {
+        return self.getBoxes();
+      },
+      getBoxes(link, opts = {}) {
         const { links } = repo;
         const { rootLink, openPaths, selectedPath, selectedIndex } = self;
         link = link || links.get(rootLink);
@@ -139,7 +142,7 @@ const ViewRepoTree = types
               }
             }
 
-            const refChildNodes = self.boxes(innerLink, {
+            const refChildNodes = self.getBoxes(innerLink, {
               root: false,
               path: childPath,
               linkPath: [...linkPath, innerLink.linkId],

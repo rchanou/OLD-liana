@@ -236,7 +236,7 @@ autorun(() => {
 autorun(() => {
   0 &&
     console.table(
-      simpleView.boxes().map(n => ({
+      simpleView.boxes.map(n => ({
         key: n.key,
         // x: n.x,
         // y: n.y,
@@ -268,7 +268,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <Observer>{() => <Tree nodes={simpleView.boxes()} />}</Observer>;
+    return <Observer>{() => <Tree nodes={simpleView.boxes} />}</Observer>;
   }
 }
 
