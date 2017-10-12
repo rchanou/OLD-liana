@@ -33,6 +33,9 @@ export const Meta = types
   .views(self => ({
     get linkLabelSet() {
       return self.linkLabelSets.get(self.selectedLabelSet);
+    },
+    get inputLabelSet() {
+      return self.inputLabelSets.get(self.selectedLabelSet);
     }
   }));
 

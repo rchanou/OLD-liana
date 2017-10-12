@@ -68,7 +68,8 @@ const simpleMeta = {
   },
   inputLabelSets: {
     standard: {
-      0: { labelId: "0" }
+      0: { labelId: "0", text: "state" },
+      1: { labelId: "1", text: "action" }
     }
   }
 };

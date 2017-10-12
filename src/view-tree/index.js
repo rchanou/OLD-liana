@@ -188,10 +188,12 @@ const ViewRepoTree = types
             currentX += boxSize;
             break;
           case Input:
+            const inputLabel = meta.inputLabelSet.get(node.input);
+
             allBoxes.push({
               ...defaultBox,
               color: inputColor,
-              text: `{${node.input}}`
+              text: inputLabel ? inputLabel.text : `{${node.input}}`
             });
             currentX++;
             break;
