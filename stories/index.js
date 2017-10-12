@@ -28,7 +28,19 @@ const simpleSnapshot = {
     5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] },
-    8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] }
+    8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] },
+    9: { linkId: "9", nodes: [{ op: "." }, { input: "1" }, { val: "type" }] },
+    10: { linkId: "10", nodes: [{ op: "+" }, { input: "2" }, { val: 1 }] },
+    "10a": { callId: "10a", link: "10" },
+    11: { linkId: "11", nodes: [{ op: "+" }, { input: "3" }, { val: -1 }] },
+    "11a": { callId: "11a", link: "11" },
+    12: {
+      linkId: "12",
+      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }]
+    },
+    13: { linkId: "13", nodes: [{ ref: "12" }, { input: "0" }] },
+    14: { callId: "14", link: "13" },
+    15: { linkId: "15", nodes: [{ ref: "8" }, { call: "14" }] }
   },
   linkLabelSets: {
     standard: {
@@ -39,7 +51,14 @@ const simpleSnapshot = {
       4: { labelId: "4", targetId: "4", groupId: "standard", text: "12²" },
       5: { labelId: "5", targetId: "5", groupId: "standard", text: "5² + 12²" },
       6: { labelId: "6", targetId: "6", groupId: "standard", text: "√" },
-      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" }
+      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" },
+      8: { labelId: "8", targetId: "8", groupId: "standard", text: "create store" },
+      9: { labelId: "9", targetId: "9", groupId: "standard", text: "action type" },
+      10: { labelId: "10", targetId: "10", text: "increment", groupId: "standard" },
+      11: { labelId: "11", targetId: "11", text: "decrement", groupId: "standard" },
+      12: { labelId: "12", targetId: "12", text: "updater", groupId: "standard" },
+      13: { labelId: "13", targetId: "13", text: "next counter state", groupId: "standard" },
+      15: { labelId: "15", targetId: "15", text: "counter store", groupId: "standard" }
     }
   }
 };
@@ -169,19 +188,10 @@ const graph = L.Repo.create(
 );
 
 const { links } = withCalls;
-console.log("hmm", links.get(2).val(12));
-console.log("hmm", links.get(3).val);
-// console.log("dep", simple.dependents("2"));
 const getVal = id => graph.links.get(id).val;
-// const a = getVal(18);
-// const b = getVal(5);
-// const c = getVal(19);
-// const d = getVal(23);
-// const subLink = graph.subs.get(0).sub.get(0)[0].ref.link;
-// console.log(subLink, 'le link')
-graph.expandSub("0", "24", { ref: "5" });
-const e = getVal("24-2");
-console.log(e);
+// graph.expandSub("0", "24", { ref: "5" });
+// const e = getVal("24-2");
+// console.log(e);
 
 const config = {
   keyMap: {
@@ -194,50 +204,46 @@ const config = {
   }
 };
 
+const testRoot = "15";
+
 const simpleView = L.makeRepoViewModel(simple).create(
   {
-    // ...simpleSnapshot,
-    rootLink: "8",
+    rootLink: testRoot,
     openPaths: {
       7: true
     },
-    selectedPath: ["8"],
+    selectedPath: [testRoot],
     selectedIndex: 0
   },
   config
 );
 
-// console.log(getVal("32"));
-// const f = graph.calls.get(0).val;
-// console.log("fff", f);
-// const g = graph.calls.get(1).val;
-// console.log("say what", g, g(37));
-// const snap = getSnapshot(graph.links);
-// console.log(JSON.stringify(snap));
-// console.log("le test", testPkg);
-// autorun(() => {
-//   console.log("le pkg", graph.packages.get(0).with());
-// });
-
-// const nodes = simpleView.boxes();
+const params = new Map(
+  Object.entries({
+    0: 4,
+    1: { type: "INCREMENT" }
+  })
+);
 
 autorun(() => {
-  console.log("shooz", simple.dependencies.get("0").val);
+  window.a = simple.links.get("14").val;
+  // console.log("ope", simpleView.openPaths.toJS());
 });
 
 autorun(() => {
-  console.table(
-    simpleView.boxes().map(n => ({
-      key: n.key,
-      // x: n.x,
-      // y: n.y,
-      // size: n.size,
-      path: (n.downPath || n.path).join(","),
-      text: n.text
-      // selected: n.selected ? "X" : null,
-      // link: n.category === L.Link ? n.upPath.join(",") : null
-    }))
-  );
+  0 &&
+    console.table(
+      simpleView.boxes().map(n => ({
+        key: n.key,
+        // x: n.x,
+        // y: n.y,
+        size: n.size,
+        // path: (n.downPath || n.path).join(","),
+        text: n.text
+        // selected: n.selected ? "X" : null,
+        // link: n.category === L.Link ? n.upPath.join(",") : null
+      }))
+    );
 });
 
 // const nodes2 = simple.links.get(5).display();

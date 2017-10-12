@@ -71,13 +71,13 @@ const opFuncs = {
     // TODO: remove
     return _;
   },
-  ifOp(condition, trueVal, falseVal) {
+  [ifOp](condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
-  switchOp(context, switcher, ...casePairs) {
+  [switchOp](switcher, ...casePairs) {
     for (let i = 0; i < casePairs.length; i += 2) {
       if (switcher === casePairs[i]) {
-        return casePairs[i + 1](context);
+        return casePairs[i + 1];
       }
     }
   }
@@ -130,7 +130,7 @@ export const Op = types
     get val() {
       return opFuncs[self.op];
     },
-    with() {
+    with(inputs) {
       return self.val;
     }
   }));
@@ -227,16 +227,25 @@ export const Input = types
 
 curry.placeholder = Input;
 
-export const Node = types.union(Val, Op, Input, types.late(() => LinkRef), types.late(() => SubRef), PackageRef);
+export const Node = types.union(
+  Val,
+  Op,
+  Input,
+  types.late(() => LinkRef),
+  types.late(() => CallRef),
+  types.late(() => SubRef),
+  PackageRef
+);
 
 const identity = x => x;
 
 const baseColor = ",66%,55%)";
 const opColor = `hsl(150${baseColor}`;
 const valColor = `hsl(210${baseColor}`;
-const inputColor = `hsl(25${baseColor}`;
-const packageColor = `hsl(315${baseColor}`;
+const inputColor = `hsl(30${baseColor}`;
+const packageColor = `hsl(190${baseColor}`;
 const pendingColor = `hsl(270${baseColor}`;
+const callColor = `hsl(300${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
 
 export const Link = types
@@ -289,8 +298,8 @@ export const LinkRef = types
     get val() {
       return self.ref.val;
     },
-    with() {
-      return self.val;
+    with(inputs) {
+      return self.ref.with(inputs);
     }
   }));
 
@@ -311,11 +320,24 @@ export const Call = types
           const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
-          return self.nodes.with(allInputs);
+          return self.link.with(allInputs);
         };
       }
 
       return linkVal;
+    },
+    with() {
+      return self.val;
+    }
+  }));
+
+export const CallRef = types
+  .model("CallRef", {
+    call: types.reference(Call)
+  })
+  .views(self => ({
+    get val() {
+      return self.call.val;
     },
     with() {
       return self.val;
@@ -348,7 +370,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, Input, LinkRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(Val, Op, Input, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
@@ -410,18 +432,6 @@ export const makeRepoViewModel = repo =>
       selectedIndex: types.maybe(types.number, 0)
     })
     .views(self => ({
-      get isPending() {
-        for (const node of self.nodes) {
-          const nodeType = getType(node);
-          if (nodeType === Input) {
-            return true;
-          }
-          if (nodeType === LinkRef && node.ref.isPending) {
-            return true;
-          }
-        }
-        return false;
-      },
       get selectedBox() {
         const { selectedPath, selectedIndex, boxes } = self;
 
@@ -460,6 +470,8 @@ export const makeRepoViewModel = repo =>
         const {
           x = 0,
           y = 0,
+          color = pendingColor,
+          immediateNextIsRef = false,
           nextIsRef = false,
           isLast = true,
           path = [linkId],
@@ -478,6 +490,7 @@ export const makeRepoViewModel = repo =>
         let currentX = x;
 
         const siblings = nodes.length;
+
         for (let i = 0; i < siblings; i++) {
           const childPath = [...linkPath, i];
 
@@ -493,38 +506,66 @@ export const makeRepoViewModel = repo =>
             selected: sameAsSelectedPath && selectedIndex === i,
             category,
             siblings,
-            downPath: linkPath.slice(0, -1)
+            downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
+          };
+
+          const makeLinkBoxes = linkOrCallRef => {
+            const childNodeType = getType(linkOrCallRef);
+            const innerLink = childNodeType === LinkRef ? linkOrCallRef.ref : linkOrCallRef.call.link;
+            const color = childNodeType === LinkRef ? pendingColor : callColor;
+
+            if (!openPaths.get(childPath.join("/"))) {
+              const label = resolveIdentifier(Label, repo, innerLink.linkId);
+              allBoxes.push({
+                ...defaultBox,
+                text: (label && label.text) || `(${self.linkId})`,
+                color,
+                size: 2
+              });
+              currentX += 2;
+              return;
+            }
+
+            const isLast = i === nodes.length - 1;
+
+            let immediateNextIsRef = false;
+            let nextIsRef = false; // rename to "followedByRef" or something
+            for (let k = i; k < siblings; k++) {
+              // TODO: don't do this in loop, precompute instead
+              const siblingType = getType(nodes[k]);
+              if (siblingType === LinkRef || siblingType === CallRef) {
+                if (k === i + 1) {
+                  immediateNextIsRef = true;
+                }
+                nextIsRef = true;
+                break;
+              }
+            }
+
+            const refChildNodes = self.boxes(innerLink, {
+              root: false,
+              path: childPath,
+              linkPath: [...linkPath, innerLink.linkId],
+              x: currentX,
+              y: y + 1,
+              color,
+              immediateNextIsRef,
+              nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
+              isLast,
+              selected: sameAsSelectedPath && selectedIndex === i,
+              siblingCount: siblings,
+              open: openPaths.has(linkPath.join("/"))
+            });
+            allBoxes.push(...refChildNodes);
+
+            const { size } = refChildNodes[refChildNodes.length - 1];
+            currentX += size;
           };
 
           switch (category) {
             case LinkRef:
-              if (!openPaths.get(childPath.join("/"))) {
-                const label = resolveIdentifier(Label, repo, node.ref.linkId);
-                allBoxes.push({
-                  ...defaultBox,
-                  text: (label && label.text) || `(${self.linkId})`,
-                  color: pendingColor
-                });
-                currentX++;
-                break;
-              }
-              const isLast = i === nodes.length - 1;
-              const refChildNodes = self.boxes(node.ref, {
-                root: false,
-                path: childPath,
-                linkPath: [...linkPath, node.ref.linkId],
-                x: currentX,
-                y: y + 1,
-                nextIsRef: !isLast && getType(nodes[i + 1]) === LinkRef,
-                isLast,
-                selected: sameAsSelectedPath && selectedIndex === i,
-                siblingCount: siblings,
-                open: openPaths.has(linkPath.join("/"))
-              });
-              allBoxes.push(...refChildNodes);
-
-              const { size } = refChildNodes[refChildNodes.length - 1];
-              currentX += size;
+            case CallRef:
+              makeLinkBoxes(node);
               break;
             case Op:
               allBoxes.push({
@@ -536,18 +577,21 @@ export const makeRepoViewModel = repo =>
               break;
             case Val:
               const { val } = node;
+              const isString = typeof val === "string";
+              const boxSize = isString ? Math.ceil(val.length / 6) : 1;
               allBoxes.push({
                 ...defaultBox,
                 color: valColor,
-                text: typeof val === "string" ? `"${val}"` : val
+                text: isString ? `"${val}"` : val,
+                size: boxSize
               });
-              currentX++;
+              currentX += boxSize;
               break;
             case Input:
               allBoxes.push({
                 ...defaultBox,
                 color: inputColor,
-                text: node.input
+                text: `{${node.input}}`
               });
               currentX++;
               break;
@@ -566,18 +610,20 @@ export const makeRepoViewModel = repo =>
         }
 
         const label = resolveIdentifier(Label, repo, link.linkId);
+        // TODO: we need some crazy logic to make this more adaptable
+        // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
         const thisSize = nextIsRef
-          ? Math.max(...allBoxes.map(n => n.x)) - x + 2
-          : isLast ? Math.max(...allBoxes.map(n => n.x + n.size)) - x : 1;
+          ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+          : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
         const thisNode = {
           path,
           upPath: linkPath,
-          ...(root ? {} : { downPath: linkPath.slice(0, -2) }),
+          ...(root ? {} : { downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2) }),
           x,
           y,
           size: thisSize,
-          color: pendingColor, //self.isPending ? pendingColor : valColor,
+          color,
           text: (label && label.text) || `(${link.linkId})`,
           category: Link,
           selected: selected || (sameAsSelectedPath && selectedIndex === null),

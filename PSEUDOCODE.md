@@ -334,3 +334,17 @@ while (a > 3){
     - cache somehow? (via mobx)
     - remember last visited, keep in the middle
     - show via direct, selectable rays
+
+### Distinguishment of "Graph Level" and "Target Level" Functions
+
+What exactly makes these different? How are these best conceptualized?
+
+To explain the difference one way: When an Input is passed to a function, it defers calling until all values are fulfilled. When a Param is passed, it creates a function that accepts that param. 
+
+Can one of these exist at the "sub" (also "macro" or "template") level?
+
+Implementation options:
+1. Are two different "types" (seems like the simplest, and how it was before)
+2. Calling it without passing in inputs could "reify" it
+  - Prevents currying? If you think about it, an argument "builder" function is like an alternate approach to currying.
+  - Ayo! After some bugfixes, it turns out it naturally works like this. So, uh, nevermind?

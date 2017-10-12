@@ -7,7 +7,8 @@ const containerStyle = {
   position: "absolute",
   height: "100vh",
   width: "100vw",
-  overflow: "hidden"
+  overflow: "hidden",
+  textAlign: "center"
 };
 
 const unit = 40;
@@ -25,7 +26,9 @@ const nodeStyle = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  color: "#fff"
+  color: "#fff",
+  textOverflow: "clip"
+  // whiteSpace: "nowrap"
 };
 
 const lineStyle = {
