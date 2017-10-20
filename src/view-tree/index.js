@@ -1,4 +1,4 @@
-import { types, getType } from "mobx-state-tree";
+import { types, getType, getEnv } from "mobx-state-tree";
 
 import { Repo, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "../core";
 import { Meta } from "../meta";
@@ -18,8 +18,6 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
-    repo: Repo,
-    meta: Meta,
     keyMap: optionalMap(types.string), // this might be better as map of enum
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
@@ -60,10 +58,10 @@ const ViewRepoTree = types
     }
   }))
   .views(self => {
-    const { repo, meta } = self;
+    const { repo, meta } = getEnv(self);
+    const { links } = repo;
 
     const getBoxes = (link, opts = {}) => {
-      const { links } = repo;
       const { rootLink, openPaths, selectedPath, selectedIndex } = self;
       link = link || links.get(rootLink);
       const { linkId, nodes } = link;
