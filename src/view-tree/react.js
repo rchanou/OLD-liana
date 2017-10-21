@@ -75,3 +75,5 @@ export const Tree = observer(({ nodes }) => {
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });
+
+export default Tree;
