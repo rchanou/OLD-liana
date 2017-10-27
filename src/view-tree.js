@@ -1,7 +1,7 @@
 import { types, getType, getEnv } from "mobx-state-tree";
 
-import { Repo, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "../core";
-import { Meta } from "../meta";
+import { Repo, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
+import { Meta } from "./meta";
 
 const optionalMap = type => types.optional(types.map(type), {});
 

@@ -12,7 +12,7 @@ import Meta from "../src/meta";
 import ViewRepoTree from "../src/view-tree";
 import ViewRepoList from "../src/view-list";
 
-import Tree from "../src/view-tree/react";
+import Tree from "../src/view-tree-react";
 
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 

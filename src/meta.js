@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "../core";
+import { CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
 
 const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");

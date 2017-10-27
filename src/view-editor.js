@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 
-import Tree from "../src/view-tree";
-import List from "../src/view-list";
+import Tree from "./view-tree";
+import List from "./view-list";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
