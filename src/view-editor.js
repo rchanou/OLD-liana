@@ -10,7 +10,7 @@ export const Editor = types
   .model("Editor", {
     tree: Tree,
     list: List,
-    currentView: types.enumeration([TREE, LIST])
+    currentView: types.optional(types.enumeration([TREE, LIST]), TREE)
   })
   .actions(self => ({
     setView(view) {

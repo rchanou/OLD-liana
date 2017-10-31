@@ -11,6 +11,7 @@ import * as L from "../src/core";
 import Meta from "../src/meta";
 import ViewRepoTree from "../src/view-tree";
 import ViewRepoList from "../src/view-list";
+import ViewEditor from "../src/view-editor";
 
 import Tree from "../src/view-tree-react";
 
