@@ -29,7 +29,9 @@ const ViewRepoTree = types
     get selectedBox() {
       const { selectedPath, selectedIndex, boxes } = self;
 
-      if (selectedIndex === null) return true;
+      if (selectedIndex === null) {
+        return true;
+      }
 
       const selectedPathLength = selectedPath.length;
 
@@ -297,13 +299,13 @@ const ViewRepoTree = types
     }
   }))
   .actions(self => {
-    const { keyMap } = self;
+    const { keyMap } = getEnv(self);
 
     const handleKeyUp = e => {
       e.preventDefault();
 
       const { keyCode } = e;
-      const actionName = keyMap.get(keyCode);
+      const actionName = keyMap[keyCode];
       switch (actionName) {
         case "left":
           self.move(-1);

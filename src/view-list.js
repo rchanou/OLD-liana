@@ -1,7 +1,6 @@
 import { types, getEnv, getType } from "mobx-state-tree";
 
-import { Repo, Node, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
-import { Meta } from "./meta";
+import { Node, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
 
 const ViewRepoList = types
   .model("ViewRepoList", {

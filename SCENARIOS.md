@@ -1,7 +1,6 @@
 ## Scenarios: How We Might Model Various Programs
 
 ### A counter, and a button that increments the counter.
-
 - def mutable count
 - def increment
 - on initialize: render button with on-click : event-source (event-source passed as parameter?)
@@ -13,7 +12,6 @@
 - event with type button click triggers counter-update and re-render
 
 ### Same as above, but without event system
-
 - def mutable global.count
 - def render
 - def increment
@@ -25,13 +23,8 @@
 - user clicks button
 - update-count fires
 
-### Same as above, but in vanilla JS.
-
-- 
-
 ### A button that, when clicked, displays a random number.
-
-- 
+-
 
 ### Types for Common Methods and Properties
 
@@ -48,7 +41,37 @@ Anything not idempotent can be called "unbounded".
 - Math.floor - fun
 - React.createElement - fun
 
-#
+## Key Maps
+
+- tree
+  - up
+  - down
+  - left
+  - right
+  - expand/collapse
+  - new node
+- list
+  - up
+  - down
+  - left
+  - right
+  - new node
+
+### Key Types
+- enter submenu
+- return to previous menu
+- return to parent menu
+- action ("leaf")
+- help?
+
+### Actions
+- add label
+- add comment
+- create new node/open node form
+- open search form
+- find all references?
+
+
 
 ### Hypotheses
 
