@@ -4,7 +4,7 @@ import { Node, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
 
 const ViewRepoList = types
   .model("ViewRepoList", {
-    form: Node
+    form: types.maybe(Node)
   })
   .views(self => {
     const { repo, meta } = getEnv(self);

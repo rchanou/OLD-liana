@@ -18,7 +18,6 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
-    keyMap: optionalMap(types.string), // this might be better as map of enum
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard"),
@@ -150,7 +149,7 @@ const ViewRepoTree = types
             y: y + 1,
             color,
             immediateNextIsRef,
-            nextIsRef, //: !isLast && getType(nodes[i + 1]) === LinkRef,
+            nextIsRef,
             isLast,
             selected: sameAsSelectedPath && selectedIndex === i,
             siblingCount: siblings,
@@ -297,48 +296,6 @@ const ViewRepoTree = types
       self.openPaths.set(pathKey, !current);
       console.log("le key", pathKey);
     }
-  }))
-  .actions(self => {
-    const { keyMap } = getEnv(self);
-
-    const handleKeyUp = e => {
-      e.preventDefault();
-
-      const { keyCode } = e;
-      const actionName = keyMap[keyCode];
-      switch (actionName) {
-        case "left":
-          self.move(-1);
-          break;
-        case "right":
-          self.move(+1);
-          break;
-        case "up":
-          self.up();
-          break;
-        case "down":
-          self.down();
-          break;
-        case "open":
-          self.open();
-          break;
-        default:
-          const action = self[actionName];
-          if (typeof action === "function") {
-            action(self);
-          }
-          console.log(keyCode);
-      }
-    };
-
-    return {
-      afterCreate() {
-        document.addEventListener("keyup", handleKeyUp);
-      },
-      beforeDestroy() {
-        document.removeEventListener("keyup", handleKeyUp);
-      }
-    };
-  });
+  }));
 
 export default ViewRepoTree;

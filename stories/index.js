@@ -7,8 +7,8 @@ import { action } from "@storybook/addon-actions";
 
 import * as L from "../src/core";
 import Meta from "../src/meta";
-import ViewRepoTree from "../src/view-tree";
-import ViewRepoList from "../src/view-list";
+import ViewTree from "../src/view-tree";
+import ViewList from "../src/view-list";
 import ViewEditor from "../src/view-editor";
 
 import Tree from "../src/view-tree-react";
@@ -79,14 +79,18 @@ const testRoot = "15";
 
 const simple = L.Repo.create(simpleSnapshot, { system: SystemJS });
 
-const simpleView = ViewRepoTree.create(
+const simpleTree = {
+  rootLink: testRoot,
+  openPaths: {
+    7: true
+  },
+  selectedPath: [testRoot],
+  selectedIndex: 0
+};
+
+const simpleEditor = ViewEditor.create(
   {
-    rootLink: testRoot,
-    openPaths: {
-      7: true
-    },
-    selectedPath: [testRoot],
-    selectedIndex: 0
+    tree: simpleTree
   },
   {
     repo: simple,
@@ -96,8 +100,8 @@ const simpleView = ViewRepoTree.create(
       82: "left",
       83: "down",
       84: "right",
-      78: "open",
-      69: "open"
+      69: "open",
+      78: "open"
     }
   }
 );
@@ -116,7 +120,7 @@ autorun(() => {
 autorun(() => {
   0 &&
     console.table(
-      simpleView.boxes.map(n => ({
+      simpleEditor.boxes.map(n => ({
         key: n.key,
         size: n.size,
         text: n.text
@@ -130,7 +134,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <Observer>{() => <Tree nodes={simpleView.boxes} />}</Observer>;
+    return <Observer>{() => <Tree nodes={simpleEditor.tree.boxes} />}</Observer>;
   }
 }
 

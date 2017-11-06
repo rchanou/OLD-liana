@@ -44,7 +44,7 @@ Anything not idempotent can be called "unbounded".
 ## Key Maps
 
 - tree
-  - up
+  - up 
   - down
   - left
   - right
