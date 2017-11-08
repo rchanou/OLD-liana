@@ -23,6 +23,12 @@ const ViewRepoList = types
         );
       }
     };
-  });
+  })
+  .actions(self => ({
+    move() {},
+    up() {},
+    down() {},
+    open() {}
+  }));
 
 export default ViewRepoList;
