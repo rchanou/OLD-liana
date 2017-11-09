@@ -9,7 +9,9 @@ import * as L from "../src/core";
 import Meta from "../src/meta";
 import ViewTree from "../src/view-tree";
 import ViewList from "../src/view-list";
-import ViewEditor from "../src/view-editor";
+import Editor from "../src/view-editor";
+
+import ViewEditor from "../src/view-editor-react";
 
 import Tree from "../src/view-tree-react";
 
@@ -88,7 +90,7 @@ const simpleTree = {
   selectedIndex: 0
 };
 
-const simpleEditor = ViewEditor.create(
+const simpleEditor = Editor.create(
   {
     tree: simpleTree
   },
@@ -134,6 +136,7 @@ class Test extends React.Component {
   }
 
   render() {
+    return <ViewEditor editor={simpleEditor} />;
     return <Observer>{() => <Tree nodes={simpleEditor.tree.boxes} />}</Observer>;
   }
 }

@@ -8,12 +8,14 @@ import Tree from "./view-tree-react";
 const containerStyle = {};
 
 export const Editor = observer(({ editor }) => {
-  const { view } = editor;
-  switch (view) {
+  const { currentView } = editor;
+  switch (currentView) {
     case LIST:
       return <List />;
       break;
     case TREE:
-      return <Tree />;
+      return <Tree nodes={editor.tree.boxes} />;
   }
 });
+
+export default Editor;
