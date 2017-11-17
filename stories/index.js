@@ -9,7 +9,7 @@ import * as L from "../src/core";
 import Meta from "../src/meta";
 import ViewTree from "../src/view-tree";
 import ViewList from "../src/view-list";
-import Editor from "../src/view-editor";
+import Editor, { LIST } from "../src/view-editor";
 
 import ViewEditor from "../src/view-editor-react";
 
@@ -92,7 +92,8 @@ const simpleTree = {
 
 const simpleEditor = Editor.create(
   {
-    tree: simpleTree
+    tree: simpleTree,
+    currentView: LIST
   },
   {
     repo: simple,
