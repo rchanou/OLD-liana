@@ -42,8 +42,8 @@ const lineStyle = {
   // boxShadow: "0.5px 0.5px 0.5px 0.5px hsla(0,0%,55%,0.5)"
 };
 
-export const Tree = observer(({ nodes }) => {
-  const displayNodes = nodes.map(({ x, y, size, color, key, form, text, category, selected }) => {
+export const Tree = observer(({ boxes }) => {
+  const displayNodes = boxes.map(({ x, y, size, color, key, form, text, category, selected }) => {
     const style = {
       ...nodeStyle,
       top: `calc(100vh - ${(y + 1) * unit}px)`,

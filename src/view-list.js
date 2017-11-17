@@ -23,9 +23,15 @@ const ViewRepoList = types
 
                 switch (nodeType) {
                   case LinkRef:
-                    return {};
+                    return {
+                      color: "red",
+                      text: "head"
+                    };
                   default:
-                    return {};
+                    return {
+                      color: "blue",
+                      text: "tail"
+                    };
                 }
               });
 

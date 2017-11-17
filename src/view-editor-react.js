@@ -11,10 +11,10 @@ export const Editor = observer(({ editor }) => {
   const { currentView } = editor;
   switch (currentView) {
     case LIST:
-      return <List />;
+      return <List rows={editor.list.rows} />;
       break;
     case TREE:
-      return <Tree nodes={editor.tree.boxes} />;
+      return <Tree boxes={editor.tree.boxes} />;
   }
 });
 

@@ -137,7 +137,7 @@ class Test extends React.Component {
 
   render() {
     return <ViewEditor editor={simpleEditor} />;
-    return <Observer>{() => <Tree nodes={simpleEditor.tree.boxes} />}</Observer>;
+    return <Observer>{() => <Tree boxes={simpleEditor.tree.boxes} />}</Observer>;
   }
 }
 
