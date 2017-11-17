@@ -12,15 +12,33 @@ const ViewRepoList = types
 
     return {
       get rows() {
-        return links.entries().map(({ nodes }, i) =>
-          nodes.map((node, j) => {
-            const nodeType = getType(node);
+        return links.entries().map((link, i) => {
+          const label = "INSERT LABEL HERE";
 
-            switch (nodeType) {
-              default:
-            }
-          })
-        );
+          const linkType = getType(link);
+          switch (linkType) {
+            case Link:
+              return [
+                label,
+                ...nodes.map((node, j) => {
+                  const nodeType = getType(node);
+
+                  switch (nodeType) {
+                    case LinkRef:
+                      return;
+                    default:
+                  }
+                })
+              ];
+
+            case Call:
+              const linkLabel = "INSERT LINK LABEL HERE";
+              return [label, linkLabel];
+
+            default:
+              throw new Error("Must be Link or Call, brah!");
+          }
+        });
       }
     };
   })
