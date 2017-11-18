@@ -13,18 +13,24 @@ const ViewRepoList = types
     return {
       get rows() {
         return links.values().map((link, i) => {
-          const headCell = "INSERT LABEL HERE";
           const linkType = getType(link);
           switch (linkType) {
             case Link:
-              const tailCells = link.nodes.map((node, key) => {
-                const nodeType = getType(node);
+              const headCell = {
+                key: link.linkId,
+                color: "violet",
+                text: link.linkId
+              };
 
+              const tailCells = link.nodes.map((node, j) => {
+                const key = `${link.linkId}-${j}`;
+
+                const nodeType = getType(node);
                 switch (nodeType) {
                   case LinkRef:
                     return {
                       key,
-                      color: "rebeccapurple",
+                      color: "orchid",
                       text: node.ref.linkId
                     };
 
@@ -73,8 +79,19 @@ const ViewRepoList = types
               return [headCell, ...tailCells];
 
             case Call:
-              const linkRefCell = "INSERT LINK LABEL HERE";
-              return [headCell, linkRefCell];
+              const callHeadCell = {
+                key: `c-${link.callId}`,
+                color: "pink",
+                text: link.callId
+              };
+
+              const linkRefCell = {
+                key: 0,
+                color: "violet",
+                text: link.link.linkId
+              };
+
+              return [callHeadCell, linkRefCell];
 
             default:
               throw new Error("Must be Link or Call, brah!");

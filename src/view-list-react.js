@@ -1,13 +1,23 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-const containerStyle = { display: "flex", flexDirection: "column" };
+const containerStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start"
+};
 
-const rowStyle = { display: "flex", justifyContent: "flex-start" };
+const rowStyle = {
+  display: "flex",
+  marginBottom: 5
+};
 
 const boxStyle = {
   width: 100,
-  height: 30
+  height: 30,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center"
 };
 
 export const List = observer(({ rows }) => (
