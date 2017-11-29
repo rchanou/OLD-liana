@@ -18,7 +18,11 @@ import Tree from "../src/view-tree-react";
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
 const simpleSnapshot = {
-  contextUser: { labelSet: 'fart' },
+  context: {
+    user: {
+      labelSet: 'arstrsta'
+    }
+  },
   dependencies: {
     0: {
       depId: "0",
@@ -26,7 +30,7 @@ const simpleSnapshot = {
     }
   },
   links: {
-    0: { linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
+    0: { fartrsat: 'astr', linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
     2: { linkId: "2", nodes: [{ ref: "1" }, { input: "n" }, { val: 2 }] },
     3: { linkId: "3", nodes: [{ ref: "2" }, { val: 5 }] },

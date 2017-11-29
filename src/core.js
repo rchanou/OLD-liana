@@ -1,4 +1,4 @@
-import { types, getEnv, getParent, getType, process } from "mobx-state-tree";
+import { types, getEnv, getParent, getType, flow } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
@@ -137,7 +137,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function* () {
+      afterCreate: flow(function* () {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -234,19 +234,31 @@ export const User = types.model('User', {
 })
 
 const getContextUser = node => {
-  const { contextUser } = node
-  if (contextUser) {
-    return contextUser
+  const { context } = node
+
+  if (!context) {
+    const parent = getParent(node)
+    if (parent) {
+      return getContextUser(parent)
+    } else {
+      return null
+    }
+  }
+
+  if (context.user) {
+    return context.user
   }
 
   const parent = getParent(node)
   if (parent) {
-    const { contextUserRef } = parent
-    if (contextUserRef) {
-      return parent.contextUserRef
+    const { context } = parent
+    if (context) {
+      return parent.context.userRef
     } else {
       return getContextUser(parent)
     }
+  } else {
+    return null
   }
 }
 
@@ -258,14 +270,14 @@ export const UserRef = types.reference(User, {
   }
 })
 
-User.mixin = {
-  contextUser: types.maybe(User),
-  contextUserRef: types.optional(UserRef, 0)
-}
+export const RepoContext = types.optional(types.model('RepoContext', {
+  user: types.maybe(User),
+  userRef: types.optional(UserRef, 0)
+}), {})
 
 export const Link = types
   .model("Link", {
-    ...User.mixin,
+    context: RepoContext,
     linkId: types.identifier(types.string),
     nodes: types.array(Node),
     labels: optionalMap(Label)
@@ -426,7 +438,7 @@ export const LabelSet = types.model('LabelSet', {
 
 export const Repo = types
   .model("Repo", {
-    ...User.mixin,
+    context: RepoContext,
     dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
