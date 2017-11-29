@@ -13,18 +13,20 @@ const ViewRepoList = types
     return {
       get rows() {
         return links.values().map((link, i) => {
+          const { linkId } = link;
+          const linkLabel = meta.linkLabelSet.get(linkId);
+
           const linkType = getType(link);
           switch (linkType) {
             case Link:
               const headCell = {
-                key: link.linkId,
+                key: linkId,
                 color: "violet",
-                text: link.linkId
+                text: link.label
               };
 
               const tailCells = link.nodes.map((node, j) => {
-                const key = `${link.linkId}-${j}`;
-
+                const key = `${link}-${j}`;
                 const nodeType = getType(node);
                 switch (nodeType) {
                   case LinkRef:

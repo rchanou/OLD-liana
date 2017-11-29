@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
+import { CallRef, Input, Link, LinkRef, Op, DepRef, Val, Repo } from "./core";
 
 const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");
@@ -13,7 +13,7 @@ export const Label = types.model("Label", {
   locale: optionalString
 });
 
-export const Comment = types.model("Post", {
+export const Post = types.model("Post", {
   postId: types.identifier(types.string),
   text: optionalString,
   targetId: optionalString
@@ -23,11 +23,11 @@ export const Meta = types
   .model("Meta", {
     linkLabelSets: optionalMap(optionalMap(Label)),
     inputLabelSets: optionalMap(optionalMap(Label)),
-    linkComments: optionalMap(Comment),
+    linkComments: optionalMap(Post),
     subLabels: optionalMap(Label),
-    subComments: optionalMap(Comment),
+    subComments: optionalMap(Post),
     branchLabels: optionalMap(Label),
-    branchComments: optionalMap(Comment),
+    branchComments: optionalMap(Post),
     selectedLabelSet: types.optional(types.string, "standard")
   })
   .views(self => ({

@@ -3,6 +3,7 @@ import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
 const optionalMap = type => types.optional(types.map(type), {});
+const optionalString = types.optional(types.string, "");
 
 export const global = "g";
 
@@ -68,6 +69,13 @@ const opFuncs = {
   }
 };
 
+
+export const Label = types.model('Label', {
+  labelId: types.identifier(types.string),
+  text: optionalString,
+})
+
+
 export const Val = types
   .model("Val", {
     val: types.union(types.string, types.number, types.boolean, types.null)
@@ -129,7 +137,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function*() {
+      afterCreate: process(function* () {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -221,12 +229,29 @@ export const Node = types.union(
   DepRef
 );
 
+export const User = types.model('User', {
+  labelSet: types.optional(types.string, 'en-US')
+})
+
+export const UserRef = types.reference(User, {
+  set(val) {
+    return 0
+  }, get(identifier, parent) {
+    return parent.user || parent.parent.user
+  }
+})
+
 export const Link = types
   .model("Link", {
+
     linkId: types.identifier(types.string),
-    nodes: types.array(Node)
+    nodes: types.array(Node),
+    labels: optionalMap(Label)
   })
   .views(self => ({
+    label(selectedSet) {
+      return labels.get(selectedSet)
+    },
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
       if (nodeVals.indexOf(Dependency) !== -1) {
@@ -372,12 +397,24 @@ export const SubRef = types
     }
   }));
 
+export const LabelSet = types.model('LabelSet', {
+  setId: types.identifier(types.string),
+  labels: optionalMap(Label)
+})
+
 export const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
-    subs: optionalMap(Sub)
+    subs: optionalMap(Sub),
+    linkLabelSets: optionalMap(LabelSet),
+    selectedLabelSet: types.maybe(types.reference(LabelSet))
   })
+  .views(self => ({
+    linkLabel(link) {
+
+    },
+  }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
       const { nodes } = self.subs.get(subId);
