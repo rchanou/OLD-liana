@@ -18,6 +18,7 @@ import Tree from "../src/view-tree-react";
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
 const simpleSnapshot = {
+  contextUser: { labelSet: 'fart' },
   dependencies: {
     0: {
       depId: "0",
@@ -80,6 +81,7 @@ const simpleMetaSnapshot = {
 const testRoot = "15";
 
 const simple = L.Repo.create(simpleSnapshot, { system: SystemJS });
+window.s = simple
 
 const simpleTree = {
   rootLink: testRoot,

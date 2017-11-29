@@ -1,4 +1,4 @@
-import { types, getEnv, getType, process } from "mobx-state-tree";
+import { types, getEnv, getParent, getType, process } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
@@ -233,17 +233,39 @@ export const User = types.model('User', {
   labelSet: types.optional(types.string, 'en-US')
 })
 
+const getContextUser = node => {
+  const { contextUser } = node
+  if (contextUser) {
+    return contextUser
+  }
+
+  const parent = getParent(node)
+  if (parent) {
+    const { contextUserRef } = parent
+    if (contextUserRef) {
+      return parent.contextUserRef
+    } else {
+      return getContextUser(parent)
+    }
+  }
+}
+
 export const UserRef = types.reference(User, {
   set(val) {
     return 0
   }, get(identifier, parent) {
-    return parent.user || parent.parent.user
+    return getContextUser(parent)
   }
 })
 
+User.mixin = {
+  contextUser: types.maybe(User),
+  contextUserRef: types.optional(UserRef, 0)
+}
+
 export const Link = types
   .model("Link", {
-
+    ...User.mixin,
     linkId: types.identifier(types.string),
     nodes: types.array(Node),
     labels: optionalMap(Label)
@@ -404,6 +426,7 @@ export const LabelSet = types.model('LabelSet', {
 
 export const Repo = types
   .model("Repo", {
+    ...User.mixin,
     dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
