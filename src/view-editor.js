@@ -13,7 +13,8 @@ export const Editor = types
     tree: Tree,
     list: types.optional(List, {}),
     form: types.maybe(Node),
-    currentView: types.optional(types.enumeration([TREE, LIST]), TREE)
+    currentView: types.optional(types.enumeration([TREE, LIST]), TREE),
+    keyMap: types.map(types.string)
   })
   .actions(self => ({
     setView(view) {
@@ -21,7 +22,7 @@ export const Editor = types
     }
   }))
   .actions(self => {
-    const { keyMap } = getEnv(self);
+    const { keyMap } = self
 
     const projectionMap = {
       [TREE]: self.tree,
@@ -31,7 +32,7 @@ export const Editor = types
     const handleKeyUp = e => {
       e.preventDefault();
       const { keyCode } = e;
-      const actionName = keyMap[keyCode];
+      const actionName = keyMap.get(keyCode);
 
       const projection = projectionMap[self.currentView];
 
@@ -50,6 +51,12 @@ export const Editor = types
           break;
         case "open":
           projection.open();
+          break;
+        case 'changeView':
+          const { currentView } = self
+          if (currentView === TREE) {
+            self.setView(LIST)
+          } else { self.setView(TREE) }
           break;
         default:
           const action = projection[actionName];

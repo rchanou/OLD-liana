@@ -9,7 +9,7 @@ import * as L from "../src/core";
 import Meta from "../src/meta";
 import ViewTree from "../src/view-tree";
 import ViewList from "../src/view-list";
-import Editor, { LIST } from "../src/view-editor";
+import Editor, { TREE, LIST } from "../src/view-editor";
 
 import ViewEditor from "../src/view-editor-react";
 
@@ -97,19 +97,20 @@ const simpleEditor = Editor.create(
   {
     [L.Repo.Key]: simpleSnapshot,
     tree: simpleTree,
-    currentView: LIST
-  },
-  {
-    system: SystemJS,
-    meta: Meta.create(simpleMetaSnapshot),
+    currentView: TREE,
     keyMap: {
       70: "up",
       82: "left",
       83: "down",
       84: "right",
       69: "open",
+      76: 'changeView',
       78: "open"
     }
+  },
+  {
+    system: SystemJS,
+    meta: Meta.create(simpleMetaSnapshot)
   }
 );
 
@@ -123,7 +124,7 @@ const params = new Map(
 );
 
 autorun(() => {
-  window.a = simple.links.get("14").val;
+  window.a = simpleEditor[L.Repo.Key].links.get("14").val;
 });
 
 autorun(() => {
