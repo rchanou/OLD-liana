@@ -22,7 +22,7 @@ export const Editor = types
     }
   }))
   .actions(self => {
-    const { keyMap } = self
+    const { keyMap } = self;
 
     const projectionMap = {
       [TREE]: self.tree,
@@ -52,11 +52,13 @@ export const Editor = types
         case "open":
           projection.open();
           break;
-        case 'changeView':
-          const { currentView } = self
+        case "changeView":
+          const { currentView } = self;
           if (currentView === TREE) {
-            self.setView(LIST)
-          } else { self.setView(TREE) }
+            self.setView(LIST);
+          } else {
+            self.setView(TREE);
+          }
           break;
         default:
           const action = projection[actionName];

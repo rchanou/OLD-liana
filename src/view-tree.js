@@ -86,7 +86,8 @@ const ViewRepoTree = types
       const allBoxes = [];
 
       const sameAsSelectedPath =
-        selectedPath.length === linkPath.length && selectedPath.every((token, j) => token === linkPath[j]);
+        selectedPath.length === linkPath.length &&
+        selectedPath.every((token, j) => token === linkPath[j]);
 
       let currentX = x;
 
@@ -112,7 +113,10 @@ const ViewRepoTree = types
 
         const makeLinkBoxes = linkOrCallRef => {
           const childNodeType = getType(linkOrCallRef);
-          const innerLink = childNodeType === LinkRef ? linkOrCallRef.ref : linkOrCallRef.call.link;
+          const innerLink =
+            childNodeType === LinkRef
+              ? linkOrCallRef.ref
+              : linkOrCallRef.call.link;
           const color = childNodeType === LinkRef ? pendingColor : callColor;
 
           if (!openPaths.get(childPath.join("/"))) {
@@ -203,7 +207,9 @@ const ViewRepoTree = types
               ...defaultBox,
               color: packageColor,
               size: 2,
-              text: node.dep.path.replace("https://unpkg.com/", "").split("/")[0]
+              text: node.dep.path
+                .replace("https://unpkg.com/", "")
+                .split("/")[0]
             });
             currentX += 2;
             break;
@@ -217,13 +223,22 @@ const ViewRepoTree = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) -
+          x +
+          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
         path,
         upPath: linkPath,
-        ...(root ? {} : { downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2) }),
+        ...(root
+          ? {}
+          : {
+              downPath:
+                linkPath.length < 3
+                  ? linkPath.slice(0, -1)
+                  : linkPath.slice(0, -2)
+            }),
         x,
         y,
         size: thisSize,
@@ -242,7 +257,8 @@ const ViewRepoTree = types
           const box = allBoxes[i];
           const { path } = box;
           let j = path.length - 1;
-          let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+          let currentKey =
+            "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
           if (!box.link) {
             j--;
             currentKey += "/" + (j in path ? path[j] : "");

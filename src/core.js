@@ -2,7 +2,7 @@ import { types, getEnv, getParent, getType, flow } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
-import { makeContextModel } from './context'
+import { makeContextModel } from "./context";
 
 const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");
@@ -71,12 +71,10 @@ const opFuncs = {
   }
 };
 
-
-export const Label = types.model('Label', {
+export const Label = types.model("Label", {
   labelId: types.identifier(types.string),
-  text: optionalString,
-})
-
+  text: optionalString
+});
 
 export const Val = types
   .model("Val", {
@@ -139,7 +137,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: flow(function* () {
+      afterCreate: flow(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -180,7 +178,12 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
+export const InputType = types.enumeration("InputType", [
+  stringType,
+  numType,
+  boolType,
+  anyType
+]);
 
 // is there a better way of doing this?
 class Hole {
@@ -231,51 +234,55 @@ export const Node = types.union(
   DepRef
 );
 
-export const User = types.model('User', {
-  labelSet: types.optional(types.string, 'en-US')
-})
+export const User = types.model("User", {
+  labelSet: types.optional(types.string, "en-US")
+});
 
 const getContextUser = node => {
-  const { context } = node
+  const { context } = node;
 
   if (!context) {
-    const parent = getParent(node)
+    const parent = getParent(node);
     if (parent) {
-      return getContextUser(parent)
+      return getContextUser(parent);
     } else {
-      return null
+      return null;
     }
   }
 
   if (context.user) {
-    return context.user
+    return context.user;
   }
 
-  const parent = getParent(node)
+  const parent = getParent(node);
   if (parent) {
-    const { context } = parent
+    const { context } = parent;
     if (context) {
-      return parent.context.userRef
+      return parent.context.userRef;
     } else {
-      return getContextUser(parent)
+      return getContextUser(parent);
     }
   } else {
-    return null
+    return null;
   }
-}
+};
 
 export const UserRef = types.reference(User, {
   set(val) {
-    return 0
-  }, get(identifier, parent) {
-    return getContextUser(parent)
+    return 0;
+  },
+  get(identifier, parent) {
+    return getContextUser(parent);
   }
-})
+});
 
-export const RepoContext = types.optional(types.model('RepoContext', {
-  user: types.maybe(User),
-  userRef: types.optional(UserRef, 0)
-}), {})
+export const RepoContext = types.optional(
+  types.model("RepoContext", {
+    user: types.maybe(User),
+    userRef: types.optional(UserRef, 0)
+  }),
+  {}
+);
 
 export const Link = types
   .model("Link", {
@@ -286,7 +293,7 @@ export const Link = types
   })
   .views(self => ({
     label(selectedSet) {
-      return labels.get(selectedSet)
+      return labels.get(selectedSet);
     },
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
@@ -351,7 +358,10 @@ export const Call = types
         const holeInputIds = Object.keys(linkVal.inputs);
 
         return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
+          const newInputEntries = newInputs.map((input, i) => [
+            holeInputIds[i],
+            input
+          ]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
           return self.link.with(allInputs);
@@ -404,7 +414,16 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, Input, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(
+  Val,
+  Op,
+  Input,
+  LinkRef,
+  CallRef,
+  SubParam,
+  SubLink,
+  types.late(() => SubRef)
+);
 
 export const Sub = types
   .model("Sub", {
@@ -433,23 +452,23 @@ export const SubRef = types
     }
   }));
 
-export const LabelSet = types.model('LabelSet', {
+export const LabelSet = types.model("LabelSet", {
   setId: types.identifier(types.string),
   labels: optionalMap(Label)
-})
+});
 
-const BaseRepo = types.model("Repo", {
-  context: RepoContext,
-  dependencies: optionalMap(Dependency),
-  links: optionalMap(types.union(Link, Call)),
-  subs: optionalMap(Sub),
-  linkLabelSets: optionalMap(LabelSet),
-  selectedLabelSet: types.maybe(types.reference(LabelSet))
-}).views(self => ({
-  linkLabel(link) {
-
-  },
-}))
+const BaseRepo = types
+  .model("Repo", {
+    context: RepoContext,
+    dependencies: optionalMap(Dependency),
+    links: optionalMap(types.union(Link, Call)),
+    subs: optionalMap(Sub),
+    linkLabelSets: optionalMap(LabelSet),
+    selectedLabelSet: types.maybe(types.reference(LabelSet))
+  })
+  .views(self => ({
+    linkLabel(link) {}
+  }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
       const { nodes } = self.subs.get(subId);
@@ -477,4 +496,4 @@ const BaseRepo = types.model("Repo", {
     }
   }));
 
-export const Repo = makeContextModel(BaseRepo)
+export const Repo = makeContextModel(BaseRepo);

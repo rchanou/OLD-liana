@@ -20,7 +20,7 @@ const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 const simpleSnapshot = {
   context: {
     user: {
-      labelSet: 'arstrsta'
+      labelSet: "arstrsta"
     }
   },
   dependencies: {
@@ -30,7 +30,7 @@ const simpleSnapshot = {
     }
   },
   links: {
-    0: { fartrsat: 'astr', linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
+    0: { fartrsat: "astr", linkId: "0", nodes: [{ op: "g" }, { val: "Math" }] },
     1: { linkId: "1", nodes: [{ op: "." }, { ref: "0" }, { val: "pow" }] },
     2: { linkId: "2", nodes: [{ ref: "1" }, { input: "n" }, { val: 2 }] },
     3: { linkId: "3", nodes: [{ ref: "2" }, { val: 5 }] },
@@ -38,7 +38,10 @@ const simpleSnapshot = {
     5: { linkId: "5", nodes: [{ op: "+" }, { ref: "3" }, { ref: "4" }] },
     6: { linkId: "6", nodes: [{ op: "." }, { ref: "0" }, { val: "sqrt" }] },
     7: { linkId: "7", nodes: [{ ref: "6" }, { ref: "5" }] },
-    8: { linkId: "8", nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }] },
+    8: {
+      linkId: "8",
+      nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }]
+    },
     9: { linkId: "9", nodes: [{ op: "." }, { input: "1" }, { val: "type" }] },
     10: { linkId: "10", nodes: [{ op: "+" }, { input: "2" }, { val: 1 }] },
     "10a": { callId: "10a", link: "10" },
@@ -46,7 +49,14 @@ const simpleSnapshot = {
     "11a": { callId: "11a", link: "11" },
     12: {
       linkId: "12",
-      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }]
+      nodes: [
+        { op: "s" },
+        { ref: "9" },
+        { val: "INCREMENT" },
+        { call: "10a" },
+        { val: "DECREMENT" },
+        { call: "11a" }
+      ]
     },
     13: { linkId: "13", nodes: [{ ref: "12" }, { input: "0" }] },
     14: { callId: "14", link: "13" },
@@ -64,14 +74,54 @@ const simpleMetaSnapshot = {
       4: { labelId: "4", targetId: "4", groupId: "standard", text: "12²" },
       5: { labelId: "5", targetId: "5", groupId: "standard", text: "5² + 12²" },
       6: { labelId: "6", targetId: "6", groupId: "standard", text: "√" },
-      7: { labelId: "7", targetId: "7", groupId: "standard", text: "hypotenuse for 5 and 12" },
-      8: { labelId: "8", targetId: "8", groupId: "standard", text: "create store" },
-      9: { labelId: "9", targetId: "9", groupId: "standard", text: "action type" },
-      10: { labelId: "10", targetId: "10", text: "increment", groupId: "standard" },
-      11: { labelId: "11", targetId: "11", text: "decrement", groupId: "standard" },
-      12: { labelId: "12", targetId: "12", text: "updater", groupId: "standard" },
-      13: { labelId: "13", targetId: "13", text: "counter reducer", groupId: "standard" },
-      15: { labelId: "15", targetId: "15", text: "counter store", groupId: "standard" }
+      7: {
+        labelId: "7",
+        targetId: "7",
+        groupId: "standard",
+        text: "hypotenuse for 5 and 12"
+      },
+      8: {
+        labelId: "8",
+        targetId: "8",
+        groupId: "standard",
+        text: "create store"
+      },
+      9: {
+        labelId: "9",
+        targetId: "9",
+        groupId: "standard",
+        text: "action type"
+      },
+      10: {
+        labelId: "10",
+        targetId: "10",
+        text: "increment",
+        groupId: "standard"
+      },
+      11: {
+        labelId: "11",
+        targetId: "11",
+        text: "decrement",
+        groupId: "standard"
+      },
+      12: {
+        labelId: "12",
+        targetId: "12",
+        text: "updater",
+        groupId: "standard"
+      },
+      13: {
+        labelId: "13",
+        targetId: "13",
+        text: "counter reducer",
+        groupId: "standard"
+      },
+      15: {
+        labelId: "15",
+        targetId: "15",
+        text: "counter store",
+        groupId: "standard"
+      }
     }
   },
   inputLabelSets: {
@@ -104,7 +154,7 @@ const simpleEditor = Editor.create(
       83: "down",
       84: "right",
       69: "open",
-      76: 'changeView',
+      76: "changeView",
       78: "open"
     }
   },
@@ -114,7 +164,7 @@ const simpleEditor = Editor.create(
   }
 );
 
-window.s = simpleEditor
+window.s = simpleEditor;
 
 const params = new Map(
   Object.entries({
@@ -145,7 +195,9 @@ class Test extends React.Component {
 
   render() {
     return <ViewEditor editor={simpleEditor} />;
-    return <Observer>{() => <Tree boxes={simpleEditor.tree.boxes} />}</Observer>;
+    return (
+      <Observer>{() => <Tree boxes={simpleEditor.tree.boxes} />}</Observer>
+    );
   }
 }
 
