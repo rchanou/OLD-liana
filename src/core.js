@@ -457,7 +457,7 @@ export const LabelSet = types.model("LabelSet", {
   labels: optionalMap(Label)
 });
 
-const BaseRepo = types
+const Repo = types
   .model("Repo", {
     context: RepoContext,
     dependencies: optionalMap(Dependency),
@@ -496,4 +496,4 @@ const BaseRepo = types
     }
   }));
 
-export const Repo = makeContextModel(BaseRepo);
+export const ContextRepo = makeContextModel(Repo);

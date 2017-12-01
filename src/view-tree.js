@@ -1,6 +1,15 @@
 import { types, getType, getEnv } from "mobx-state-tree";
 
-import { Repo, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
+import {
+  ContextRepo,
+  CallRef,
+  Input,
+  Link,
+  LinkRef,
+  Op,
+  DepRef,
+  Val
+} from "./core";
 import { Meta } from "./meta";
 
 const optionalMap = type => types.optional(types.map(type), {});
@@ -18,7 +27,7 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
-    repo: Repo.ContextRef,
+    repo: ContextRepo.Ref,
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard"),

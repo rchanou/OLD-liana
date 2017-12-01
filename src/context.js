@@ -22,7 +22,7 @@ export const makeContextModel = Model => {
     return null;
   };
 
-  const ContextRef = types.optional(
+  const Ref = types.optional(
     types.reference(Model, {
       set(val) {
         return 0;
@@ -34,9 +34,9 @@ export const makeContextModel = Model => {
     0
   );
 
-  const ContextMixin = {
+  const Mixin = {
     [Key]: Model
   };
 
-  return { Key, Model, ContextRef, ContextMixin };
+  return { Key, Model, Ref, Mixin };
 };

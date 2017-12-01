@@ -145,7 +145,7 @@ const simpleTree = {
 
 const simpleEditor = Editor.create(
   {
-    [L.Repo.Key]: simpleSnapshot,
+    [L.ContextRepo.Key]: simpleSnapshot,
     tree: simpleTree,
     currentView: TREE,
     keyMap: {
@@ -174,7 +174,7 @@ const params = new Map(
 );
 
 autorun(() => {
-  window.a = simpleEditor[L.Repo.Key].links.get("14").val;
+  window.a = simpleEditor[L.ContextRepo.Key].links.get("14").val;
 });
 
 autorun(() => {

@@ -10,12 +10,12 @@ import {
   Op,
   DepRef,
   Val,
-  Repo
+  ContextRepo
 } from "./core";
 
 const ViewRepoList = types
   .model("ViewRepoList", {
-    repo: Repo.ContextRef,
+    repo: ContextRepo.Ref,
     form: types.maybe(Node)
   })
   .views(self => {

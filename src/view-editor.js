@@ -1,6 +1,6 @@
 import { getEnv, types } from "mobx-state-tree";
 
-import { Node, Repo } from "./core";
+import { Node, ContextRepo } from "./core";
 import Tree from "./view-tree";
 import List from "./view-list";
 
@@ -9,7 +9,7 @@ export const LIST = "LIST";
 
 export const Editor = types
   .model("Editor", {
-    ...Repo.ContextMixin,
+    ...ContextRepo.Mixin,
     tree: Tree,
     list: types.optional(List, {}),
     form: types.maybe(Node),
