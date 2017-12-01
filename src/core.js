@@ -438,19 +438,18 @@ export const LabelSet = types.model('LabelSet', {
   labels: optionalMap(Label)
 })
 
-export const Repo = makeContextModel("Repo", {
-    context: RepoContext,
-    dependencies: optionalMap(Dependency),
-    links: optionalMap(types.union(Link, Call)),
-    subs: optionalMap(Sub),
-    linkLabelSets: optionalMap(LabelSet),
-    selectedLabelSet: types.maybe(types.reference(LabelSet))
-  })
-  .views(self => ({
-    linkLabel(link) {
+const BaseRepo = types.model("Repo", {
+  context: RepoContext,
+  dependencies: optionalMap(Dependency),
+  links: optionalMap(types.union(Link, Call)),
+  subs: optionalMap(Sub),
+  linkLabelSets: optionalMap(LabelSet),
+  selectedLabelSet: types.maybe(types.reference(LabelSet))
+}).views(self => ({
+  linkLabel(link) {
 
-    },
-  }))
+  },
+}))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
       const { nodes } = self.subs.get(subId);
@@ -477,3 +476,5 @@ export const Repo = makeContextModel("Repo", {
       });
     }
   }));
+
+export const Repo = makeContextModel(BaseRepo)

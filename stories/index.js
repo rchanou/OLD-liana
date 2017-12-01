@@ -84,7 +84,7 @@ const simpleMetaSnapshot = {
 
 const testRoot = "15";
 
-const simple = L.Repo.create(simpleSnapshot, { system: SystemJS });
+const simple = L.Repo.Model.create(simpleSnapshot, { system: SystemJS });
 window.s = simple
 
 const simpleTree = {
@@ -98,10 +98,12 @@ const simpleTree = {
 
 const simpleEditor = Editor.create(
   {
+    [L.Repo.Key]: simpleSnapshot,
     tree: simpleTree,
     currentView: LIST
   },
   {
+    system: SystemJS,
     repo: simple,
     meta: Meta.create(simpleMetaSnapshot),
     keyMap: {

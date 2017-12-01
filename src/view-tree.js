@@ -18,6 +18,7 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
+    repo: Repo.Ref,
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard"),
@@ -59,7 +60,8 @@ const ViewRepoTree = types
     }
   }))
   .views(self => {
-    const { repo, meta } = getEnv(self);
+    const { meta } = getEnv(self);
+    const { repo } = self;
     const { links } = repo;
 
     const getBoxes = (link, opts = {}) => {
