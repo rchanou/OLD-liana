@@ -2,6 +2,8 @@ import { types, getEnv, getParent, getType, flow } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
+import { makeContextModel } from './context'
+
 const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");
 
@@ -436,8 +438,7 @@ export const LabelSet = types.model('LabelSet', {
   labels: optionalMap(Label)
 })
 
-export const Repo = types
-  .model("Repo", {
+export const Repo = makeContextModel("Repo", {
     context: RepoContext,
     dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
