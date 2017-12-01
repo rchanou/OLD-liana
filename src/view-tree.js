@@ -18,7 +18,7 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
-    repo: Repo.Ref,
+    repo: Repo.ContextRef,
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard"),

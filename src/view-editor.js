@@ -9,7 +9,7 @@ export const LIST = "LIST";
 
 export const Editor = types
   .model("Editor", {
-    [Repo.Key]: Repo.Model,
+    ...Repo.ContextMixin,
     tree: Tree,
     list: types.optional(List, {}),
     form: types.maybe(Node),

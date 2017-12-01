@@ -84,9 +84,6 @@ const simpleMetaSnapshot = {
 
 const testRoot = "15";
 
-const simple = L.Repo.Model.create(simpleSnapshot, { system: SystemJS });
-window.s = simple
-
 const simpleTree = {
   rootLink: testRoot,
   openPaths: {
@@ -104,7 +101,6 @@ const simpleEditor = Editor.create(
   },
   {
     system: SystemJS,
-    repo: simple,
     meta: Meta.create(simpleMetaSnapshot),
     keyMap: {
       70: "up",
@@ -116,6 +112,8 @@ const simpleEditor = Editor.create(
     }
   }
 );
+
+window.s = simpleEditor
 
 const params = new Map(
   Object.entries({

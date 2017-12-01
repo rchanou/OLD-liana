@@ -1,13 +1,15 @@
 import { types, getEnv, getType } from "mobx-state-tree";
 
-import { Node, CallRef, Input, Link, Call, LinkRef, Op, DepRef, Val } from "./core";
+import { Node, CallRef, Input, Link, Call, LinkRef, Op, DepRef, Val, Repo } from "./core";
 
 const ViewRepoList = types
   .model("ViewRepoList", {
+    repo: Repo.ContextRef,
     form: types.maybe(Node)
   })
   .views(self => {
-    const { repo, meta } = getEnv(self);
+    const { meta } = getEnv(self);
+    const { repo } = self
     const { links } = repo;
 
     return {
@@ -103,10 +105,10 @@ const ViewRepoList = types
     };
   })
   .actions(self => ({
-    move() {},
-    up() {},
-    down() {},
-    open() {}
+    move() { },
+    up() { },
+    down() { },
+    open() { }
   }));
 
 export default ViewRepoList;
