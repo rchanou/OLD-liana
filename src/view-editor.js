@@ -1,4 +1,4 @@
-import { getEnv, types } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 
 import { Node, ContextRepo } from "./core";
 import Tree from "./view-tree";

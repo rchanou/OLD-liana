@@ -1,11 +1,10 @@
-import { types, getEnv, getType } from "mobx-state-tree";
+import { types, getType } from "mobx-state-tree";
 
 import {
   Node,
   CallRef,
-  Input,
+  InputRef,
   Link,
-  Call,
   LinkRef,
   Op,
   DepRef,
@@ -19,99 +18,86 @@ const ViewRepoList = types
     form: types.maybe(Node)
   })
   .views(self => {
-    const { meta } = getEnv(self);
     const { repo } = self;
     const { links } = repo;
 
     return {
       get rows() {
-        return links.values().map((link, i) => {
+        const rows = [];
+
+        links.forEach(link => {
+          const linkType = getType(link);
+
+          if (linkType !== Link) {
+            return;
+          }
+
           const { linkId, label } = link;
           const linkLabel = label;
 
-          const linkType = getType(link);
-          switch (linkType) {
-            case Link:
-              const headCell = {
-                key: linkId,
-                color: "violet",
-                text: link.label
-              };
+          const headCell = {
+            key: linkId,
+            color: "violet",
+            text: link.label
+          };
 
-              const tailCells = link.nodes.map((node, j) => {
-                const key = `${link}-${j}`;
-                const nodeType = getType(node);
-                switch (nodeType) {
-                  case LinkRef:
-                    return {
-                      key,
-                      color: "orchid",
-                      text: node.ref.linkId
-                    };
+          const tailCells = link.nodes.map((node, j) => {
+            const key = `${link}-${j}`;
+            const nodeType = getType(node);
+            switch (nodeType) {
+              case LinkRef:
+                return {
+                  key,
+                  color: "orchid",
+                  text: node.ref.label
+                };
 
-                  case CallRef:
-                    return {
-                      key,
-                      color: "pink",
-                      text: "call"
-                    };
+              case CallRef:
+                return {
+                  key,
+                  color: "pink",
+                  text: node.call.link.label
+                };
 
-                  case DepRef:
-                    return {
-                      key,
-                      color: "aquamarine",
-                      text: node.dep.path.slice(0, 22)
-                    };
+              case DepRef:
+                return {
+                  key,
+                  color: "aquamarine",
+                  text: node.dep.path.slice(0, 22)
+                };
 
-                  case Op:
-                    return {
-                      key,
-                      color: "green",
-                      text: node.op
-                    };
+              case Op:
+                return {
+                  key,
+                  color: "green",
+                  text: node.op
+                };
 
-                  case Input:
-                    return {
-                      key,
-                      color: "orange",
-                      text: node.input
-                    };
+              case InputRef:
+                return {
+                  key,
+                  color: "orange",
+                  text: node.label || `{${node.input.inputId}}`
+                };
 
-                  case Val:
-                    return {
-                      key,
-                      color: "lightblue",
-                      text: node.val
-                    };
-                  default:
-                    return {
-                      color: "blue",
-                      text: "tail"
-                    };
-                }
-              });
+              case Val:
+                return {
+                  key,
+                  color: "lightblue",
+                  text: node.val
+                };
+              default:
+                return {
+                  color: "red",
+                  text: node.val || "???"
+                };
+            }
+          });
 
-              return [headCell, ...tailCells];
-
-            case Call:
-              const callHeadCell = {
-                key: `c-${link.callId}`,
-                color: "pink",
-                text: link.callId
-              };
-
-              const linkRefCell = {
-                key: 0,
-                color: "violet",
-                text: link.link.linkId
-              };
-
-              return [callHeadCell, linkRefCell];
-
-            default:
-              throw new Error("Must be Link or Call, brah!");
-          }
+          rows.push([headCell, ...tailCells]);
         });
+
+        return rows;
       }
     };
   })

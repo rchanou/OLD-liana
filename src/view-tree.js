@@ -1,4 +1,4 @@
-import { types, getType, getEnv } from "mobx-state-tree";
+import { types, getType } from "mobx-state-tree";
 
 import {
   ContextRepo,
@@ -10,7 +10,6 @@ import {
   DepRef,
   Val
 } from "./core";
-import { Meta } from "./meta";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
@@ -69,7 +68,6 @@ const ViewRepoTree = types
     }
   }))
   .views(self => {
-    const { meta } = getEnv(self);
     const { repo } = self;
     const { links } = repo;
 

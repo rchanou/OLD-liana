@@ -207,6 +207,10 @@ export const Input = types
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .views(self => ({
+    get label() {
+      return self.labelSet;
+    },
+
     get val() {
       return Input;
     },
@@ -232,6 +236,9 @@ export const InputRef = types
     input: types.reference(Input)
   })
   .views(self => ({
+    get label() {
+      return self.input.label;
+    },
     get val() {
       return Input;
     },

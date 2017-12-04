@@ -6,7 +6,7 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import * as L from "../src/core";
-import Meta from "../src/meta";
+
 import ViewTree from "../src/view-tree";
 import ViewList from "../src/view-list";
 import Editor, { TREE, LIST } from "../src/view-editor";
@@ -123,74 +123,6 @@ const simpleSnapshot = {
   }
 };
 
-const simpleMetaSnapshot = {
-  linkLabelSets: {
-    standard: {
-      0: { labelId: "0", targetId: "0", groupId: "standard", text: "Math" },
-      1: { labelId: "1", targetId: "1", groupId: "standard", text: "power" },
-      2: { labelId: "2", targetId: "2", groupId: "standard", text: "square" },
-      3: { labelId: "3", targetId: "3", groupId: "standard", text: "5²" },
-      4: { labelId: "4", targetId: "4", groupId: "standard", text: "12²" },
-      5: { labelId: "5", targetId: "5", groupId: "standard", text: "5² + 12²" },
-      6: { labelId: "6", targetId: "6", groupId: "standard", text: "√" },
-      7: {
-        labelId: "7",
-        targetId: "7",
-        groupId: "standard",
-        text: "hypotenuse for 5 and 12"
-      },
-      8: {
-        labelId: "8",
-        targetId: "8",
-        groupId: "standard",
-        text: "create store"
-      },
-      9: {
-        labelId: "9",
-        targetId: "9",
-        groupId: "standard",
-        text: "action type"
-      },
-      10: {
-        labelId: "10",
-        targetId: "10",
-        text: "increment",
-        groupId: "standard"
-      },
-      11: {
-        labelId: "11",
-        targetId: "11",
-        text: "decrement",
-        groupId: "standard"
-      },
-      12: {
-        labelId: "12",
-        targetId: "12",
-        text: "updater",
-        groupId: "standard"
-      },
-      13: {
-        labelId: "13",
-        targetId: "13",
-        text: "counter reducer",
-        groupId: "standard"
-      },
-      15: {
-        labelId: "15",
-        targetId: "15",
-        text: "counter store",
-        groupId: "standard"
-      }
-    }
-  },
-  inputLabelSets: {
-    standard: {
-      0: { labelId: "0", text: "state" },
-      1: { labelId: "1", text: "action" }
-    }
-  }
-};
-
 const testRoot = "15";
 
 const simpleTree = {
@@ -218,8 +150,7 @@ const simpleEditor = Editor.create(
     }
   },
   {
-    system: SystemJS,
-    meta: Meta.create(simpleMetaSnapshot)
+    system: SystemJS
   }
 );
 
