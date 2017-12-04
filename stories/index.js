@@ -18,16 +18,18 @@ import Tree from "../src/view-tree-react";
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
 const simpleSnapshot = {
-  context: {
-    user: {
-      labelSet: "arstrsta"
-    }
-  },
   dependencies: {
     0: {
       depId: "0",
       path: testDep
     }
+  },
+  inputs: {
+    0: { inputId: "0", labelSet: "state" },
+    1: { inputId: "1", labelSet: "action" },
+    2: { inputId: "2", labelSet: "x" },
+    3: { inputId: "3" },
+    n: { inputId: "n", labelSet: "square" }
   },
   links: {
     0: {

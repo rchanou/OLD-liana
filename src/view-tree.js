@@ -3,7 +3,7 @@ import { types, getType, getEnv } from "mobx-state-tree";
 import {
   ContextRepo,
   CallRef,
-  Input,
+  InputRef,
   Link,
   LinkRef,
   Op,
@@ -201,13 +201,13 @@ const ViewRepoTree = types
             });
             currentX += boxSize;
             break;
-          case Input:
-            const inputLabel = meta.inputLabelSet.get(node.input);
+          case InputRef:
+            const inputLabel = node.input.labelSet;
 
             allBoxes.push({
               ...defaultBox,
               color: inputColor,
-              text: inputLabel ? inputLabel.text : `{${node.input}}`
+              text: inputLabel || `{${node.input.inputId}}`
             });
             currentX++;
             break;

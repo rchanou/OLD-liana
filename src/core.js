@@ -202,7 +202,7 @@ class Hole {
 
 export const Input = types
   .model("Input", {
-    input: types.identifier(types.string),
+    inputId: types.identifier(types.string),
     type: types.maybe(InputType, anyType),
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
@@ -227,10 +227,23 @@ export const Input = types
 
 curry.placeholder = Input;
 
+export const InputRef = types
+  .model("InputRef", {
+    input: types.reference(Input)
+  })
+  .views(self => ({
+    get val() {
+      return Input;
+    },
+    with(inputs) {
+      return self.input.with(inputs);
+    }
+  }));
+
 export const Node = types.union(
   Val,
   Op,
-  Input,
+  InputRef,
   types.late(() => LinkRef),
   types.late(() => CallRef),
   types.late(() => SubRef),
@@ -257,7 +270,7 @@ export const Link = types
       const [head, ...nodeInputs] = nodeVals;
 
       if (typeof head === "function") {
-        const inputs = nodeInputs.filter(input => input === Input);
+        const inputs = nodeInputs.filter(input => input === InputRef);
         if (inputs.length) {
           const curried = curry(head, nodeInputs.length);
           return ary(curried(...nodeInputs), inputs.length);
@@ -370,7 +383,7 @@ export const SubLink = types
 export const SubNode = types.union(
   Val,
   Op,
-  Input,
+  InputRef,
   LinkRef,
   CallRef,
   SubParam,
@@ -408,6 +421,7 @@ export const SubRef = types
 const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
+    inputs: optionalMap(Input),
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
     linkLabelSets: optionalMap(LabelSet),

@@ -26,8 +26,8 @@ const ViewRepoList = types
     return {
       get rows() {
         return links.values().map((link, i) => {
-          const { linkId } = link;
-          const linkLabel = meta.linkLabelSet.get(linkId);
+          const { linkId, label } = link;
+          const linkLabel = label;
 
           const linkType = getType(link);
           switch (linkType) {
