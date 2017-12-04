@@ -129,10 +129,10 @@ const ViewRepoTree = types
           const color = childNodeType === LinkRef ? pendingColor : callColor;
 
           if (!openPaths.get(childPath.join("/"))) {
-            const label = meta.linkLabelSet.get(innerLink.linkId);
+            const { label } = innerLink;
             allBoxes.push({
               ...defaultBox,
-              text: (label && label.text) || `(${self.linkId})`,
+              text: label || `(${self.linkId})`,
               color,
               size: 2
             });
@@ -228,7 +228,7 @@ const ViewRepoTree = types
         }
       }
 
-      const label = meta.linkLabelSet.get(link.linkId);
+      const { label } = link;
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
@@ -252,7 +252,7 @@ const ViewRepoTree = types
         y,
         size: thisSize,
         color,
-        text: (label && label.text) || `(${link.linkId})`,
+        text: label || `(${link.linkId})`,
         category: Link,
         selected: selected || (sameAsSelectedPath && selectedIndex === null),
         siblings: siblingCount

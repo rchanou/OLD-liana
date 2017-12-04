@@ -71,10 +71,12 @@ const opFuncs = {
   }
 };
 
-export const Label = types.model("Label", {
+const Label = types.model("Label", {
   labelId: types.identifier(types.string),
   text: optionalString
 });
+
+const LabelSet = types.maybe(types.union(types.string, types.map(Label)));
 
 export const Val = types
   .model("Val", {
@@ -201,7 +203,8 @@ class Hole {
 export const Input = types
   .model("Input", {
     input: types.identifier(types.string),
-    type: types.maybe(InputType, anyType)
+    type: types.maybe(InputType, anyType),
+    labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .views(self => ({
     get val() {
@@ -234,66 +237,16 @@ export const Node = types.union(
   DepRef
 );
 
-export const User = types.model("User", {
-  labelSet: types.optional(types.string, "en-US")
-});
-
-const getContextUser = node => {
-  const { context } = node;
-
-  if (!context) {
-    const parent = getParent(node);
-    if (parent) {
-      return getContextUser(parent);
-    } else {
-      return null;
-    }
-  }
-
-  if (context.user) {
-    return context.user;
-  }
-
-  const parent = getParent(node);
-  if (parent) {
-    const { context } = parent;
-    if (context) {
-      return parent.context.userRef;
-    } else {
-      return getContextUser(parent);
-    }
-  } else {
-    return null;
-  }
-};
-
-export const UserRef = types.reference(User, {
-  set(val) {
-    return 0;
-  },
-  get(identifier, parent) {
-    return getContextUser(parent);
-  }
-});
-
-export const RepoContext = types.optional(
-  types.model("RepoContext", {
-    user: types.maybe(User),
-    userRef: types.optional(UserRef, 0)
-  }),
-  {}
-);
-
 export const Link = types
   .model("Link", {
-    context: RepoContext,
     linkId: types.identifier(types.string),
     nodes: types.array(Node),
-    labels: optionalMap(Label)
+    labelSet: LabelSet
   })
   .views(self => ({
-    label(selectedSet) {
-      return labels.get(selectedSet);
+    get label() {
+      // TODO: handle maps for localization, icon labels, etc.
+      return self.labelSet;
     },
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
@@ -452,14 +405,8 @@ export const SubRef = types
     }
   }));
 
-export const LabelSet = types.model("LabelSet", {
-  setId: types.identifier(types.string),
-  labels: optionalMap(Label)
-});
-
 const Repo = types
   .model("Repo", {
-    context: RepoContext,
     dependencies: optionalMap(Dependency),
     links: optionalMap(types.union(Link, Call)),
     subs: optionalMap(Sub),
