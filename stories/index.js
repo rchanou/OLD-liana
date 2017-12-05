@@ -1,5 +1,6 @@
 import React from "react";
 import { autorun } from "mobx";
+import { getSnapshot } from "mobx-state-tree";
 import { Observer } from "mobx-react";
 
 import { storiesOf } from "@storybook/react";
@@ -15,6 +16,8 @@ import ViewEditor from "../src/view-editor-react";
 
 import Tree from "../src/view-tree-react";
 
+const LOCAL_STORAGE_KEY = "LIANA";
+
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
 const simpleSnapshot = {
@@ -29,7 +32,7 @@ const simpleSnapshot = {
     1: { inputId: "1", labelSet: "action" },
     2: { inputId: "2", labelSet: "x" },
     3: { inputId: "3" },
-    n: { inputId: "n", labelSet: "square" }
+    n: { inputId: "n", labelSet: "base" }
   },
   links: {
     0: {
@@ -134,27 +137,39 @@ const simpleTree = {
   selectedIndex: 0
 };
 
-const simpleEditor = Editor.create(
-  {
-    [L.ContextRepo.Key]: simpleSnapshot,
-    tree: simpleTree,
-    currentView: TREE,
-    keyMap: {
-      70: "up",
-      82: "left",
-      83: "down",
-      84: "right",
-      69: "open",
-      76: "changeView",
-      78: "open"
-    }
-  },
-  {
-    system: SystemJS
+const defaultSnapshot = {
+  [L.ContextRepo.Key]: simpleSnapshot,
+  tree: simpleTree,
+  currentView: TREE,
+  keyMap: {
+    70: "up",
+    82: "left",
+    83: "down",
+    84: "right",
+    69: "open",
+    76: "changeView",
+    78: "open"
   }
-);
+};
+
+const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+const snapshotToUse = storedSnapshot
+  ? JSON.parse(storedSnapshot)
+  : defaultSnapshot;
+
+const simpleEditor = Editor.create(snapshotToUse, {
+  system: SystemJS
+});
 
 window.s = simpleEditor;
+
+const saveSnapshot = () => {
+  const snapshotToSave = getSnapshot(simpleEditor);
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshotToSave));
+};
+
+addEventListener("beforeunload", saveSnapshot);
 
 const params = new Map(
   Object.entries({

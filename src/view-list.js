@@ -69,7 +69,7 @@ const ViewRepoList = types
               case Op:
                 return {
                   key,
-                  color: "green",
+                  color: "lightgreen",
                   text: node.op
                 };
 

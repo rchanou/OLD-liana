@@ -9,12 +9,12 @@ const containerStyle = {
 
 const rowStyle = {
   display: "flex",
-  marginBottom: 5
+  marginBottom: 11
 };
 
 const boxStyle = {
   width: 100,
-  height: 30,
+  height: 22,
   display: "flex",
   justifyContent: "center",
   alignItems: "center"
