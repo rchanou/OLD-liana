@@ -43,35 +43,37 @@ const lineStyle = {
 };
 
 export const Tree = observer(({ boxes }) => {
-  const displayNodes = boxes.map(({ x, y, size, color, key, form, text, category, selected }) => {
-    const style = {
-      ...nodeStyle,
-      top: `calc(100vh - ${(y + 1) * unit}px)`,
-      left: x * unit,
-      width: size * unit + 0.5 * spacer,
-      background: color,
-      ...(selected ? { borderWidth: 3, borderColor: "yellow" } : {})
-    };
+  const displayNodes = boxes.map(
+    ({ x, y, size, color, key, form, text, category, selected }) => {
+      const style = {
+        ...nodeStyle,
+        top: `calc(100vh - ${(y + 1) * unit}px)`,
+        left: x * unit,
+        width: size * unit + 0.5 * spacer,
+        background: color,
+        ...(selected ? { borderWidth: 3, borderColor: "yellow" } : {})
+      };
 
-    const connector =
-      category === Link ? (
-        <div
-          key={`${key}L`}
-          style={{
-            ...lineStyle,
-            left: unit * (x + 0.5) - 3 * spacer,
-            top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
-          }}
-        />
-      ) : null;
+      const connector =
+        category === Link ? (
+          <div
+            key={`${key}L`}
+            style={{
+              ...lineStyle,
+              left: unit * (x + 0.5) - 3 * spacer,
+              top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
+            }}
+          />
+        ) : null;
 
-    return [
-      connector,
-      <div key={key} style={style}>
-        {text}
-      </div>
-    ];
-  });
+      return [
+        connector,
+        <div key={key} style={style}>
+          {text}
+        </div>
+      ];
+    }
+  );
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });

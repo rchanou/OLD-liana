@@ -1,37 +1,89 @@
-const { types, getEnv } = require("mobx-state-tree");
-const { autorun } = require("mobx");
+const assert = require('assert')
+const { types, getParent } = require("mobx-state-tree");
 
-const Record = types.model("Record", {
-  id: types.identifier(types.number),
-  name: types.string
-});
+const contextModelType = (name, ...rest) => {
+  if (typeof name !== 'string') {
+    throw new Error('Name required for context model type!')
+  }
 
-const Records = types.array(Record);
+  const Model = types.model(name, ...rest)
+  const contextKey = `__${Model}_`
+  Model.Key = contextKey
 
-const A = types
-  .model("A", {
-    selected: types.number
-  })
-  .views(self => {
-    const { records } = getEnv(self);
-    return {
-      get selectedRecord() {
-        return records[self.selected];
-      }
-    };
-  })
-  .actions(self => ({
-    select(id) {
-      self.selected = id;
+  const getContext = node => {
+    const context = node[contextKey]
+
+    if (context) {
+      return context
     }
-  }));
 
-const records = [{ id: 0, name: "joe" }, { id: 1, name: "ccaa" }, { id: 2, name: "ab" }, { id: 3, name: "j" }];
+    const parent = getParent(node)
+    if (parent) {
+      return getContext(parent)
+    }
 
-const a = A.create({ selected: 1 }, { records });
+    return null
+  }
 
-autorun(() => {
-  console.log(a.selectedRecord);
-});
+  Model.Ref = types.optional(
+    types.reference(Model, {
+      set(val) {
+        return 0
+      }, get(identifier, parent) {
+        return getContext(parent)
+      }
+    }), 0)
 
-a.select(2);
+  return Model
+}
+
+const ContextUser = contextModelType('User', {
+  username: types.string
+})
+
+
+const Card = types.model('Card', {
+  context: ContextUser.Ref,
+  id: types.identifier(types.number),
+  body: types.string
+})
+  .views(self => ({
+    get message() {
+      return `${self.body} From ${self.context.username}`
+    }
+  }))
+
+const List = types.model('List', {
+  // [Context.Key]: types.maybe(Context),
+  name: types.string,
+  cards: types.array(Card)
+})
+
+const App = types.model('App', {
+  [ContextUser.Key]: ContextUser,
+  lists: types.array(List),
+  selectedCard: types.reference(Card)
+})
+
+const example = App.create({
+  [ContextUser.Key]: {
+    username: 'testname'
+  },
+  selectedCard: 1,
+  lists: [
+    {
+      name: 'Greetings',
+      cards: [{ id: 1, body: 'Happy Birthday!' }, { id: 0, body: 'Merry Holidays!' }]
+    },
+    {
+      name: 'Motivation',
+      cards: [{
+        id: 0,
+        body: 'Doing great!'
+      }, { id: 1, body: 'Keep it up!' }]
+    }
+  ]
+})
+
+
+assert.equal(example.lists[1].cards[0].message, 'Doing great! From testname')

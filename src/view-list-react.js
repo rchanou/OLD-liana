@@ -9,26 +9,30 @@ const containerStyle = {
 
 const rowStyle = {
   display: "flex",
-  marginBottom: 5
+  marginBottom: 11
 };
 
 const boxStyle = {
   width: 100,
-  height: 30,
+  height: 22,
   display: "flex",
   justifyContent: "center",
   alignItems: "center"
 };
 
+const noStyle = {};
+const headStyle = { marginRight: 3, justifyContent: "flex-end", fontWeight: "bold" };
+
 export const List = observer(({ rows }) => (
   <div style={containerStyle}>
     {rows.map((boxes, i) => (
       <div style={rowStyle} key={boxes[0].key}>
-        {boxes.map(box => (
+        {boxes.map((box, i) => (
           <div
             key={box.key}
             style={{
               ...boxStyle,
+              ...(i ? noStyle : headStyle),
               background: box.color
             }}
           >

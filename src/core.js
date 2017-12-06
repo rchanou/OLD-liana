@@ -1,8 +1,11 @@
-import { types, getEnv, getType, process } from "mobx-state-tree";
+import { types, getEnv, getParent, getType, flow } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
+import { makeContextModel } from "./context";
+
 const optionalMap = type => types.optional(types.map(type), {});
+const optionalString = types.optional(types.string, "");
 
 export const global = "g";
 
@@ -68,6 +71,13 @@ const opFuncs = {
   }
 };
 
+const Label = types.model("Label", {
+  labelId: types.identifier(types.string),
+  text: optionalString
+});
+
+const LabelSet = types.maybe(types.union(types.string, types.map(Label)));
+
 export const Val = types
   .model("Val", {
     val: types.union(types.string, types.number, types.boolean, types.null)
@@ -129,7 +139,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: process(function*() {
+      afterCreate: flow(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -187,10 +197,15 @@ class Hole {
 
 export const Input = types
   .model("Input", {
-    input: types.identifier(types.string),
-    type: types.maybe(InputType, anyType)
+    inputId: types.identifier(types.string),
+    type: types.maybe(InputType, anyType),
+    labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .views(self => ({
+    get label() {
+      return self.labelSet;
+    },
+
     get val() {
       return Input;
     },
@@ -211,10 +226,26 @@ export const Input = types
 
 curry.placeholder = Input;
 
+export const InputRef = types
+  .model("InputRef", {
+    input: types.reference(Input)
+  })
+  .views(self => ({
+    get label() {
+      return self.input.label;
+    },
+    get val() {
+      return Input;
+    },
+    with(inputs) {
+      return self.input.with(inputs);
+    }
+  }));
+
 export const Node = types.union(
   Val,
   Op,
-  Input,
+  InputRef,
   types.late(() => LinkRef),
   types.late(() => CallRef),
   types.late(() => SubRef),
@@ -224,9 +255,14 @@ export const Node = types.union(
 export const Link = types
   .model("Link", {
     linkId: types.identifier(types.string),
-    nodes: types.array(Node)
+    nodes: types.array(Node),
+    labelSet: LabelSet
   })
   .views(self => ({
+    get label() {
+      // TODO: handle maps for localization, icon labels, etc.
+      return self.labelSet;
+    },
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
       if (nodeVals.indexOf(Dependency) !== -1) {
@@ -236,7 +272,7 @@ export const Link = types
       const [head, ...nodeInputs] = nodeVals;
 
       if (typeof head === "function") {
-        const inputs = nodeInputs.filter(input => input === Input);
+        const inputs = nodeInputs.filter(input => input === InputRef);
         if (inputs.length) {
           const curried = curry(head, nodeInputs.length);
           return ary(curried(...nodeInputs), inputs.length);
@@ -343,7 +379,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, Input, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(Val, Op, InputRef, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
@@ -372,12 +408,18 @@ export const SubRef = types
     }
   }));
 
-export const Repo = types
+const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
+    inputs: optionalMap(Input),
     links: optionalMap(types.union(Link, Call)),
-    subs: optionalMap(Sub)
+    subs: optionalMap(Sub),
+    linkLabelSets: optionalMap(LabelSet),
+    selectedLabelSet: types.maybe(types.reference(LabelSet))
   })
+  .views(self => ({
+    linkLabel(link) {}
+  }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
       const { nodes } = self.subs.get(subId);
@@ -404,3 +446,5 @@ export const Repo = types
       });
     }
   }));
+
+export const ContextRepo = makeContextModel(Repo);

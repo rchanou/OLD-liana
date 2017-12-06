@@ -1,7 +1,15 @@
-import { types, getType, getEnv } from "mobx-state-tree";
+import { types, getType } from "mobx-state-tree";
 
-import { Repo, CallRef, Input, Link, LinkRef, Op, DepRef, Val } from "./core";
-import { Meta } from "./meta";
+import {
+  ContextRepo,
+  CallRef,
+  InputRef,
+  Link,
+  LinkRef,
+  Op,
+  DepRef,
+  Val
+} from "./core";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
@@ -18,6 +26,7 @@ const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
   .model("ViewRepoTree", {
+    repo: ContextRepo.Ref,
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
     labelGroup: types.optional(types.string, "standard"),
@@ -59,7 +68,7 @@ const ViewRepoTree = types
     }
   }))
   .views(self => {
-    const { repo, meta } = getEnv(self);
+    const { repo } = self;
     const { links } = repo;
 
     const getBoxes = (link, opts = {}) => {
@@ -84,7 +93,8 @@ const ViewRepoTree = types
       const allBoxes = [];
 
       const sameAsSelectedPath =
-        selectedPath.length === linkPath.length && selectedPath.every((token, j) => token === linkPath[j]);
+        selectedPath.length === linkPath.length &&
+        selectedPath.every((token, j) => token === linkPath[j]);
 
       let currentX = x;
 
@@ -110,14 +120,17 @@ const ViewRepoTree = types
 
         const makeLinkBoxes = linkOrCallRef => {
           const childNodeType = getType(linkOrCallRef);
-          const innerLink = childNodeType === LinkRef ? linkOrCallRef.ref : linkOrCallRef.call.link;
+          const innerLink =
+            childNodeType === LinkRef
+              ? linkOrCallRef.ref
+              : linkOrCallRef.call.link;
           const color = childNodeType === LinkRef ? pendingColor : callColor;
 
           if (!openPaths.get(childPath.join("/"))) {
-            const label = meta.linkLabelSet.get(innerLink.linkId);
+            const { label } = innerLink;
             allBoxes.push({
               ...defaultBox,
-              text: (label && label.text) || `(${self.linkId})`,
+              text: label || `(${self.linkId})`,
               color,
               size: 2
             });
@@ -186,13 +199,13 @@ const ViewRepoTree = types
             });
             currentX += boxSize;
             break;
-          case Input:
-            const inputLabel = meta.inputLabelSet.get(node.input);
+          case InputRef:
+            const inputLabel = node.input.labelSet;
 
             allBoxes.push({
               ...defaultBox,
               color: inputColor,
-              text: inputLabel ? inputLabel.text : `{${node.input}}`
+              text: inputLabel || `{${node.input.inputId}}`
             });
             currentX++;
             break;
@@ -201,7 +214,9 @@ const ViewRepoTree = types
               ...defaultBox,
               color: packageColor,
               size: 2,
-              text: node.dep.path.replace("https://unpkg.com/", "").split("/")[0]
+              text: node.dep.path
+                .replace("https://unpkg.com/", "")
+                .split("/")[0]
             });
             currentX += 2;
             break;
@@ -211,22 +226,31 @@ const ViewRepoTree = types
         }
       }
 
-      const label = meta.linkLabelSet.get(link.linkId);
+      const { label } = link;
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) -
+          x +
+          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
         path,
         upPath: linkPath,
-        ...(root ? {} : { downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2) }),
+        ...(root
+          ? {}
+          : {
+              downPath:
+                linkPath.length < 3
+                  ? linkPath.slice(0, -1)
+                  : linkPath.slice(0, -2)
+            }),
         x,
         y,
         size: thisSize,
         color,
-        text: (label && label.text) || `(${link.linkId})`,
+        text: label || `(${link.linkId})`,
         category: Link,
         selected: selected || (sameAsSelectedPath && selectedIndex === null),
         siblings: siblingCount
@@ -240,7 +264,8 @@ const ViewRepoTree = types
           const box = allBoxes[i];
           const { path } = box;
           let j = path.length - 1;
-          let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+          let currentKey =
+            "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
           if (!box.link) {
             j--;
             currentKey += "/" + (j in path ? path[j] : "");
