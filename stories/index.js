@@ -1,7 +1,6 @@
 import React from "react";
 import { autorun } from "mobx";
 import { getSnapshot } from "mobx-state-tree";
-import { Observer } from "mobx-react";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
@@ -200,9 +199,6 @@ class Test extends React.Component {
 
   render() {
     return <ViewEditor editor={simpleEditor} />;
-    return (
-      <Observer>{() => <Tree boxes={simpleEditor.tree.boxes} />}</Observer>
-    );
   }
 }
 
