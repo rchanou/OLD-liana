@@ -19,6 +19,9 @@ export const Editor = types
   .actions(self => ({
     setView(view) {
       self.currentView = view;
+    },
+    openForm() {
+      self.form = {};
     }
   }))
   .actions(self => {
@@ -40,18 +43,23 @@ export const Editor = types
         case "left":
           projection.move(-1);
           break;
+
         case "right":
           projection.move(+1);
           break;
+
         case "up":
           projection.up();
           break;
+
         case "down":
           projection.down();
           break;
+
         case "open":
           projection.open();
           break;
+
         case "changeView":
           const { currentView } = self;
           if (currentView === TREE) {
@@ -60,6 +68,11 @@ export const Editor = types
             self.setView(TREE);
           }
           break;
+
+        case "create":
+          self.openForm();
+          break;
+
         default:
           const action = projection[actionName];
           if (typeof action === "function") {

@@ -180,12 +180,7 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [
-  stringType,
-  numType,
-  boolType,
-  anyType
-]);
+export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
 
 // is there a better way of doing this?
 class Hole {
@@ -331,10 +326,7 @@ export const Call = types
         const holeInputIds = Object.keys(linkVal.inputs);
 
         return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [
-            holeInputIds[i],
-            input
-          ]);
+          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
           return self.link.with(allInputs);
@@ -387,16 +379,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(
-  Val,
-  Op,
-  InputRef,
-  LinkRef,
-  CallRef,
-  SubParam,
-  SubLink,
-  types.late(() => SubRef)
-);
+export const SubNode = types.union(Val, Op, InputRef, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {

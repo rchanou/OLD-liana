@@ -98,14 +98,7 @@ const simpleSnapshot = {
     "11a": { callId: "11a", link: "11" },
     12: {
       linkId: "12",
-      nodes: [
-        { op: "s" },
-        { ref: "9" },
-        { val: "INCREMENT" },
-        { call: "10a" },
-        { val: "DECREMENT" },
-        { call: "11a" }
-      ],
+      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }],
       labelSet: "updater"
     },
     13: {
@@ -136,30 +129,34 @@ const simpleTree = {
   selectedIndex: 0
 };
 
+const keyMap = {
+  70: "up",
+  82: "left",
+  83: "down",
+  84: "right",
+  69: "open",
+  76: "changeView",
+  78: "open",
+  85: "create"
+};
+
 const defaultSnapshot = {
   [L.ContextRepo.Key]: simpleSnapshot,
   tree: simpleTree,
   currentView: TREE,
-  keyMap: {
-    70: "up",
-    82: "left",
-    83: "down",
-    84: "right",
-    69: "open",
-    76: "changeView",
-    78: "open"
-  }
+  keyMap
 };
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToUse = storedSnapshot
-  ? JSON.parse(storedSnapshot)
-  : defaultSnapshot;
+const snapshotToUse = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
 
-const simpleEditor = Editor.create(snapshotToUse, {
-  system: SystemJS
-});
+const simpleEditor = Editor.create(
+  { ...snapshotToUse, keyMap },
+  {
+    system: SystemJS
+  }
+);
 
 window.s = simpleEditor;
 

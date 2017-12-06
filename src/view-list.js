@@ -1,16 +1,6 @@
 import { types, getType } from "mobx-state-tree";
 
-import {
-  Node,
-  CallRef,
-  InputRef,
-  Link,
-  LinkRef,
-  Op,
-  DepRef,
-  Val,
-  ContextRepo
-} from "./core";
+import { Node, CallRef, InputRef, Link, LinkRef, Op, DepRef, Val, ContextRepo } from "./core";
 
 const ViewRepoList = types
   .model("ViewRepoList", {
@@ -37,7 +27,6 @@ const ViewRepoList = types
 
           const headCell = {
             key: linkId,
-            color: "violet",
             text: link.label
           };
 
