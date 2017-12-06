@@ -12,7 +12,7 @@ export const Editor = types
     ...ContextRepo.Mixin,
     tree: Tree,
     list: types.optional(List, {}),
-    form: types.maybe(Node),
+    form: types.maybe(types.array(Node)),
     currentView: types.optional(types.enumeration([TREE, LIST]), TREE),
     keyMap: types.map(types.string)
   })
@@ -20,8 +20,12 @@ export const Editor = types
     setView(view) {
       self.currentView = view;
     },
-    openForm() {
-      self.form = {};
+    toggleForm() {
+      if (self.form) {
+        self.form = null;
+      } else {
+        self.form = [];
+      }
     }
   }))
   .actions(self => {
@@ -70,7 +74,7 @@ export const Editor = types
           break;
 
         case "create":
-          self.openForm();
+          self.toggleForm();
           break;
 
         default:

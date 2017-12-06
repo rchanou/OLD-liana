@@ -1,15 +1,6 @@
-import { types, getType } from "mobx-state-tree";
+import { getType, types } from "mobx-state-tree";
 
-import {
-  ContextRepo,
-  CallRef,
-  InputRef,
-  Link,
-  LinkRef,
-  Op,
-  DepRef,
-  Val
-} from "./core";
+import { ContextRepo, InputRef, Link, LinkRef, Op, DepRef, Val } from "./core";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
@@ -21,7 +12,7 @@ const valColor = `hsl(210${baseColor}`;
 const inputColor = `hsl(30${baseColor}`;
 const packageColor = `hsl(190${baseColor}`;
 const pendingColor = `hsl(270${baseColor}`;
-const callColor = `hsl(300${baseColor}`;
+const reifiedColor = `hsl(300${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
 
 const ViewRepoTree = types
@@ -118,13 +109,9 @@ const ViewRepoTree = types
           downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
         };
 
-        const makeLinkBoxes = linkOrCallRef => {
-          const childNodeType = getType(linkOrCallRef);
-          const innerLink =
-            childNodeType === LinkRef
-              ? linkOrCallRef.ref
-              : linkOrCallRef.call.link;
-          const color = childNodeType === LinkRef ? pendingColor : callColor;
+        const makeRefBoxes = linkRef => {
+          const innerLink = linkRef.ref;
+          const color = linkRef.inputs ? reifiedColor : pendingColor;
 
           if (!openPaths.get(childPath.join("/"))) {
             const { label } = innerLink;
@@ -145,7 +132,7 @@ const ViewRepoTree = types
           for (let k = i; k < siblings; k++) {
             // TODO: don't do this in loop, precompute instead
             const siblingType = getType(nodes[k]);
-            if (siblingType === LinkRef || siblingType === CallRef) {
+            if (siblingType === LinkRef) {
               if (k === i + 1) {
                 immediateNextIsRef = true;
               }
@@ -176,8 +163,7 @@ const ViewRepoTree = types
 
         switch (category) {
           case LinkRef:
-          case CallRef:
-            makeLinkBoxes(node);
+            makeRefBoxes(node);
             break;
           case Op:
             allBoxes.push({

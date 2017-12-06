@@ -89,16 +89,22 @@ const simpleSnapshot = {
       nodes: [{ op: "+" }, { input: "2" }, { val: 1 }],
       labelSet: "increment"
     },
-    "10a": { callId: "10a", link: "10" },
+    // "10a": { callId: "10a", link: "10" },
     11: {
       linkId: "11",
       nodes: [{ op: "+" }, { input: "3" }, { val: -1 }],
       labelSet: "decrement"
     },
-    "11a": { callId: "11a", link: "11" },
     12: {
       linkId: "12",
-      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }],
+      nodes: [
+        { op: "s" },
+        { ref: "9" },
+        { val: "INCREMENT" },
+        { ref: "10", inputs: {} },
+        { val: "DECREMENT" },
+        { ref: "11", inputs: {} }
+      ],
       labelSet: "updater"
     },
     13: {
@@ -106,13 +112,9 @@ const simpleSnapshot = {
       nodes: [{ ref: "12" }, { input: "0" }],
       labelSet: "counter reducer"
     },
-    14: {
-      callId: "14",
-      link: "13"
-    },
     15: {
       linkId: "15",
-      nodes: [{ ref: "8" }, { call: "14" }],
+      nodes: [{ ref: "8" }, { ref: "13", inputs: {} }],
       labelSet: "counter store"
     }
   }
@@ -149,10 +151,12 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToUse = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
+const snapshotToLoad = storedSnapshot
+  ? JSON.parse(storedSnapshot)
+  : defaultSnapshot;
 
 const simpleEditor = Editor.create(
-  { ...snapshotToUse, keyMap },
+  { ...defaultSnapshot, keyMap },
   {
     system: SystemJS
   }
@@ -175,7 +179,7 @@ const params = new Map(
 );
 
 autorun(() => {
-  window.a = simpleEditor[L.ContextRepo.Key].links.get("14").val;
+  window.a = simpleEditor[L.ContextRepo.Key].links.get("13").val;
 });
 
 autorun(() => {

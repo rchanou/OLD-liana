@@ -1,6 +1,15 @@
-import { types, getType } from "mobx-state-tree";
+import { getType, types } from "mobx-state-tree";
 
-import { Node, CallRef, InputRef, Link, LinkRef, Op, DepRef, Val, ContextRepo } from "./core";
+import {
+  Node,
+  InputRef,
+  Link,
+  LinkRef,
+  Op,
+  DepRef,
+  Val,
+  ContextRepo
+} from "./core";
 
 const ViewRepoList = types
   .model("ViewRepoList", {
@@ -16,12 +25,6 @@ const ViewRepoList = types
         const rows = [];
 
         links.forEach(link => {
-          const linkType = getType(link);
-
-          if (linkType !== Link) {
-            return;
-          }
-
           const { linkId, label } = link;
           const linkLabel = label;
 
@@ -37,15 +40,8 @@ const ViewRepoList = types
               case LinkRef:
                 return {
                   key,
-                  color: "orchid",
+                  color: node.inputs ? "pink" : "orchid",
                   text: node.ref.label
-                };
-
-              case CallRef:
-                return {
-                  key,
-                  color: "pink",
-                  text: node.call.link.label
                 };
 
               case DepRef:

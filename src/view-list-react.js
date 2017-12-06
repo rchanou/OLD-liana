@@ -17,11 +17,16 @@ const boxStyle = {
   height: 22,
   display: "flex",
   justifyContent: "center",
-  alignItems: "center"
+  alignItems: "center",
+  textAlign: "right"
 };
 
 const noStyle = {};
-const headStyle = { marginRight: 3, justifyContent: "flex-end", fontWeight: "bold" };
+const headStyle = {
+  marginRight: 3,
+  justifyContent: "flex-end",
+  fontWeight: "bold"
+};
 
 export const List = observer(({ rows }) => (
   <div style={containerStyle}>

@@ -180,7 +180,12 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
+export const InputType = types.enumeration("InputType", [
+  stringType,
+  numType,
+  boolType,
+  anyType
+]);
 
 // is there a better way of doing this?
 class Hole {
@@ -247,7 +252,6 @@ export const Node = types.union(
   Op,
   InputRef,
   types.late(() => LinkRef),
-  types.late(() => CallRef),
   types.late(() => SubRef),
   DepRef
 );
@@ -301,52 +305,32 @@ export const Link = types
 
 export const LinkRef = types
   .model("LinkRef", {
-    ref: types.reference(Link)
+    ref: types.reference(Link),
+    inputs: types.maybe(types.map(Node))
   })
   .views(self => ({
     get val() {
-      return self.ref.val;
-    },
-    with(inputs) {
-      return self.ref.with(inputs);
-    }
-  }));
+      if (!self.inputs) {
+        return self.ref.val;
+      }
 
-export const Call = types
-  .model("Call", {
-    callId: types.identifier(types.string),
-    link: types.reference(Link),
-    inputs: optionalMap(Node)
-  })
-  .views(self => ({
-    get val() {
-      const linkVal = self.link.with(self.inputs);
+      const linkVal = self.ref.with(self.inputs);
       if (linkVal instanceof Hole) {
         const inputEntries = self.inputs.entries().slice();
         const holeInputIds = Object.keys(linkVal.inputs);
 
         return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
+          const newInputEntries = newInputs.map((input, i) => [
+            holeInputIds[i],
+            input
+          ]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
-          return self.link.with(allInputs);
+          return self.ref.with(allInputs);
         };
       }
 
       return linkVal;
-    },
-    with() {
-      return self.val;
-    }
-  }));
-
-export const CallRef = types
-  .model("CallRef", {
-    call: types.reference(Call)
-  })
-  .views(self => ({
-    get val() {
-      return self.call.val;
     },
     with() {
       return self.val;
@@ -379,7 +363,15 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, InputRef, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(
+  Val,
+  Op,
+  InputRef,
+  LinkRef,
+  SubParam,
+  SubLink,
+  types.late(() => SubRef)
+);
 
 export const Sub = types
   .model("Sub", {
@@ -412,7 +404,7 @@ const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
     inputs: optionalMap(Input),
-    links: optionalMap(types.union(Link, Call)),
+    links: optionalMap(Link),
     subs: optionalMap(Sub),
     linkLabelSets: optionalMap(LabelSet),
     selectedLabelSet: types.maybe(types.reference(LabelSet))
