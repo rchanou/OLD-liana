@@ -22,7 +22,7 @@ export const Editor = observer(({ editor }) => {
   return (
     <div>
       {mainEl}
-      {editor.form && <form>form opn barhs</form>}
+      {editor.form.nodes && <form>form opn barhs</form>}
     </div>
   );
 });

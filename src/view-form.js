@@ -13,7 +13,7 @@ export const Form = types
     // }
   }))
   .actions(self => ({
-    toggleForm() {
+    toggle() {
       if (self.nodes) {
         self.nodes = null;
       } else {

@@ -6,21 +6,11 @@ const optionalMap = type => types.optional(types.map(type), {});
 
 const Path = types.array(types.union(types.string, types.number));
 
-const baseColor = ",66%,55%)";
-const opColor = `hsl(150${baseColor}`;
-const valColor = `hsl(210${baseColor}`;
-const inputColor = `hsl(30${baseColor}`;
-const packageColor = `hsl(190${baseColor}`;
-const pendingColor = `hsl(270${baseColor}`;
-const reifiedColor = `hsl(300${baseColor}`;
-const unknownColor = `hsl(0${baseColor}`;
-
 export const Tree = types
   .model("ViewRepoTree", {
     repo: ContextRepo.Ref,
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
-    labelGroup: types.optional(types.string, "standard"),
     selectedPath: types.optional(Path, []),
     selectedIndex: types.maybe(types.number, 0)
   })
@@ -69,7 +59,7 @@ export const Tree = types
       const {
         x = 0,
         y = 0,
-        color = pendingColor,
+        color = link.color,
         immediateNextIsRef = false,
         nextIsRef = false,
         isLast = true,
@@ -98,6 +88,8 @@ export const Tree = types
         const category = getType(node);
 
         const defaultBox = {
+          text: node.label,
+          color: node.color,
           path: childPath,
           x: currentX,
           y: y + 1,
@@ -111,13 +103,13 @@ export const Tree = types
 
         const makeRefBoxes = linkRef => {
           const innerLink = linkRef.ref;
-          const color = linkRef.inputs ? reifiedColor : pendingColor;
+          const { color } = linkRef;
 
           if (!openPaths.get(childPath.join("/"))) {
             const { label } = innerLink;
             allBoxes.push({
               ...defaultBox,
-              text: label || `(${self.linkId})`,
+              text: label,
               color,
               size: 2
             });
@@ -153,7 +145,7 @@ export const Tree = types
             isLast,
             selected: sameAsSelectedPath && selectedIndex === i,
             siblingCount: siblings,
-            open: openPaths.has(linkPath.join("/"))
+            open: openPaths.get(linkPath.join("/"))
           });
           allBoxes.push(...refChildNodes);
 
@@ -166,48 +158,30 @@ export const Tree = types
             makeRefBoxes(node);
             break;
           case Op:
-            allBoxes.push({
-              ...defaultBox,
-              color: opColor,
-              text: node.op
-            });
+          case InputRef:
+            allBoxes.push(defaultBox);
             currentX++;
             break;
           case Val:
             const { val } = node;
-            const isString = typeof val === "string";
-            const boxSize = isString ? Math.ceil(val.length / 6) : 1;
+            const boxSize =
+              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
-              color: valColor,
-              text: isString ? `"${val}"` : val,
               size: boxSize
             });
             currentX += boxSize;
             break;
-          case InputRef:
-            const inputLabel = node.input.labelSet;
-
-            allBoxes.push({
-              ...defaultBox,
-              color: inputColor,
-              text: inputLabel || `{${node.input.inputId}}`
-            });
-            currentX++;
-            break;
           case DepRef:
             allBoxes.push({
               ...defaultBox,
-              color: packageColor,
-              size: 2,
-              text: node.dep.path
-                .replace("https://unpkg.com/", "")
-                .split("/")[0]
+              size: 2
             });
             currentX += 2;
             break;
           default:
-            allBoxes.push({ ...defaultBox, color: unknownColor });
+            throw new Error("A wild node type appeared!");
+            allBoxes.push(defaultBox);
             currentX++;
         }
       }
@@ -236,7 +210,7 @@ export const Tree = types
         y,
         size: thisSize,
         color,
-        text: label || `(${link.linkId})`,
+        text: label,
         category: Link,
         selected: selected || (sameAsSelectedPath && selectedIndex === null),
         siblings: siblingCount

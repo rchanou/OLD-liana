@@ -3,6 +3,7 @@ import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
 import { setupContext } from "./context";
+import * as Color from "./color";
 
 const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");
@@ -85,6 +86,17 @@ export const Val = types
   .views(self => ({
     with() {
       return self.val;
+    },
+    get label() {
+      const { val } = self;
+      if (typeof val === "string") {
+        return `"${val}"`;
+      } else {
+        return String(val);
+      }
+    },
+    get color() {
+      return Color.val;
     }
   }));
 
@@ -126,6 +138,13 @@ export const Op = types
     },
     with(inputs) {
       return self.val;
+    },
+    get label() {
+      // TODO: look up?
+      return self.op;
+    },
+    get color() {
+      return Color.op;
     }
   }));
 
@@ -154,10 +173,17 @@ export const Dependency = types
         if (self.resolved) {
           return system.get(self.path);
         }
+
         return Dependency;
       },
       with() {
         return self.val;
+      },
+      get label() {
+        return self.path.replace("https://unpkg.com/", "").split("/")[0];
+      },
+      get color() {
+        return Color.dep;
       }
     };
   });
@@ -172,6 +198,12 @@ export const DepRef = types
     },
     with() {
       return self.val;
+    },
+    get label() {
+      return self.dep.label;
+    },
+    get color() {
+      return self.dep.color;
     }
   }));
 
@@ -207,10 +239,6 @@ export const Input = types
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .views(self => ({
-    get label() {
-      return self.labelSet;
-    },
-
     get val() {
       return Input;
     },
@@ -226,6 +254,13 @@ export const Input = types
       } else {
         return new Hole({ [input]: true });
       }
+    },
+    get label() {
+      // TODO: look up appropriate label based on user context
+      return self.labelSet || `{${self.inputId}}`;
+    },
+    get color() {
+      return Color.input;
     }
   }));
 
@@ -236,14 +271,17 @@ export const InputRef = types
     input: types.reference(Input)
   })
   .views(self => ({
-    get label() {
-      return self.input.label;
-    },
     get val() {
       return Input;
     },
     with(inputs) {
       return self.input.with(inputs);
+    },
+    get label() {
+      return self.input.label;
+    },
+    get color() {
+      return self.input.color;
     }
   }));
 
@@ -263,10 +301,6 @@ export const Link = types
     labelSet: LabelSet
   })
   .views(self => ({
-    get label() {
-      // TODO: handle maps for localization, icon labels, etc.
-      return self.labelSet;
-    },
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
       if (nodeVals.indexOf(Dependency) !== -1) {
@@ -300,6 +334,17 @@ export const Link = types
       }
 
       return self.derive(nodeVals);
+    },
+    get label() {
+      if (!self.labelSet) {
+        return `(${link.linkId})`;
+      }
+
+      // TODO: handle maps for localization, icon labels, etc.
+      return self.labelSet;
+    },
+    get color() {
+      return Color.pending;
     }
   }));
 
@@ -334,6 +379,12 @@ export const LinkRef = types
     },
     with() {
       return self.val;
+    },
+    get label() {
+      return self.ref.label;
+    },
+    get color() {
+      return self.inputs ? Color.reified : self.ref.color;
     }
   }));
 
