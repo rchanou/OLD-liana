@@ -1,8 +1,9 @@
 import { types } from "mobx-state-tree";
 
 import { Node, ContextRepo } from "./core";
-import Tree from "./view-tree";
-import List from "./view-list";
+import { Tree } from "./view-tree";
+import { List } from "./view-list";
+import { Form } from "./view-form";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -19,13 +20,6 @@ export const Editor = types
   .actions(self => ({
     setView(view) {
       self.currentView = view;
-    },
-    toggleForm() {
-      if (self.form) {
-        self.form = null;
-      } else {
-        self.form = [];
-      }
     }
   }))
   .actions(self => {

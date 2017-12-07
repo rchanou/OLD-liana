@@ -11,10 +11,9 @@ import {
   ContextRepo
 } from "./core";
 
-const ViewRepoList = types
+export const List = types
   .model("ViewRepoList", {
-    repo: ContextRepo.Ref,
-    form: types.maybe(Node)
+    repo: ContextRepo.Ref
   })
   .views(self => {
     const { repo } = self;
@@ -94,4 +93,4 @@ const ViewRepoList = types
     open() {}
   }));
 
-export default ViewRepoList;
+export default List;

@@ -15,7 +15,7 @@ const pendingColor = `hsl(270${baseColor}`;
 const reifiedColor = `hsl(300${baseColor}`;
 const unknownColor = `hsl(0${baseColor}`;
 
-const ViewRepoTree = types
+export const Tree = types
   .model("ViewRepoTree", {
     repo: ContextRepo.Ref,
     rootLink: types.string,
@@ -309,4 +309,4 @@ const ViewRepoTree = types
     }
   }));
 
-export default ViewRepoTree;
+export default Tree;
