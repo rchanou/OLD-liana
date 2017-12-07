@@ -9,13 +9,22 @@ const containerStyle = {};
 
 export const Editor = observer(({ editor }) => {
   const { currentView } = editor;
+
+  let mainEl;
   switch (currentView) {
     case LIST:
-      return <List rows={editor.list.rows} />;
+      mainEl = <List rows={editor.list.rows} />;
       break;
     case TREE:
-      return <Tree boxes={editor.tree.boxes} />;
+      mainEl = <Tree boxes={editor.tree.boxes} />;
   }
+
+  return (
+    <div>
+      {mainEl}
+      {editor.form && <form>form opn barhs</form>}
+    </div>
+  );
 });
 
 export default Editor;

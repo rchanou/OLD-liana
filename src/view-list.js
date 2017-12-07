@@ -71,6 +71,7 @@ const ViewRepoList = types
                   color: "lightblue",
                   text: node.val
                 };
+
               default:
                 return {
                   color: "red",

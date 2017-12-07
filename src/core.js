@@ -400,7 +400,7 @@ export const SubRef = types
     }
   }));
 
-const Repo = types
+export const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
     inputs: optionalMap(Input),
