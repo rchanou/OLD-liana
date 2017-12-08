@@ -28,7 +28,7 @@ const headStyle = {
   fontWeight: "bold"
 };
 
-export const List = observer(({ rows }) => (
+export const ReactList = observer(({ rows }) => (
   <div style={containerStyle}>
     {rows.map((boxes, i) => (
       <div style={rowStyle} key={boxes[0].key}>
@@ -48,5 +48,3 @@ export const List = observer(({ rows }) => (
     ))}
   </div>
 ));
-
-export default List;

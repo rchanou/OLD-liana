@@ -2,21 +2,21 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { TREE, LIST } from "./view-editor";
-import List from "./view-list-react";
-import Tree from "./view-tree-react";
+import { ReactList } from "./view-list-react";
+import { ReactTree } from "./view-tree-react";
 
 const containerStyle = {};
 
-export const Editor = observer(({ editor }) => {
+export const ReactEditor = observer(({ editor }) => {
   const { currentView } = editor;
 
   let mainEl;
   switch (currentView) {
     case LIST:
-      mainEl = <List rows={editor.list.rows} />;
+      mainEl = <ReactList rows={editor.list.rows} />;
       break;
     case TREE:
-      mainEl = <Tree boxes={editor.tree.boxes} />;
+      mainEl = <ReactTree boxes={editor.tree.boxes} />;
   }
 
   return (
@@ -26,5 +26,3 @@ export const Editor = observer(({ editor }) => {
     </div>
   );
 });
-
-export default Editor;

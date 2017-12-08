@@ -5,15 +5,9 @@ import { getSnapshot } from "mobx-state-tree";
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
-import * as L from "../src/core";
-
-import ViewTree from "../src/view-tree";
-import ViewList from "../src/view-list";
-import Editor, { TREE, LIST } from "../src/view-editor";
-
-import ViewEditor from "../src/view-editor-react";
-
-import Tree from "../src/view-tree-react";
+import { ContextRepo } from "../src/core";
+import { Editor, TREE, LIST } from "../src/view-editor";
+import { ReactEditor } from "../src/view-editor-react";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -143,7 +137,7 @@ const keyMap = {
 };
 
 const defaultSnapshot = {
-  [L.ContextRepo.Key]: simpleSnapshot,
+  [ContextRepo.Key]: simpleSnapshot,
   tree: simpleTree,
   currentView: TREE,
   keyMap
@@ -179,7 +173,7 @@ const params = new Map(
 );
 
 autorun(() => {
-  window.a = simpleEditor[L.ContextRepo.Key].links.get("13").val;
+  window.a = simpleEditor[ContextRepo.Key].links.get("13").val;
 });
 
 autorun(() => {
@@ -199,7 +193,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <ViewEditor editor={simpleEditor} />;
+    return <ReactEditor editor={simpleEditor} />;
   }
 }
 

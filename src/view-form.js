@@ -8,9 +8,17 @@ export const Form = types
     nodes: types.maybe(types.array(Node))
   })
   .views(self => ({
-    // get defaultRepoLink() {
-    //   return self.repo.links.values().next().value.link;
-    // }
+    get fields() {
+      if (!self.nodes) {
+        return [];
+      }
+
+      const fields = [];
+
+      self.nodes.forEach(node => {});
+
+      return fields;
+    }
   }))
   .actions(self => ({
     toggle() {

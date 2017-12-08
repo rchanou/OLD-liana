@@ -42,5 +42,3 @@ export const List = types
     down() {},
     open() {}
   }));
-
-export default List;
