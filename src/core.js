@@ -60,9 +60,7 @@ const opFuncs = {
   [array](...items) {
     return items;
   },
-  [object](...kvs) {
-
-  },
+  [object](...kvs) {},
   [ifOp](condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
@@ -103,7 +101,7 @@ export const Val = types
     }
   }));
 
-export const OpEnum = types.enumeration("OpEnum", [
+export const opLabels = [
   global,
   access,
   array,
@@ -131,7 +129,9 @@ export const OpEnum = types.enumeration("OpEnum", [
   notEqual,
   notStrictEqual,
   swap
-])
+];
+
+export const OpEnum = types.enumeration("OpEnum", opLabels);
 
 export const Op = types
   .model("Op", {
@@ -163,7 +163,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: flow(function* () {
+      afterCreate: flow(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -466,7 +466,7 @@ export const Repo = types
     selectedLabelSet: types.maybe(types.reference(LabelSet))
   })
   .views(self => ({
-    linkLabel(link) { }
+    linkLabel(link) {}
   }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
