@@ -21,7 +21,10 @@ const boxStyle = {
   textAlign: "right"
 };
 
-const noStyle = {};
+const tailStyle = {
+  color: 'white'
+};
+
 const headStyle = {
   marginRight: 3,
   justifyContent: "flex-end",
@@ -37,7 +40,7 @@ export const ReactList = observer(({ rows }) => (
             key={box.key}
             style={{
               ...boxStyle,
-              ...(i ? noStyle : headStyle),
+              ...(i ? tailStyle : headStyle),
               background: box.color
             }}
           >

@@ -60,6 +60,9 @@ const opFuncs = {
   [array](...items) {
     return items;
   },
+  [object](...kvs) {
+
+  },
   [ifOp](condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
@@ -100,37 +103,39 @@ export const Val = types
     }
   }));
 
+export const OpEnum = types.enumeration("OpEnum", [
+  global,
+  access,
+  array,
+  object,
+  add,
+  subtract,
+  multiply,
+  divide,
+  mod,
+  ifOp,
+  switchOp,
+  forOp,
+  importOp,
+  newOp,
+  typeofOp,
+  instanceOfOp,
+  classOp,
+  thisOp,
+  lessThan,
+  greaterThan,
+  lessThanOrEqual,
+  greaterThanOrEqual,
+  equal,
+  strictEqual,
+  notEqual,
+  notStrictEqual,
+  swap
+])
+
 export const Op = types
   .model("Op", {
-    op: types.enumeration("OpEnum", [
-      global,
-      access,
-      array,
-      object,
-      add,
-      subtract,
-      multiply,
-      divide,
-      mod,
-      ifOp,
-      switchOp,
-      forOp,
-      importOp,
-      newOp,
-      typeofOp,
-      instanceOfOp,
-      classOp,
-      thisOp,
-      lessThan,
-      greaterThan,
-      lessThanOrEqual,
-      greaterThanOrEqual,
-      equal,
-      strictEqual,
-      notEqual,
-      notStrictEqual,
-      swap
-    ])
+    op: OpEnum
   })
   .views(self => ({
     get val() {
@@ -158,7 +163,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      afterCreate: flow(function*() {
+      afterCreate: flow(function* () {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
@@ -461,7 +466,7 @@ export const Repo = types
     selectedLabelSet: types.maybe(types.reference(LabelSet))
   })
   .views(self => ({
-    linkLabel(link) {}
+    linkLabel(link) { }
   }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
