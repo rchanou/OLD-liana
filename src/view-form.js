@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { ContextRepo } from "./core";
+import { OpEnum, Link, Input, Dependency, ContextRepo } from "./core";
 
 const BOOL = "B";
 const NUM = "N";
@@ -69,6 +69,7 @@ const RefForm = types
 
 const InputForm = types
   .model("InputForm", {
+    repo: ContextRepo.Ref,
     search: types.string,
     inputRef: types.reference(Input)
   })
@@ -90,6 +91,7 @@ const InputForm = types
 
 const DepForm = types
   .model("DepForm", {
+    repo: ContextRepo.Ref,
     search: types.string,
     depRef: types.reference(Dependency)
   })
@@ -111,34 +113,14 @@ const DepForm = types
 
 const SubForm = types.union(ValForm, OpForm, RefForm, InputForm, DepForm);
 
-export const Form = types
-  .model("Form", {
-    nodes: types.maybe(types.array(SubForm))
+export const LinkForm = types
+  .model("LinkForm", {
+    subForms: types.optional(types.array(SubForm), [])
   })
-  .views(self => ({
-    get fields() {
-      if (!self.nodes) {
-        return [];
-      }
-
-      const fields = [];
-
-      self.nodes.forEach(node => {});
-
-      return fields;
-    }
-  }))
   .actions(self => ({
-    toggle() {
-      if (self.nodes) {
-        self.nodes = null;
-      } else {
-        self.nodes = [];
-      }
-    },
-    addNode() {
-      self.nodes.push({ op: "+" });
+    addSubForm() {
+      console.log("clock you");
+      self.subForms.push({ search: "", op: "+" });
       // self.form.push({ ref: self.defaultRepoLink });
-    },
-    submit() {}
+    }
   }));

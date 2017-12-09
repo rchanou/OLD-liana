@@ -3,7 +3,7 @@ import { types } from "mobx-state-tree";
 import { Node, ContextRepo } from "./core";
 import { Tree } from "./view-tree";
 import { List } from "./view-list";
-import { Form } from "./view-form";
+import { LinkForm } from "./view-form";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -13,13 +13,16 @@ export const Editor = types
     ...ContextRepo.Mixin,
     tree: Tree,
     list: types.optional(List, {}),
-    form: types.optional(Form, {}),
+    form: types.maybe(LinkForm),
     currentView: types.optional(types.enumeration([TREE, LIST]), TREE),
     keyMap: types.map(types.string)
   })
   .actions(self => ({
     setView(view) {
       self.currentView = view;
+    },
+    toggleForm() {
+      self.form = self.form ? null : { subForms: [] };
     }
   }))
   .actions(self => {
@@ -68,7 +71,7 @@ export const Editor = types
           break;
 
         case "create":
-          self.form.toggle();
+          self.toggleForm();
           break;
 
         default:

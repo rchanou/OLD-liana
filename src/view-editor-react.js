@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { TREE, LIST } from "./view-editor";
 import { ReactList } from "./view-list-react";
 import { ReactTree } from "./view-tree-react";
+import { ReactLinkForm } from "./view-form-react";
 
 const containerStyle = {};
 
@@ -22,7 +23,7 @@ export const ReactEditor = observer(({ editor }) => {
   return (
     <div>
       {mainEl}
-      {editor.form.nodes && <form>form opn barhs</form>}
+      {editor.form && <ReactLinkForm form={editor.form} />}
     </div>
   );
 });
