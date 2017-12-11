@@ -8,6 +8,7 @@ const STRING = "S";
 
 const ValForm = types
   .model("ValForm", {
+    id: types.identifier(types.number),
     valType: types.enumeration("ValType", [BOOL, NUM, STRING]),
     boolVal: types.boolean,
     numVal: types.number,
@@ -28,6 +29,7 @@ const ValForm = types
 
 const OpForm = types
   .model("OpForm", {
+    id: types.identifier(types.number),
     search: types.string,
     op: types.optional(OpEnum, ".")
   })
@@ -47,6 +49,7 @@ const OpForm = types
 
 const RefForm = types
   .model("RefForm", {
+    id: types.identifier(types.number),
     repo: ContextRepo.Ref,
     search: types.string,
     linkRef: types.reference(Link)
@@ -69,6 +72,7 @@ const RefForm = types
 
 const InputForm = types
   .model("InputForm", {
+    id: types.identifier(types.number),
     repo: ContextRepo.Ref,
     search: types.string,
     inputRef: types.reference(Input)
@@ -91,6 +95,7 @@ const InputForm = types
 
 const DepForm = types
   .model("DepForm", {
+    id: types.identifier(types.number),
     repo: ContextRepo.Ref,
     search: types.string,
     depRef: types.reference(Dependency)
@@ -113,14 +118,23 @@ const DepForm = types
 
 const SubForm = types.union(ValForm, OpForm, RefForm, InputForm, DepForm);
 
+let subFormIdCounter = 0;
+
 export const LinkForm = types
   .model("LinkForm", {
     subForms: types.optional(types.array(SubForm), [])
   })
-  .actions(self => ({
-    addSubForm() {
-      console.log("clock you");
-      self.subForms.push({ search: "", op: "+" });
-      // self.form.push({ ref: self.defaultRepoLink });
-    }
-  }));
+  .actions(self => {
+    let subFormIdCounter = 0;
+    return {
+      afterCreate() {
+        if (self.subForms) {
+          subFormIdCounter =
+            Math.max(0, ...self.subForms.map(f => f.get("id") || 0)) + 1;
+        }
+      },
+      addSubForm() {
+        self.subForms.push({ id: subFormIdCounter++, search: "", op: "+" });
+      }
+    };
+  });
