@@ -150,7 +150,7 @@ const snapshotToLoad = storedSnapshot
   : defaultSnapshot;
 
 const simpleEditor = Editor.create(
-  { ...defaultSnapshot, keyMap },
+  { ...snapshotToLoad, keyMap },
   {
     system: SystemJS
   }
@@ -162,6 +162,7 @@ const saveSnapshot = () => {
   const snapshotToSave = getSnapshot(simpleEditor);
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshotToSave));
 };
+window.g = () => getSnapshot(simpleEditor);
 
 addEventListener("beforeunload", saveSnapshot);
 

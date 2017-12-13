@@ -122,7 +122,8 @@ let subFormIdCounter = 0;
 
 export const LinkForm = types
   .model("LinkForm", {
-    subForms: types.optional(types.array(SubForm), [])
+    subForms: types.optional(types.array(SubForm), []),
+    selectedSubForm: types.maybe(types.reference(SubForm))
   })
   .actions(self => {
     let subFormIdCounter = 0;
@@ -130,7 +131,7 @@ export const LinkForm = types
       afterCreate() {
         if (self.subForms) {
           subFormIdCounter =
-            Math.max(0, ...self.subForms.map(f => f.get("id") || 0)) + 1;
+            Math.max(0, ...self.subForms.map(f => f.id || 0)) + 1;
         }
       },
       addSubForm() {

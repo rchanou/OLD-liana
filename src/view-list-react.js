@@ -22,7 +22,9 @@ const boxStyle = {
 };
 
 const tailStyle = {
-  color: 'white'
+  color: "white",
+  border: "1px solid #333",
+  borderLeft: "none"
 };
 
 const headStyle = {
