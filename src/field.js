@@ -5,17 +5,15 @@ import { OpEnum, Link, Input, Dependency, ContextRepo } from "./core";
 // placeholder prop for localizable labels
 const presetText = text => types.optional(types.string, text);
 
+const BOOL = "B";
+const NUM = "N";
+const STRING = "S";
+
 let idCounter = 0;
 const optionalId = types.optional(
   types.identifier(types.number),
   () => idCounter++
 );
-
-export const ValTypeField = types.model("ValTypeField", {
-  fieldId: optionalId,
-  checked: types.boolean,
-  label: presetText("Value Type")
-});
 
 export const BoolField = types.model("BoolField", {
   fieldId: optionalId,
@@ -24,7 +22,7 @@ export const BoolField = types.model("BoolField", {
 });
 
 export const NumField = types.model("NumField", {
-  optionalId,
+  fieldId: optionalId,
   number: types.number,
   label: presetText("Value")
 });
@@ -67,6 +65,7 @@ export const LinkField = types
       return self.linkRef.linkId;
     },
     get options() {
+      // TODO: options may be more optimal outside of field models
       return self.repo.links
         .entries()
         .map(link => ({ value: link.linkId, label: link.label }));
@@ -100,6 +99,36 @@ export const InputField = types
       self.inputRef = value;
     }
   }));
+
+export const ValForm = types
+  .model("ValForm", {
+    valType: types.enumeration("ValType", [BOOL, NUM, STRING]),
+    boolField: BoolField,
+    numField: NumField,
+    stringField: StringField
+  })
+  .views(self => ({
+    get val() {
+      switch (self.valType) {
+        case BOOL:
+          return self.boolField.checked;
+        case NUM:
+          return self.numField.number;
+        case STRING:
+          return self.stringField.string;
+      }
+    }
+  }));
+
+export const InputArg = types.model("InputArg", {
+  input: types.reference(Input),
+  valForm: ValForm
+});
+
+export const LinkForm = types.model("LinkForm", {
+  linkField: LinkField,
+  inputArgs: types.maybe(types.array(InputArg))
+});
 
 export const DepField = types
   .model("DepField", {
