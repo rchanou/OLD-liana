@@ -10,10 +10,7 @@ const NUM = "N";
 const STRING = "S";
 
 let idCounter = 0;
-const optionalId = types.optional(
-  types.identifier(types.number),
-  () => idCounter++
-);
+const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
 
 export const BoolField = types.model("BoolField", {
   fieldId: optionalId,
@@ -140,9 +137,7 @@ export const DepRefField = types
       return self.depRef.depId;
     },
     get options() {
-      return self.repo.dependencies
-        .entries()
-        .map(dep => ({ value: dep.depId, label: dep.label }));
+      return self.repo.depList;
     }
   }))
   .actions(self => ({
@@ -151,16 +146,6 @@ export const DepRefField = types
     }
   }));
 
-export const LinkForm = types.array(
-  types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)
-);
+export const LinkForm = types.array(types.union(ValForm, RefForm, OpField, InputRefField, DepRefField));
 
-export const Field = types.union(
-  BoolField,
-  NumField,
-  StringField,
-  OpField,
-  InputRefField,
-  LinkField,
-  DepRefField
-);
+export const Field = types.union(BoolField, NumField, StringField, OpField, InputRefField, LinkField, DepRefField);

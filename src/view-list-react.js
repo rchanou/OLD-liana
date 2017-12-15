@@ -21,16 +21,21 @@ const boxStyle = {
   textAlign: "right"
 };
 
-const tailStyle = {
-  color: "white",
-  border: "1px solid #333",
-  borderLeft: "none"
-};
-
 const headStyle = {
   marginRight: 3,
   justifyContent: "flex-end",
   fontWeight: "bold"
+};
+
+const secondStyle = {
+  color: "white",
+  border: "1px solid #333"
+};
+
+const tailStyle = {
+  color: "white",
+  border: "1px solid #333",
+  borderLeft: "none"
 };
 
 export const ReactList = observer(({ rows }) => (
@@ -42,7 +47,7 @@ export const ReactList = observer(({ rows }) => (
             key={box.key}
             style={{
               ...boxStyle,
-              ...(i ? tailStyle : headStyle),
+              ...(i === 1 ? secondStyle : i ? tailStyle : headStyle),
               background: box.color
             }}
           >

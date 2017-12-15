@@ -83,7 +83,6 @@ const simpleSnapshot = {
       nodes: [{ op: "+" }, { input: "2" }, { val: 1 }],
       labelSet: "increment"
     },
-    // "10a": { callId: "10a", link: "10" },
     11: {
       linkId: "11",
       nodes: [{ op: "+" }, { input: "3" }, { val: -1 }],
@@ -145,9 +144,7 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot
-  ? JSON.parse(storedSnapshot)
-  : defaultSnapshot;
+const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
 
 const simpleEditor = Editor.create(
   { ...snapshotToLoad, keyMap },
