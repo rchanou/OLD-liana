@@ -2,20 +2,28 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { TREE, LIST } from "./view-editor";
-import List from "./view-list-react";
-import Tree from "./view-tree-react";
+import { ReactList } from "./view-list-react";
+import { ReactTree } from "./view-tree-react";
+import { ReactLinkForm } from "./view-form-react";
 
 const containerStyle = {};
 
-export const Editor = observer(({ editor }) => {
+export const ReactEditor = observer(({ editor }) => {
   const { currentView } = editor;
+
+  let mainEl;
   switch (currentView) {
     case LIST:
-      return <List rows={editor.list.rows} />;
+      mainEl = <ReactList rows={editor.list.rows} />;
       break;
     case TREE:
-      return <Tree boxes={editor.tree.boxes} />;
+      mainEl = <ReactTree boxes={editor.tree.boxes} />;
   }
-});
 
-export default Editor;
+  return (
+    <div>
+      {mainEl}
+      {editor.form && <ReactLinkForm form={editor.form} />}
+    </div>
+  );
+});

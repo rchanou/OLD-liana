@@ -17,13 +17,28 @@ const boxStyle = {
   height: 22,
   display: "flex",
   justifyContent: "center",
-  alignItems: "center"
+  alignItems: "center",
+  textAlign: "right"
 };
 
-const noStyle = {};
-const headStyle = { marginRight: 3, justifyContent: "flex-end", fontWeight: "bold" };
+const headStyle = {
+  marginRight: 3,
+  justifyContent: "flex-end",
+  fontWeight: "bold"
+};
 
-export const List = observer(({ rows }) => (
+const secondStyle = {
+  color: "white",
+  border: "1px solid #333"
+};
+
+const tailStyle = {
+  color: "white",
+  border: "1px solid #333",
+  borderLeft: "none"
+};
+
+export const ReactList = observer(({ rows }) => (
   <div style={containerStyle}>
     {rows.map((boxes, i) => (
       <div style={rowStyle} key={boxes[0].key}>
@@ -32,7 +47,7 @@ export const List = observer(({ rows }) => (
             key={box.key}
             style={{
               ...boxStyle,
-              ...(i ? noStyle : headStyle),
+              ...(i === 1 ? secondStyle : i ? tailStyle : headStyle),
               background: box.color
             }}
           >
@@ -43,5 +58,3 @@ export const List = observer(({ rows }) => (
     ))}
   </div>
 ));
-
-export default List;

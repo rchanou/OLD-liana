@@ -1,11 +1,11 @@
 import { types, getParent } from "mobx-state-tree";
 
-export const makeContextModel = Model => {
+export const setupContext = (Model, key) => {
   if (typeof Model.name !== "string") {
     throw new Error("Name required for context model type!");
   }
 
-  const Key = `__${Model.name}_`;
+  const Key = key || `context${Model.name}`;
 
   const getContext = node => {
     const context = node[Key];
@@ -23,14 +23,17 @@ export const makeContextModel = Model => {
   };
 
   const Ref = types.optional(
-    types.reference(Model, {
-      set(val) {
-        return 0;
-      },
-      get(identifier, parent) {
-        return getContext(parent);
-      }
-    }),
+    types.union(
+      Model,
+      types.reference(Model, {
+        set(val) {
+          return 0;
+        },
+        get(identifier, parent) {
+          return getContext(parent);
+        }
+      })
+    ),
     0
   );
 

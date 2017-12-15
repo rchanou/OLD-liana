@@ -2,7 +2,8 @@ import { types, getEnv, getParent, getType, flow } from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
-import { makeContextModel } from "./context";
+import { setupContext } from "./context";
+import * as Color from "./color";
 
 const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");
@@ -59,6 +60,7 @@ const opFuncs = {
   [array](...items) {
     return items;
   },
+  [object](...kvs) {},
   [ifOp](condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
@@ -85,40 +87,55 @@ export const Val = types
   .views(self => ({
     with() {
       return self.val;
+    },
+    get label() {
+      const { val } = self;
+      if (typeof val === "string") {
+        return `"${val}"`;
+      } else {
+        return String(val);
+      }
+    },
+    get color() {
+      return Color.val;
     }
   }));
 
+export const ops = [
+  global,
+  access,
+  array,
+  object,
+  add,
+  subtract,
+  multiply,
+  divide,
+  mod,
+  ifOp,
+  switchOp,
+  forOp,
+  importOp,
+  newOp,
+  typeofOp,
+  instanceOfOp,
+  classOp,
+  thisOp,
+  lessThan,
+  greaterThan,
+  lessThanOrEqual,
+  greaterThanOrEqual,
+  equal,
+  strictEqual,
+  notEqual,
+  notStrictEqual,
+  swap
+];
+
+export const OpEnum = types.enumeration("OpEnum", ops);
+
 export const Op = types
   .model("Op", {
-    op: types.enumeration("OpEnum", [
-      global,
-      access,
-      array,
-      object,
-      add,
-      subtract,
-      multiply,
-      divide,
-      mod,
-      ifOp,
-      switchOp,
-      forOp,
-      importOp,
-      newOp,
-      typeofOp,
-      instanceOfOp,
-      classOp,
-      thisOp,
-      lessThan,
-      greaterThan,
-      lessThanOrEqual,
-      greaterThanOrEqual,
-      equal,
-      strictEqual,
-      notEqual,
-      notStrictEqual,
-      swap
-    ])
+    op: OpEnum
   })
   .views(self => ({
     get val() {
@@ -126,6 +143,13 @@ export const Op = types
     },
     with(inputs) {
       return self.val;
+    },
+    get label() {
+      // TODO: look up?
+      return self.op;
+    },
+    get color() {
+      return Color.op;
     }
   }));
 
@@ -154,10 +178,17 @@ export const Dependency = types
         if (self.resolved) {
           return system.get(self.path);
         }
+
         return Dependency;
       },
       with() {
         return self.val;
+      },
+      get label() {
+        return self.path.replace("https://unpkg.com/", "").split("/")[0];
+      },
+      get color() {
+        return Color.dep;
       }
     };
   });
@@ -172,6 +203,12 @@ export const DepRef = types
     },
     with() {
       return self.val;
+    },
+    get label() {
+      return self.dep.label;
+    },
+    get color() {
+      return self.dep.color;
     }
   }));
 
@@ -202,10 +239,6 @@ export const Input = types
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .views(self => ({
-    get label() {
-      return self.labelSet;
-    },
-
     get val() {
       return Input;
     },
@@ -221,6 +254,13 @@ export const Input = types
       } else {
         return new Hole({ [input]: true });
       }
+    },
+    get label() {
+      // TODO: look up appropriate label based on user context
+      return self.labelSet || `{${self.inputId}}`;
+    },
+    get color() {
+      return Color.input;
     }
   }));
 
@@ -231,26 +271,21 @@ export const InputRef = types
     input: types.reference(Input)
   })
   .views(self => ({
-    get label() {
-      return self.input.label;
-    },
     get val() {
       return Input;
     },
     with(inputs) {
       return self.input.with(inputs);
+    },
+    get label() {
+      return self.input.label;
+    },
+    get color() {
+      return self.input.color;
     }
   }));
 
-export const Node = types.union(
-  Val,
-  Op,
-  InputRef,
-  types.late(() => LinkRef),
-  types.late(() => CallRef),
-  types.late(() => SubRef),
-  DepRef
-);
+export const Node = types.union(Val, Op, InputRef, types.late(() => LinkRef), types.late(() => SubRef), DepRef);
 
 export const Link = types
   .model("Link", {
@@ -259,10 +294,6 @@ export const Link = types
     labelSet: LabelSet
   })
   .views(self => ({
-    get label() {
-      // TODO: handle maps for localization, icon labels, etc.
-      return self.labelSet;
-    },
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
       if (nodeVals.indexOf(Dependency) !== -1) {
@@ -296,31 +327,33 @@ export const Link = types
       }
 
       return self.derive(nodeVals);
+    },
+    get label() {
+      if (!self.labelSet) {
+        return `(${link.linkId})`;
+      }
+
+      // TODO: handle maps for localization, icon labels, etc.
+      return self.labelSet;
+    },
+    get color() {
+      return Color.pending;
     }
   }));
 
 export const LinkRef = types
   .model("LinkRef", {
-    ref: types.reference(Link)
+    ref: types.reference(Link),
+    // TODO: inputs may be replace-able with simple boolean
+    inputs: types.maybe(types.map(Node))
   })
   .views(self => ({
     get val() {
-      return self.ref.val;
-    },
-    with(inputs) {
-      return self.ref.with(inputs);
-    }
-  }));
+      if (!self.inputs) {
+        return self.ref.val;
+      }
 
-export const Call = types
-  .model("Call", {
-    callId: types.identifier(types.string),
-    link: types.reference(Link),
-    inputs: optionalMap(Node)
-  })
-  .views(self => ({
-    get val() {
-      const linkVal = self.link.with(self.inputs);
+      const linkVal = self.ref.with(self.inputs);
       if (linkVal instanceof Hole) {
         const inputEntries = self.inputs.entries().slice();
         const holeInputIds = Object.keys(linkVal.inputs);
@@ -329,7 +362,7 @@ export const Call = types
           const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
-          return self.link.with(allInputs);
+          return self.ref.with(allInputs);
         };
       }
 
@@ -337,19 +370,12 @@ export const Call = types
     },
     with() {
       return self.val;
-    }
-  }));
-
-export const CallRef = types
-  .model("CallRef", {
-    call: types.reference(Call)
-  })
-  .views(self => ({
-    get val() {
-      return self.call.val;
     },
-    with() {
-      return self.val;
+    get label() {
+      return self.ref.label;
+    },
+    get color() {
+      return self.inputs ? Color.reified : self.ref.color;
     }
   }));
 
@@ -379,7 +405,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, InputRef, LinkRef, CallRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(Val, Op, InputRef, LinkRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
@@ -408,17 +434,25 @@ export const SubRef = types
     }
   }));
 
-const Repo = types
+export const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
     inputs: optionalMap(Input),
-    links: optionalMap(types.union(Link, Call)),
+    links: optionalMap(Link),
     subs: optionalMap(Sub),
     linkLabelSets: optionalMap(LabelSet),
     selectedLabelSet: types.maybe(types.reference(LabelSet))
   })
   .views(self => ({
-    linkLabel(link) {}
+    get linkList() {
+      return self.links.entries().map(link => ({ value: link.linkId, label: link.label }));
+    },
+    get inputList() {
+      return self.inputs.entries().map(input => ({ value: input.inputId, label: input.label }));
+    },
+    get depList() {
+      return self.dependencies.entries().map(dep => ({ value: dep.depId, label: dep.label }));
+    }
   }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {
@@ -447,4 +481,4 @@ const Repo = types
     }
   }));
 
-export const ContextRepo = makeContextModel(Repo);
+export const ContextRepo = setupContext(Repo);

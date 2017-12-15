@@ -5,15 +5,9 @@ import { getSnapshot } from "mobx-state-tree";
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
-import * as L from "../src/core";
-
-import ViewTree from "../src/view-tree";
-import ViewList from "../src/view-list";
-import Editor, { TREE, LIST } from "../src/view-editor";
-
-import ViewEditor from "../src/view-editor-react";
-
-import Tree from "../src/view-tree-react";
+import { ContextRepo } from "../src/core";
+import { Editor, TREE, LIST } from "../src/view-editor";
+import { ReactEditor } from "../src/view-editor-react";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -89,16 +83,21 @@ const simpleSnapshot = {
       nodes: [{ op: "+" }, { input: "2" }, { val: 1 }],
       labelSet: "increment"
     },
-    "10a": { callId: "10a", link: "10" },
     11: {
       linkId: "11",
       nodes: [{ op: "+" }, { input: "3" }, { val: -1 }],
       labelSet: "decrement"
     },
-    "11a": { callId: "11a", link: "11" },
     12: {
       linkId: "12",
-      nodes: [{ op: "s" }, { ref: "9" }, { val: "INCREMENT" }, { call: "10a" }, { val: "DECREMENT" }, { call: "11a" }],
+      nodes: [
+        { op: "s" },
+        { ref: "9" },
+        { val: "INCREMENT" },
+        { ref: "10", inputs: {} },
+        { val: "DECREMENT" },
+        { ref: "11", inputs: {} }
+      ],
       labelSet: "updater"
     },
     13: {
@@ -106,13 +105,9 @@ const simpleSnapshot = {
       nodes: [{ ref: "12" }, { input: "0" }],
       labelSet: "counter reducer"
     },
-    14: {
-      callId: "14",
-      link: "13"
-    },
     15: {
       linkId: "15",
-      nodes: [{ ref: "8" }, { call: "14" }],
+      nodes: [{ ref: "8" }, { ref: "13", inputs: {} }],
       labelSet: "counter store"
     }
   }
@@ -141,7 +136,7 @@ const keyMap = {
 };
 
 const defaultSnapshot = {
-  [L.ContextRepo.Key]: simpleSnapshot,
+  [ContextRepo.Key]: simpleSnapshot,
   tree: simpleTree,
   currentView: TREE,
   keyMap
@@ -149,10 +144,10 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToUse = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
+const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
 
 const simpleEditor = Editor.create(
-  { ...snapshotToUse, keyMap },
+  { ...snapshotToLoad, keyMap },
   {
     system: SystemJS
   }
@@ -164,6 +159,7 @@ const saveSnapshot = () => {
   const snapshotToSave = getSnapshot(simpleEditor);
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshotToSave));
 };
+window.g = () => getSnapshot(simpleEditor);
 
 addEventListener("beforeunload", saveSnapshot);
 
@@ -175,7 +171,7 @@ const params = new Map(
 );
 
 autorun(() => {
-  window.a = simpleEditor[L.ContextRepo.Key].links.get("14").val;
+  window.a = simpleEditor[ContextRepo.Key].links.get("13").val;
 });
 
 autorun(() => {
@@ -195,7 +191,7 @@ class Test extends React.Component {
   }
 
   render() {
-    return <ViewEditor editor={simpleEditor} />;
+    return <ReactEditor editor={simpleEditor} />;
   }
 }
 

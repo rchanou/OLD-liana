@@ -1,35 +1,16 @@
-import { types, getType } from "mobx-state-tree";
+import { getType, types } from "mobx-state-tree";
 
-import {
-  ContextRepo,
-  CallRef,
-  InputRef,
-  Link,
-  LinkRef,
-  Op,
-  DepRef,
-  Val
-} from "./core";
+import { ContextRepo, InputRef, Link, LinkRef, Op, DepRef, Val } from "./core";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
 const Path = types.array(types.union(types.string, types.number));
 
-const baseColor = ",66%,55%)";
-const opColor = `hsl(150${baseColor}`;
-const valColor = `hsl(210${baseColor}`;
-const inputColor = `hsl(30${baseColor}`;
-const packageColor = `hsl(190${baseColor}`;
-const pendingColor = `hsl(270${baseColor}`;
-const callColor = `hsl(300${baseColor}`;
-const unknownColor = `hsl(0${baseColor}`;
-
-const ViewRepoTree = types
+export const Tree = types
   .model("ViewRepoTree", {
     repo: ContextRepo.Ref,
     rootLink: types.string,
     openPaths: optionalMap(types.boolean),
-    labelGroup: types.optional(types.string, "standard"),
     selectedPath: types.optional(Path, []),
     selectedIndex: types.maybe(types.number, 0)
   })
@@ -78,7 +59,7 @@ const ViewRepoTree = types
       const {
         x = 0,
         y = 0,
-        color = pendingColor,
+        color = link.color,
         immediateNextIsRef = false,
         nextIsRef = false,
         isLast = true,
@@ -107,6 +88,8 @@ const ViewRepoTree = types
         const category = getType(node);
 
         const defaultBox = {
+          text: node.label,
+          color: node.color,
           path: childPath,
           x: currentX,
           y: y + 1,
@@ -118,19 +101,15 @@ const ViewRepoTree = types
           downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
         };
 
-        const makeLinkBoxes = linkOrCallRef => {
-          const childNodeType = getType(linkOrCallRef);
-          const innerLink =
-            childNodeType === LinkRef
-              ? linkOrCallRef.ref
-              : linkOrCallRef.call.link;
-          const color = childNodeType === LinkRef ? pendingColor : callColor;
+        const makeRefBoxes = linkRef => {
+          const innerLink = linkRef.ref;
+          const { color } = linkRef;
 
           if (!openPaths.get(childPath.join("/"))) {
             const { label } = innerLink;
             allBoxes.push({
               ...defaultBox,
-              text: label || `(${self.linkId})`,
+              text: label,
               color,
               size: 2
             });
@@ -145,7 +124,7 @@ const ViewRepoTree = types
           for (let k = i; k < siblings; k++) {
             // TODO: don't do this in loop, precompute instead
             const siblingType = getType(nodes[k]);
-            if (siblingType === LinkRef || siblingType === CallRef) {
+            if (siblingType === LinkRef) {
               if (k === i + 1) {
                 immediateNextIsRef = true;
               }
@@ -166,7 +145,7 @@ const ViewRepoTree = types
             isLast,
             selected: sameAsSelectedPath && selectedIndex === i,
             siblingCount: siblings,
-            open: openPaths.has(linkPath.join("/"))
+            open: openPaths.get(linkPath.join("/"))
           });
           allBoxes.push(...refChildNodes);
 
@@ -176,52 +155,33 @@ const ViewRepoTree = types
 
         switch (category) {
           case LinkRef:
-          case CallRef:
-            makeLinkBoxes(node);
+            makeRefBoxes(node);
             break;
           case Op:
-            allBoxes.push({
-              ...defaultBox,
-              color: opColor,
-              text: node.op
-            });
+          case InputRef:
+            allBoxes.push(defaultBox);
             currentX++;
             break;
           case Val:
             const { val } = node;
-            const isString = typeof val === "string";
-            const boxSize = isString ? Math.ceil(val.length / 6) : 1;
+            const boxSize =
+              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
-              color: valColor,
-              text: isString ? `"${val}"` : val,
               size: boxSize
             });
             currentX += boxSize;
             break;
-          case InputRef:
-            const inputLabel = node.input.labelSet;
-
-            allBoxes.push({
-              ...defaultBox,
-              color: inputColor,
-              text: inputLabel || `{${node.input.inputId}}`
-            });
-            currentX++;
-            break;
           case DepRef:
             allBoxes.push({
               ...defaultBox,
-              color: packageColor,
-              size: 2,
-              text: node.dep.path
-                .replace("https://unpkg.com/", "")
-                .split("/")[0]
+              size: 2
             });
             currentX += 2;
             break;
           default:
-            allBoxes.push({ ...defaultBox, color: unknownColor });
+            throw new Error("A wild node type appeared!");
+            allBoxes.push(defaultBox);
             currentX++;
         }
       }
@@ -250,7 +210,7 @@ const ViewRepoTree = types
         y,
         size: thisSize,
         color,
-        text: label || `(${link.linkId})`,
+        text: label,
         category: Link,
         selected: selected || (sameAsSelectedPath && selectedIndex === null),
         siblings: siblingCount
@@ -323,4 +283,4 @@ const ViewRepoTree = types
     }
   }));
 
-export default ViewRepoTree;
+export default Tree;
