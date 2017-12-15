@@ -42,8 +42,8 @@ const lineStyle = {
   // boxShadow: "0.5px 0.5px 0.5px 0.5px hsla(0,0%,55%,0.5)"
 };
 
-export const ReactTree = observer(({ boxes }) => {
-  const displayNodes = boxes.map(
+export const ReactTree = observer(({ cells }) => {
+  const displayNodes = cells.map(
     ({ x, y, size, color, key, form, text, category, selected }) => {
       const style = {
         ...nodeStyle,

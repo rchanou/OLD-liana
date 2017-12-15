@@ -15,7 +15,7 @@ export const Tree = types
     selectedIndex: types.maybe(types.number, 0)
   })
   .views(self => ({
-    get selectedBox() {
+    get selectedCell() {
       const { selectedPath, selectedIndex, boxes } = self;
 
       if (selectedIndex === null) {
@@ -36,13 +36,13 @@ export const Tree = types
       );
     },
     get isLinkSelected() {
-      const { selectedBox } = self;
+      const { selectedCell } = self;
 
-      if (!selectedBox) {
+      if (!selectedCell) {
         return false;
       }
 
-      return selectedBox.category === Link;
+      return selectedCell.category === Link;
     },
     get pathKey() {
       return self.selectedPath.concat(self.selectedIndex).join("/");
@@ -52,7 +52,7 @@ export const Tree = types
     const { repo } = self;
     const { links } = repo;
 
-    const getBoxes = (link, opts = {}) => {
+    const getCells = (link, opts = {}) => {
       const { rootLink, openPaths, selectedPath, selectedIndex } = self;
       link = link || links.get(rootLink);
       const { linkId, nodes } = link;
@@ -71,7 +71,7 @@ export const Tree = types
         open = true
       } = opts;
 
-      const allBoxes = [];
+      const allCells = [];
 
       const sameAsSelectedPath =
         selectedPath.length === linkPath.length &&
@@ -87,7 +87,7 @@ export const Tree = types
         const node = nodes[i];
         const category = getType(node);
 
-        const defaultBox = {
+        const defaultCell = {
           text: node.label,
           color: node.color,
           path: childPath,
@@ -101,14 +101,14 @@ export const Tree = types
           downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
         };
 
-        const makeRefBoxes = linkRef => {
+        const makeRefCells = linkRef => {
           const innerLink = linkRef.ref;
           const { color } = linkRef;
 
           if (!openPaths.get(childPath.join("/"))) {
             const { label } = innerLink;
-            allBoxes.push({
-              ...defaultBox,
+            allCells.push({
+              ...defaultCell,
               text: label,
               color,
               size: 2
@@ -133,7 +133,7 @@ export const Tree = types
             }
           }
 
-          const refChildNodes = getBoxes(innerLink, {
+          const refChildNodes = getCells(innerLink, {
             root: false,
             path: childPath,
             linkPath: [...linkPath, innerLink.linkId],
@@ -147,7 +147,7 @@ export const Tree = types
             siblingCount: siblings,
             open: openPaths.get(linkPath.join("/"))
           });
-          allBoxes.push(...refChildNodes);
+          allCells.push(...refChildNodes);
 
           const { size } = refChildNodes[refChildNodes.length - 1];
           currentX += size;
@@ -155,33 +155,33 @@ export const Tree = types
 
         switch (category) {
           case LinkRef:
-            makeRefBoxes(node);
+            makeRefCells(node);
             break;
           case Op:
           case InputRef:
-            allBoxes.push(defaultBox);
+            allCells.push(defaultCell);
             currentX++;
             break;
           case Val:
             const { val } = node;
             const boxSize =
               typeof val === "string" ? Math.ceil(val.length / 6) : 1;
-            allBoxes.push({
-              ...defaultBox,
+            allCells.push({
+              ...defaultCell,
               size: boxSize
             });
             currentX += boxSize;
             break;
           case DepRef:
-            allBoxes.push({
-              ...defaultBox,
+            allCells.push({
+              ...defaultCell,
               size: 2
             });
             currentX += 2;
             break;
           default:
             throw new Error("A wild node type appeared!");
-            allBoxes.push(defaultBox);
+            allCells.push(defaultCell);
             currentX++;
         }
       }
@@ -190,10 +190,10 @@ export const Tree = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) -
+        ? Math.max(...allCells.map(n => n.x)) -
           x +
-          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
-        : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
+          (immediateNextIsRef ? 2 : allCells[allCells.length - 1].size + 1)
+        : Math.max(...allCells.map(n => n.x + n.size)) - x;
 
       const thisNode = {
         path,
@@ -215,13 +215,13 @@ export const Tree = types
         selected: selected || (sameAsSelectedPath && selectedIndex === null),
         siblings: siblingCount
       };
-      allBoxes.push(thisNode);
+      allCells.push(thisNode);
 
       if (root) {
         const existingKeys = {};
-        let i = allBoxes.length;
+        let i = allCells.length;
         while (i--) {
-          const box = allBoxes[i];
+          const box = allCells[i];
           const { path } = box;
           let j = path.length - 1;
           let currentKey =
@@ -239,18 +239,18 @@ export const Tree = types
         }
       }
 
-      return allBoxes;
+      return allCells;
     };
 
     return {
-      get boxes() {
-        return getBoxes();
+      get cells() {
+        return getCells();
       }
     };
   })
   .actions(self => ({
     move(dir) {
-      const { siblings } = self.selectedBox;
+      const { siblings } = self.selectedCell;
       let newSelectedIndex = self.selectedIndex + dir;
       if (newSelectedIndex < 0) {
         newSelectedIndex = siblings - 1;
@@ -260,16 +260,16 @@ export const Tree = types
       self.selectedIndex = newSelectedIndex;
     },
     up() {
-      const { selectedBox } = self;
-      const { upPath } = selectedBox;
+      const { selectedCell } = self;
+      const { upPath } = selectedCell;
       if (upPath) {
         self.selectedPath = upPath;
         self.selectedIndex = 0;
       }
     },
     down() {
-      const { selectedBox } = self;
-      const { downPath } = selectedBox;
+      const { selectedCell } = self;
+      const { downPath } = selectedCell;
       if (downPath) {
         self.selectedPath = downPath;
         self.selectedIndex = 0;

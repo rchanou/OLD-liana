@@ -144,7 +144,9 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
+const snapshotToLoad = storedSnapshot
+  ? JSON.parse(storedSnapshot)
+  : defaultSnapshot;
 
 const simpleEditor = Editor.create(
   { ...snapshotToLoad, keyMap },
@@ -177,7 +179,7 @@ autorun(() => {
 autorun(() => {
   0 &&
     console.table(
-      simpleEditor.boxes.map(n => ({
+      simpleEditor.cells.map(n => ({
         key: n.key,
         size: n.size,
         text: n.text

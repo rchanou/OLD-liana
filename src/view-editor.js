@@ -29,8 +29,8 @@ export const Editor = types
     get projection() {
       return self.projectionMap[self.currentView];
     },
-    get boxes() {
-      return self.projection.boxes;
+    get cells() {
+      return self.projection.cells;
     }
   }))
   .actions(self => ({
