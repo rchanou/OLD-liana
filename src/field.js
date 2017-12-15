@@ -99,6 +99,7 @@ export const InputRefField = types
 
 export const ValForm = types
   .model("ValForm", {
+    // TODO: this needs to be a radio form/set of fields
     valType: types.enumeration("ValType", [BOOL, NUM, STRING]),
     boolField: BoolField,
     numField: NumField,
@@ -155,7 +156,6 @@ export const LinkForm = types.array(
 );
 
 export const Field = types.union(
-  ValTypeField,
   BoolField,
   NumField,
   StringField,
