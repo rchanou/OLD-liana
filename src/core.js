@@ -101,7 +101,7 @@ export const Val = types
     }
   }));
 
-export const opLabels = [
+export const ops = [
   global,
   access,
   array,
@@ -131,7 +131,7 @@ export const opLabels = [
   swap
 ];
 
-export const OpEnum = types.enumeration("OpEnum", opLabels);
+export const OpEnum = types.enumeration("OpEnum", ops);
 
 export const Op = types
   .model("Op", {
@@ -466,7 +466,16 @@ export const Repo = types
     selectedLabelSet: types.maybe(types.reference(LabelSet))
   })
   .views(self => ({
-    linkLabel(link) {}
+    get linkList() {
+      return self.links
+        .entries()
+        .map(link => ({ value: link.linkId, label: link.label }));
+    },
+    get inputList() {
+      return self.inputs
+        .entries()
+        .map(input => ({ value: input.inputId, label: input.label }));
+    }
   }))
   .actions(self => ({
     expandSub(subId, baseId, ...params) {

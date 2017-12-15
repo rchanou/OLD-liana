@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { OpEnum, Link, Input, Dependency, ContextRepo } from "./core";
+import { OpEnum, ops, Link, Input, Dependency, ContextRepo } from "./core";
 
 // placeholder prop for localizable labels
 const presetText = text => types.optional(types.string, text);
@@ -33,6 +33,8 @@ export const StringField = types.model("StringField", {
   label: presetText("Value")
 });
 
+const opList = ops.map(label => ({ value: label, label }));
+
 export const OpField = types
   .model("OpField", {
     fieldId: optionalId,
@@ -44,7 +46,7 @@ export const OpField = types
       return self.op;
     },
     get options() {
-      return opLabels.map(label => ({ value: label, label }));
+      return opList;
     }
   }))
   .actions(self => ({
@@ -65,10 +67,7 @@ export const LinkField = types
       return self.linkRef.linkId;
     },
     get options() {
-      // TODO: options may be more optimal outside of field models
-      return self.repo.links
-        .entries()
-        .map(link => ({ value: link.linkId, label: link.label }));
+      return self.repo.linkList;
     }
   }))
   .actions(self => ({
@@ -77,7 +76,7 @@ export const LinkField = types
     }
   }));
 
-export const InputField = types
+export const InputRefField = types
   .model("InputField", {
     fieldId: optionalId,
     repo: ContextRepo.Ref,
@@ -89,9 +88,7 @@ export const InputField = types
       return self.inputRef.inputId;
     },
     get options() {
-      return self.repo.inputs
-        .entries()
-        .map(input => ({ value: input.inputId, label: input.label }));
+      return self.repo.inputList;
     }
   }))
   .actions(self => ({
@@ -125,12 +122,12 @@ export const InputArg = types.model("InputArg", {
   valForm: ValForm
 });
 
-export const LinkForm = types.model("LinkForm", {
+export const RefForm = types.model("RefForm", {
   linkField: LinkField,
   inputArgs: types.maybe(types.array(InputArg))
 });
 
-export const DepField = types
+export const DepRefField = types
   .model("DepField", {
     fieldId: optionalId,
     repo: ContextRepo.Ref,
@@ -153,13 +150,17 @@ export const DepField = types
     }
   }));
 
+export const LinkForm = types.array(
+  types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)
+);
+
 export const Field = types.union(
   ValTypeField,
   BoolField,
   NumField,
   StringField,
   OpField,
-  InputField,
+  InputRefField,
   LinkField,
-  DepField
+  DepRefField
 );
