@@ -19,6 +19,20 @@ export const Editor = types
     currentView: types.optional(types.enumeration([TREE, LIST]), TREE),
     keyMap: types.map(types.string)
   })
+  .views(self => ({
+    get projectionMap() {
+      return {
+        [TREE]: self.tree,
+        [LIST]: self.list
+      };
+    },
+    get projection() {
+      return self.projectionMap[self.currentView];
+    },
+    get boxes() {
+      return self.projection.boxes;
+    }
+  }))
   .actions(self => ({
     setView(view) {
       self.currentView = view;
@@ -28,19 +42,12 @@ export const Editor = types
     }
   }))
   .actions(self => {
-    const { keyMap } = self;
-
-    const projectionMap = {
-      [TREE]: self.tree,
-      [LIST]: self.list
-    };
-
     const handleKeyUp = e => {
       e.preventDefault();
-      const { keyCode } = e;
-      const actionName = keyMap.get(keyCode);
 
-      const projection = projectionMap[self.currentView];
+      const { keyCode } = e;
+      const actionName = self.keyMap.get(keyCode);
+      const { projection } = self;
 
       switch (actionName) {
         case "left":

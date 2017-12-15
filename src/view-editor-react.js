@@ -17,7 +17,7 @@ export const ReactEditor = observer(({ editor }) => {
       mainEl = <ReactList rows={editor.list.rows} />;
       break;
     case TREE:
-      mainEl = <ReactTree boxes={editor.tree.boxes} />;
+      mainEl = <ReactTree boxes={editor.boxes} />;
   }
 
   return (
