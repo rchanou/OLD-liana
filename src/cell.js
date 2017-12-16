@@ -17,18 +17,6 @@ export const LinkCell = types
     root: types.optional(types.boolean, true)
   })
   .views(self => ({
-    // get x() {},
-    // get y() {},
-    // get width() {},
-    // get display() {
-    //   const me = {
-    //     x: 0,
-    //     y: 0,
-    //     width: 0
-    //   };
-
-    //   return [...self.subCells.map(sC => sC.display), me];
-    // },
     get selected() {
       return false; // TODO: IMPLEMENT
     },
@@ -36,36 +24,18 @@ export const LinkCell = types
       return self.display();
     },
     display(opts = {}) {
-      // const { rootLink, openPaths, selectedPath, selectedIndex } = self;
       const { link, subCells, root, selected } = self;
       const { linkId, nodes, color } = link;
-      const {
-        x = 0,
-        y = 0,
-        // color = link.color,
-        immediateNextIsRef = false,
-        nextIsRef = false,
-        isLast = true,
-        // path = [linkId],
-        // linkPath = [linkId],
-        // root = true,
-        // selected = false,
-        siblingCount = 1
-        // opened = true
-      } = opts;
+
+      const { x = 0, y = 0, immediateNextIsRef = false, nextIsRef = false, isLast = true, siblingCount = 1 } = opts;
 
       const allBoxes = [];
-
-      // const sameAsSelectedPath =
-      //   selectedPath.length === linkPath.length && selectedPath.every((token, j) => token === linkPath[j]);
 
       let currentX = x;
 
       const siblings = subCells.length;
 
       for (let i = 0; i < siblings; i++) {
-        // const childPath = [...linkPath, i];
-
         const subCell = subCells[i];
         const { cellId, node, selected, link } = subCell;
         const category = link ? Link : getType(node); // TODO: try to remove this
@@ -74,16 +44,13 @@ export const LinkCell = types
           text: link ? link.label : node.label,
           color: link ? link.color : node.color,
           key: cellId,
-          // path: childPath,
           x: currentX,
           y: y + 1,
           size: 1,
           root: false,
           selected,
-          // selected: sameAsSelectedPath && selectedIndex === i,
           category,
           siblings
-          // downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
         };
 
         const makeRefCells = linkCell => {
@@ -119,18 +86,14 @@ export const LinkCell = types
           }
 
           const refChildBoxes = linkCell.display({
-            // root: false,
-            // path: childPath,
-            // linkPath: [...linkPath, innerLink.linkId],
             x: currentX,
             y: y + 1,
             color,
             immediateNextIsRef,
             nextIsRef,
             isLast,
-            selected: linkCell.selected, //sameAsSelectedPath && selectedIndex === i,
+            selected: linkCell.selected,
             siblingCount: siblings
-            //open: openPaths.get(linkPath.join("/"))
           });
           allBoxes.push(...refChildBoxes);
 
@@ -178,13 +141,6 @@ export const LinkCell = types
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
-        // path,
-        // upPath: linkPath,
-        // ...(root
-        //   ? {}
-        //   : {
-        //       downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2)
-        //     }),
         key: self.cellId,
         x,
         y,
@@ -192,31 +148,10 @@ export const LinkCell = types
         color,
         text: label,
         category: Link,
-        selected, // || (sameAsSelectedPath && selectedIndex === null),
+        selected,
         siblings: siblingCount
       };
       allBoxes.push(thisNode);
-
-      // if (root) {
-      //   const existingKeys = {};
-      //   let i = allBoxes.length;
-      //   while (i--) {
-      //     const box = allBoxes[i];
-      //     const { path } = box;
-      //     let j = path.length - 1;
-      //     let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
-      //     if (!box.link) {
-      //       j--;
-      //       currentKey += "/" + (j in path ? path[j] : "");
-      //     }
-      //     while (existingKeys[currentKey]) {
-      //       j--;
-      //       currentKey += "/" + (j in path ? path[j] : "");
-      //     }
-      //     existingKeys[currentKey] = true;
-      //     box.key = currentKey;
-      //   }
-      // }
 
       return allBoxes;
     }
@@ -237,6 +172,7 @@ export const LinkCell = types
     },
     afterCreate() {
       if (1 || self.root) {
+        // TODO: don't just render all
         self.open();
       }
     }
@@ -248,76 +184,9 @@ const LeafCell = types
     node: types.union(Val, Op, InputRef, DepRef)
   })
   .views(self => ({
-    // get x() {},
-    // get y() {},
-    // get width() {},
     get selected() {
       // TODO: IMPLEMENT
       return false;
-    },
-    get display() {
-      const { x, y, width } = self;
-      return { x, y, width };
-
-      const { node, selected, parent } = self;
-
-      const nodeType = getType(self.node);
-
-      const defaultCell = {
-        key: self.cellId,
-        text: node.label,
-        color: node.color,
-        // path: childPath,
-        x: currentX,
-        y: y + 1,
-        size: 1,
-        root: false,
-        selected,
-        // selected: sameAsSelectedPath && selectedIndex === i,
-        nodeType,
-        siblings
-        // downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
-      };
-
-      switch (nodeType) {
-        case Op:
-        case InputRef:
-          return defaultCell;
-          // allCells.push(defaultCell);
-          // currentX++;
-          break;
-        case Val:
-          const { val } = node;
-          const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
-          defaultCell.size = boxSize;
-          return defaultCell;
-          // allCells.push({
-          //   ...defaultCell,
-          //   size: boxSize
-          // });
-          // currentX += boxSize;
-          break;
-        case DepRef:
-          defaultCell.size = 2;
-          return defaultCell;
-          // allCells.push({
-          //   ...defaultCell,
-          //   size: 2
-          // });
-          // currentX += 2;
-          break;
-        default:
-          throw new Error("A wild node type appeared!");
-          return defaultCell;
-          // allCells.push(defaultCell);
-          // currentX++;
-
-          return {
-            x: 0,
-            y: 0,
-            width: 0
-          };
-      }
     }
   }));
 
