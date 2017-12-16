@@ -30,6 +30,7 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
+      // TODO: switch on type here
       return self.projection.cells;
     }
   }))
@@ -39,6 +40,12 @@ export const Editor = types
     },
     toggleForm() {
       self.form = self.form ? null : { subForms: [] };
+    },
+    moveUp() {
+      switch (self.currentView) {
+        case TREE:
+          const { cells } = self.tree;
+      }
     }
   }))
   .actions(self => {

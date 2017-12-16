@@ -16,7 +16,8 @@ export const Tree = types
   })
   .views(self => ({
     get selectedCell() {
-      const { selectedPath, selectedIndex, boxes } = self;
+      // TODO: try to optimize
+      const { selectedPath, selectedIndex, cells } = self;
 
       if (selectedIndex === null) {
         return true;
@@ -28,22 +29,22 @@ export const Tree = types
         return false;
       }
 
-      return self.boxes.find(
-        box =>
-          box.path.length === selectedPathLength + 1 &&
-          selectedPath.every((x, i) => x === box.path[i]) &&
-          box.path[selectedPathLength] === selectedIndex
+      return cells.find(
+        cell =>
+          cell.path.length === selectedPathLength + 1 &&
+          selectedPath.every((x, i) => x === cell.path[i]) &&
+          cell.path[selectedPathLength] === selectedIndex
       );
     },
-    get isLinkSelected() {
-      const { selectedCell } = self;
+    // get isLinkSelected() {
+    //   const { selectedCell } = self;
 
-      if (!selectedCell) {
-        return false;
-      }
+    //   if (!selectedCell) {
+    //     return false;
+    //   }
 
-      return selectedCell.category === Link;
-    },
+    //   return selectedCell.category === Link;
+    // },
     get pathKey() {
       return self.selectedPath.concat(self.selectedIndex).join("/");
     }
