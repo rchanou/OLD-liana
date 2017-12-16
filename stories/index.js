@@ -6,6 +6,7 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
+import { ContextUser } from "../src/cell";
 import { Editor, TREE, LIST } from "../src/view-editor";
 import { ReactEditor } from "../src/view-editor-react";
 
@@ -114,15 +115,16 @@ const simpleSnapshot = {
 };
 
 const testRoot = "7";
+const testCellId = -1;
 
-const simpleTree = {
-  rootLink: testRoot,
-  openPaths: {
-    7: true
-  },
-  selectedPath: [testRoot],
-  selectedIndex: 0
-};
+// const simpleTree = {
+//   rootLink: testRoot,
+//   openPaths: {
+//     7: true
+//   },
+//   selectedPath: [testRoot],
+//   selectedIndex: 0
+// };
 
 const keyMap = {
   70: "up",
@@ -137,8 +139,11 @@ const keyMap = {
 
 const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
-  tree: simpleTree,
-  root: { link: testRoot },
+  // tree: simpleTree,
+  root: { cellId: testCellId, link: testRoot },
+  [ContextUser.Key]: {
+    selectedCell: testCellId
+  },
   currentView: TREE,
   keyMap
 };
