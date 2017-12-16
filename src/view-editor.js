@@ -48,10 +48,7 @@ export const Editor = types
       self.form = self.form ? null : { subForms: [] };
     },
     moveUp() {
-      switch (self.currentView) {
-        case TREE:
-          const { cells } = self.tree;
-      }
+      const { cells } = self;
     }
   }))
   .actions(self => {

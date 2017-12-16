@@ -59,6 +59,7 @@ export const LinkCell = types
         const category = link ? (opened ? Link : LinkCell) : getType(node); // (HACK) TODO: try to remove this
 
         const defaultBox = {
+          cellRef: subCell,
           text: link ? link.label : node.label,
           color: link ? link.color : node.color,
           key: cellId,
@@ -160,6 +161,7 @@ export const LinkCell = types
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
+        cellRef: self,
         key: self.cellId,
         x,
         y,
