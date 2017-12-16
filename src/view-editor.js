@@ -5,6 +5,7 @@ import { Tree } from "./view-tree";
 import { List } from "./view-list";
 import { LinkForm } from "./view-form";
 import { Field } from "./field";
+import { LinkCell } from "./cell";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -13,6 +14,7 @@ export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
     tree: Tree,
+    root: types.maybe(LinkCell),
     list: types.optional(List, {}),
     form: types.maybe(LinkForm),
     selectedField: types.maybe(types.reference(Field)),
@@ -30,6 +32,9 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
+      if (self.root) {
+        return self.root.displayCells;
+      }
       // TODO: switch on type here
       return self.projection.cells;
     }

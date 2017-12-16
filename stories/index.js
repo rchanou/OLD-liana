@@ -113,7 +113,7 @@ const simpleSnapshot = {
   }
 };
 
-const testRoot = "15";
+const testRoot = "7";
 
 const simpleTree = {
   rootLink: testRoot,
@@ -138,18 +138,17 @@ const keyMap = {
 const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
   tree: simpleTree,
+  root: { link: testRoot },
   currentView: TREE,
   keyMap
 };
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot
-  ? JSON.parse(storedSnapshot)
-  : defaultSnapshot;
+const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
 
 const simpleEditor = Editor.create(
-  { ...snapshotToLoad, keyMap },
+  { ...defaultSnapshot, keyMap },
   {
     system: SystemJS
   }
