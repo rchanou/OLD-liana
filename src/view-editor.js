@@ -34,7 +34,7 @@ export const Editor = types
     },
     get cells() {
       if (self.root) {
-        return self.root.rootCells;
+        return self.root.rootBoxes;
       }
       // TODO: switch on type here
       return self.projection.cells;

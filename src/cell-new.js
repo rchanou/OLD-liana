@@ -23,7 +23,10 @@ export const LinkCell = types
     cellId,
     link: types.reference(Link),
     subCells: types.maybe(types.array(types.late(() => Cell))),
-    opened: types.optional(types.boolean, true)
+    opened: types.optional(types.boolean, true),
+    x: types.number,
+    y: types.number,
+    width: types.optional(types.number, 3)
     // root: types.optional(types.boolean, true)
   })
   .views(self => ({
@@ -185,10 +188,18 @@ export const LinkCell = types
   .actions(self => ({
     open() {
       if (!self.subCells) {
+        self.subCells = [];
+
+        let currentX = self.x;
+        const y = self.y + 1;
         // TODO: rename all ref props to "link"?
-        self.subCells = self.link.nodes.map(
-          node => (node.ref ? { opened: false, link: node.ref } : { node: clone(node) })
-        );
+        self.link.nodes.forEach(node => {
+          if (node.ref) {
+            self.subCells.push({ x: currentX++, opened: false, link: node.ref });
+          } else {
+            self.subCells.push({ node: clone(node) });
+          }
+        });
       }
 
       self.opened = true;
@@ -207,7 +218,10 @@ const LeafCell = types
   .model("LeafCell", {
     user: ContextUser.Ref,
     cellId,
-    node: types.union(Val, Op, InputRef, DepRef)
+    node: types.union(Val, Op, InputRef, DepRef),
+    x: types.number,
+    y: types.number,
+    width: types.optional(types.number, 1)
   })
   .views(self => ({
     get selected() {
