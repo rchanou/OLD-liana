@@ -3,9 +3,9 @@ import { types } from "mobx-state-tree";
 import { Node, ContextRepo } from "./core";
 import { Tree } from "./view-tree";
 import { List } from "./view-list";
-import { LinkForm } from "./view-form";
+// import { LinkForm } from "./view-form";
 import { Field } from "./field";
-import { LinkCell, ContextUser, CellList } from "./cell";
+import { LinkCell, ContextUser, CellList, LinkForm } from "./cell";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -18,7 +18,7 @@ export const Editor = types
     root: types.maybe(LinkCell),
     list: types.optional(List, {}),
     cellList: types.optional(CellList, {}),
-    form: types.maybe(LinkForm),
+    form: types.optional(LinkForm, { x: 2, y: 15 }),
     // selectedField: types.maybe(types.reference(Field)),
     currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
     keyMap: types.map(types.string)
@@ -34,7 +34,7 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
-      return self.cellList.cells;
+      return [...self.cellList.cells, ...self.form.nodeFields];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -48,7 +48,7 @@ export const Editor = types
       self.currentView = view;
     },
     toggleForm() {
-      self.form = self.form ? null : { subForms: [] };
+      self.form = self.form ? null : { nodeForms };
     },
     moveUp() {
       const { cells } = self;

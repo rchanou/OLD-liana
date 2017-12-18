@@ -42,8 +42,6 @@ const lineStyle = {
   // boxShadow: "0.5px 0.5px 0.5px 0.5px hsla(0,0%,55%,0.5)"
 };
 
-const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
-
 const selectableStyle = {
   color: "#fff",
   borderWidth: 0.5 * spacer,
@@ -52,6 +50,12 @@ const selectableStyle = {
   borderRadius: 0.5 * spacer,
   boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)"
 };
+
+const labelStyle = {
+  fontWeight: "bold"
+};
+
+const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
 
 const noStyle = {};
 
@@ -64,7 +68,7 @@ export const ReactTree = observer(({ cells }) => {
         left: x * unit,
         width: (width || size) * unit + 0.5 * spacer,
         background: color,
-        ...(selectable ? selectableStyle : noStyle),
+        ...(selectable ? selectableStyle : labelStyle),
         ...(selected ? selectedStyle : noStyle)
       };
 
