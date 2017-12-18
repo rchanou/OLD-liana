@@ -17,18 +17,11 @@ const darkGray = "#888";
 
 const nodeStyle = {
   position: "absolute",
-  // borderWidth: 0.5 * spacer,
-  // borderStyle: "solid",
-  // borderColor: "#333",
-  // borderRadius: 0.5 * spacer,
-  // boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)",
   height: unit - 3 * spacer,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  // color: "#fff",
   textOverflow: "clip"
-  // whiteSpace: "nowrap"
 };
 
 const lineStyle = {
@@ -39,7 +32,6 @@ const lineStyle = {
   zIndex: -1,
   borderLeft: "thin solid #333",
   borderRight: "thin solid #333"
-  // boxShadow: "0.5px 0.5px 0.5px 0.5px hsla(0,0%,55%,0.5)"
 };
 
 const selectableStyle = {

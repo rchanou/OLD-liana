@@ -1,10 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import { Node, ContextRepo } from "./core";
-import { Tree } from "./view-tree";
-import { List } from "./view-list";
-// import { LinkForm } from "./view-form";
-import { Field } from "./field";
+// import { Tree } from "./view-tree";
 import { LinkCell, ContextUser, CellList, LinkForm } from "./cell";
 
 export const TREE = "TREE";
@@ -16,10 +13,8 @@ export const Editor = types
     ...ContextUser.Mixin,
     // tree: Tree,
     root: types.maybe(LinkCell),
-    list: types.optional(List, {}),
     cellList: types.optional(CellList, {}),
     form: types.optional(LinkForm, { x: 2, y: 15 }),
-    // selectedField: types.maybe(types.reference(Field)),
     currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
     keyMap: types.map(types.string)
   })

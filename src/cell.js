@@ -1,7 +1,7 @@
 import { types, getType, clone } from "mobx-state-tree";
 
 import { setupContext } from "./context";
-import { Val, Op, ops, InputRef, DepRef, LinkRef, Link, Input, Dependency, ContextRepo } from "./core";
+import { Val, Op, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
 
 let idCounter = 0;
 const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
@@ -350,25 +350,19 @@ const BOOL = "B";
 const NUM = "N";
 const STRING = "S";
 
-// let idCounter = 0;
-// const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
-
 const createFieldModel = (name, ...args) => types.compose(name, PosCell, types.model(...args));
 
 export const BoolField = createFieldModel("BoolField", {
-  // fieldId: optionalId,
   checked: types.boolean,
   label: presetText("True?")
 });
 
 export const NumField = createFieldModel("NumField", {
-  // fieldId: optionalId,
   number: types.number,
   label: presetText("Value")
 });
 
 export const StringField = createFieldModel("StringField", {
-  // fieldId: optionalId,
   string: types.string,
   label: presetText("Value")
 });
@@ -376,7 +370,6 @@ export const StringField = createFieldModel("StringField", {
 const opList = ops.map(label => ({ value: label, label }));
 
 export const OpField = createFieldModel("OpField", {
-  // fieldId: optionalId,
   search: presetText("")
   // op: types.optional(OpEnum, ".") // TODO: remove hard-coded default
 })
@@ -395,7 +388,6 @@ export const OpField = createFieldModel("OpField", {
   }));
 
 export const LinkField = createFieldModel("LinkField", {
-  // fieldId: optionalId,
   repo: ContextRepo.Ref,
   search: types.string,
   linkRef: types.reference(Link)
@@ -415,7 +407,6 @@ export const LinkField = createFieldModel("LinkField", {
   }));
 
 export const InputRefField = createFieldModel("InputField", {
-  // fieldId: optionalId,
   repo: ContextRepo.Ref,
   search: types.string,
   inputRef: types.reference(Input)
@@ -464,7 +455,6 @@ export const RefForm = createFieldModel("RefForm", {
 });
 
 export const DepRefField = createFieldModel("DepField", {
-  // fieldId: optionalId,
   repo: ContextRepo.Ref,
   search: types.string,
   depRef: types.reference(Dependency)
