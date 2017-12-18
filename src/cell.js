@@ -313,60 +313,75 @@ export const CellList = types
     x: types.optional(types.number, 0),
     y: types.optional(types.number, 0)
   })
-  .actions(self => ({
-    setPos(x, y) {
-      let currentX = x - 1;
-      let currentY = y - 1;
+  .actions(self => {
+    let wrapMap = {};
 
-      self.cells.forEach(cell => {
-        if (!cell.selectable) {
-          currentX = x;
-          currentY++;
-        }
+    return {
+      setPos(x, y) {
+        let currentX = x - 1;
+        let currentY = y - 1;
 
-        cell.setPos(currentX, currentY);
-        currentX += cell.width;
-      });
-    },
-    afterCreate() {
-      const linkCellMap = {};
-      const linkCells = [];
+        self.cells.forEach(cell => {
+          if (wrapMap[cell.cellId]) {
+            currentX = x;
+            currentY++;
+          }
 
-      self.repo.links.forEach(link => {
-        const { nodes, label } = link;
-
-        self.cells.push({
-          x: 0,
-          y: 0,
-          text: label
+          cell.setPos(currentX, currentY);
+          currentX += cell.width;
         });
+      },
+      afterCreate() {
+        const linkCellMap = {};
+        const linkCells = [];
 
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i];
+        self.repo.links.forEach(link => {
+          const { nodes, val, label } = link;
 
-          const nodeCell = {
+          self.cells.push({
             x: 0,
             y: 0,
-            node: clone(node)
-          };
+            text: label
+          });
 
-          self.cells.push(nodeCell);
+          wrapMap[self.cells[self.cells.length - 1].cellId] = true;
 
-          if (i === 0) {
-            linkCellMap[link.linkId] = self.cells[self.cells.length - 1];
+          for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+
+            const nodeCell = {
+              x: 0,
+              y: 0,
+              node: clone(node)
+            };
+
+            self.cells.push(nodeCell);
+
+            if (i === 0) {
+              linkCellMap[link.linkId] = self.cells[self.cells.length - 1];
+            }
           }
-        }
+
+          self.cells.push({
+            x: 0,
+            y: 0,
+            text:
+              typeof val === "function"
+                ? "{f}"
+                : (JSON.stringify(val) || "").slice(0, 9)
+          });
+        });
 
         for (const cell of self.cells) {
           if (cell.node && cell.node.ref) {
             cell.cellRef = linkCellMap[cell.node.ref.linkId];
           }
         }
-      });
 
-      self.setPos(self.x, self.y);
-    }
-  }));
+        self.setPos(self.x, self.y);
+      }
+    };
+  });
 
 // placeholder prop for localizable labels
 const presetText = text => types.optional(types.string, text);
