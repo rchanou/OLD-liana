@@ -239,6 +239,14 @@ const PosCell = types // TODO: rename all cells
       self.x = x;
       self.y = y;
     }
+  }))
+  .actions(self => ({
+    // TODO: for testing only, remove
+    afterCreate() {
+      if (!self.user.selectedCell) {
+        self.user.selectedCell = self;
+      }
+    }
   }));
 
 const LabelCell = types
@@ -310,4 +318,4 @@ export const CellList = types
     }
   }));
 
-export const Cell = types.union(LinkCell, LeafCell);
+export const Cell = types.union(LinkCell, LeafCell, PosCell);

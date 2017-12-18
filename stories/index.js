@@ -141,9 +141,9 @@ const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
   // tree: simpleTree,
   root: { cellId: testCellId, link: testRoot },
-  [ContextUser.Key]: {
-    selectedCell: testCellId
-  },
+  // [ContextUser.Key]: {
+  //   selectedCell: testCellId
+  // },
   currentView: TREE,
   keyMap
 };

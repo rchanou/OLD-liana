@@ -17,16 +17,16 @@ const darkGray = "#888";
 
 const nodeStyle = {
   position: "absolute",
-  borderWidth: 0.5 * spacer,
-  borderStyle: "solid",
-  borderColor: "#333",
-  borderRadius: 0.5 * spacer,
-  boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)",
+  // borderWidth: 0.5 * spacer,
+  // borderStyle: "solid",
+  // borderColor: "#333",
+  // borderRadius: 0.5 * spacer,
+  // boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)",
   height: unit - 3 * spacer,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  color: "#fff",
+  // color: "#fff",
   textOverflow: "clip"
   // whiteSpace: "nowrap"
 };
@@ -44,38 +44,50 @@ const lineStyle = {
 
 const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
 
+const selectableStyle = {
+  color: "#fff",
+  borderWidth: 0.5 * spacer,
+  borderStyle: "solid",
+  borderColor: "#333",
+  borderRadius: 0.5 * spacer,
+  boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)"
+};
+
 const noStyle = {};
 
 export const ReactTree = observer(({ cells }) => {
-  const displayNodes = cells.map(({ x, y, width, size, color, key, form, text, category, selected }) => {
-    const style = {
-      ...nodeStyle,
-      top: `calc(100vh - ${(y + 1) * unit}px)`,
-      left: x * unit,
-      width: (width || size) * unit + 0.5 * spacer,
-      background: color,
-      ...(selected ? selectedStyle : noStyle)
-    };
+  const displayNodes = cells.map(
+    ({ x, y, width, size, color, cellId, key, form, text, category, selected, selectable }) => {
+      const style = {
+        ...nodeStyle,
+        top: `calc(100vh - ${(y + 1) * unit}px)`,
+        left: x * unit,
+        width: (width || size) * unit + 0.5 * spacer,
+        background: color,
+        ...(selectable ? selectableStyle : noStyle),
+        ...(selected ? selectedStyle : noStyle)
+      };
 
-    const connector =
-      category === Link ? (
-        <div
-          key={`${key}L`}
-          style={{
-            ...lineStyle,
-            left: unit * (x + 0.5) - 3 * spacer,
-            top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
-          }}
-        />
-      ) : null;
+      const connector =
+        category === Link ? (
+          <div
+            key={`${key}L`}
+            style={{
+              ...lineStyle,
+              left: unit * (x + 0.5) - 3 * spacer,
+              top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
+            }}
+          />
+        ) : null;
 
-    return [
-      connector,
-      <div key={key} style={style}>
-        {text}
-      </div>
-    ];
-  });
+      return [
+        connector,
+        <div key={cellId || key} style={style}>
+          {text}
+        </div>
+      ];
+    }
+  );
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });
