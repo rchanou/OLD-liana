@@ -21,6 +21,10 @@ const B = types.compose(
     .actions(self => ({
       setE() {
         self.ref = self.e;
+      },
+      createE() {
+        self.e = { txt: "fufufufufu" };
+        console.log("le wut e", self.e.id);
       }
     }))
 );
@@ -52,6 +56,7 @@ const d = D.create({
 
 d.list[0].setE();
 d.list[0].e.stuff.a = "what";
+d.list[0].createE();
 console.log(d.list[0].e.txt);
 console.log(d.list[0].e.stuff);
 console.log(d.selected.num);

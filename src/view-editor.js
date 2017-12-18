@@ -52,6 +52,51 @@ export const Editor = types
     },
     moveUp() {
       const { cells } = self;
+      const { selectedCell } = self[ContextUser.Key];
+
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+      );
+
+      if (gotoCell) {
+        self[ContextUser.Key].selectedCell = gotoCell;
+      }
+    },
+    moveDown() {
+      const { cells } = self;
+      const { selectedCell } = self[ContextUser.Key];
+
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+      );
+
+      if (gotoCell) {
+        self[ContextUser.Key].selectedCell = gotoCell;
+      }
+    },
+    moveLeft() {
+      const { cells } = self;
+      const { selectedCell } = self[ContextUser.Key];
+
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+      );
+
+      if (gotoCell) {
+        self[ContextUser.Key].selectedCell = gotoCell;
+      }
+    },
+    moveRight() {
+      const { cells } = self;
+      const { selectedCell } = self[ContextUser.Key];
+
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+      );
+
+      if (gotoCell) {
+        self[ContextUser.Key].selectedCell = gotoCell;
+      }
     }
   }))
   .actions(self => {
@@ -64,22 +109,28 @@ export const Editor = types
 
       switch (actionName) {
         case "left":
-          projection.move(-1);
+          self.moveLeft();
+          // projection.move(-1);
           break;
 
         case "right":
-          projection.move(+1);
+          self.moveRight();
+          // projection.move(+1);
           break;
 
         case "up":
-          projection.up();
+          self.moveUp();
+          // projection.up();
           break;
 
         case "down":
-          projection.down();
+          self.moveDown();
+          // projection.down();
           break;
 
         case "open":
+          self[ContextUser.Key].selectCellRef();
+          break;
           projection.open();
           break;
 
@@ -97,11 +148,11 @@ export const Editor = types
           break;
 
         default:
+          console.log(keyCode);
           const action = projection[actionName];
           if (typeof action === "function") {
             action(projection);
           }
-          console.log(keyCode);
       }
     };
 

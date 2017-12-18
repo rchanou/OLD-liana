@@ -10,9 +10,19 @@ const cellId = optionalId;
 
 export const ContextUser = setupContext(
   types.optional(
-    types.model("User", {
-      selectedCell: types.maybe(types.reference(types.late(() => Cell)))
-    }),
+    types
+      .model("User", {
+        selectedCell: types.maybe(types.reference(types.late(() => Cell)))
+      })
+      .actions(self => ({
+        selectCellRef() {
+          const { cellRef } = self.selectedCell;
+
+          if (cellRef) {
+            self.selectedCell = cellRef;
+          }
+        }
+      })),
     {}
   )
 );
@@ -223,7 +233,8 @@ const PosCell = types // TODO: rename all cells
     x: types.number,
     y: types.number,
     selectable: types.optional(types.boolean, true),
-    width: types.optional(types.number, 2)
+    width: types.optional(types.number, 2),
+    cellRef: types.maybe(types.reference(types.late(() => PosCell)))
   })
   .views(self => ({
     get selected() {
@@ -292,28 +303,50 @@ export const CellList = types
       });
     },
     afterCreate() {
-      const cells = [];
+      const linkCellMap = {};
+      const linkCells = [];
+
+      self.repo.links.forEach(link => {});
+
+      // const nodeCells = [];
 
       self.repo.links.forEach(link => {
         const { nodes, label } = link;
 
-        cells.push({
+        self.cells.push({
           x: 0,
           y: 0,
           text: label
-          // node: clone(link)
         });
 
-        for (const node of nodes) {
-          cells.push({
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+
+          const nodeCell = {
             x: 0,
             y: 0,
             node: clone(node)
-          });
+          };
+
+          // if (node.ref) {
+          //   nodeCell.cellRef = linkCellMap[node.ref];
+          // }
+
+          self.cells.push(nodeCell);
+
+          if (i === 0) {
+            linkCellMap[link.linkId] = self.cells[self.cells.length - 1];
+          }
+        }
+
+        for (const cell of self.cells) {
+          if (cell.node && cell.node.ref) {
+            cell.cellRef = linkCellMap[cell.node.ref.linkId];
+          }
         }
       });
 
-      self.cells = cells;
+      // self.cells.push(nodeCells);
       self.setPos(0, 0);
     }
   }));
