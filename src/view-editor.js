@@ -55,7 +55,7 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
       if (gotoCell) {
@@ -67,7 +67,7 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
       if (gotoCell) {

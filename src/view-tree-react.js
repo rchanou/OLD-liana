@@ -60,7 +60,7 @@ export const ReactTree = observer(({ cells }) => {
     ({ x, y, width, size, color, cellId, key, form, text, category, selected, selectable }) => {
       const style = {
         ...nodeStyle,
-        top: `calc(100vh - ${(y + 1) * unit}px)`,
+        top: y * unit, //`calc(100vh - ${(y + 1) * unit}px)`,
         left: x * unit,
         width: (width || size) * unit + 0.5 * spacer,
         background: color,

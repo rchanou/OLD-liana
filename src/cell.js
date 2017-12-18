@@ -34,7 +34,6 @@ export const LinkCell = types
     link: types.reference(Link),
     subCells: types.maybe(types.array(types.late(() => Cell))),
     opened: types.optional(types.boolean, true)
-    // root: types.optional(types.boolean, true)
   })
   .views(self => ({
     get selected() {
@@ -308,8 +307,6 @@ export const CellList = types
 
       self.repo.links.forEach(link => {});
 
-      // const nodeCells = [];
-
       self.repo.links.forEach(link => {
         const { nodes, label } = link;
 
@@ -328,10 +325,6 @@ export const CellList = types
             node: clone(node)
           };
 
-          // if (node.ref) {
-          //   nodeCell.cellRef = linkCellMap[node.ref];
-          // }
-
           self.cells.push(nodeCell);
 
           if (i === 0) {
@@ -346,7 +339,6 @@ export const CellList = types
         }
       });
 
-      // self.cells.push(nodeCells);
       self.setPos(0, 0);
     }
   }));
