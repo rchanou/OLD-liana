@@ -1,10 +1,24 @@
 import { types, getType, clone } from "mobx-state-tree";
 
 import { setupContext } from "./context";
-import { Val, Op, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
+import {
+  Val,
+  Op,
+  ops,
+  LinkRef,
+  InputRef,
+  DepRef,
+  Link,
+  Input,
+  Dependency,
+  ContextRepo
+} from "./core";
 
 let idCounter = 0;
-const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
+const optionalId = types.optional(
+  types.identifier(types.number),
+  () => idCounter++
+);
 
 const cellId = optionalId;
 
@@ -146,7 +160,8 @@ export const LinkCell = types
             break;
           case Val:
             const { val } = subCell;
-            const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+            const boxSize =
+              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
               size: boxSize
@@ -171,7 +186,9 @@ export const LinkCell = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) -
+          x +
+          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
@@ -196,7 +213,8 @@ export const LinkCell = types
       if (!self.subCells) {
         // TODO: rename all ref props to "link"?
         self.subCells = self.link.nodes.map(
-          node => (node.ref ? { opened: false, link: node.ref } : { node: clone(node) })
+          node =>
+            node.ref ? { opened: false, link: node.ref } : { node: clone(node) }
         );
       }
 
@@ -237,17 +255,10 @@ const PosCell = types
     get selected() {
       return self === self.user.selectedCell;
     }
-  }))
-  .actions(self => ({
-    // TODO: for testing only, remove
-    afterCreate() {
-      if (!self.user.selectedCell) {
-        self.user.selectedCell = self;
-      }
-    }
   }));
 
-const extendPosCell = (name, ...args) => types.compose(name, PosCell, types.model(...args));
+const extendPosCell = (name, ...args) =>
+  types.compose(name, PosCell, types.model(...args));
 
 // TODO: rename all cells
 const NodeCell = extendPosCell("NodeCell", {
@@ -297,6 +308,7 @@ const LabelCell = types
 export const CellList = types
   .model("CellList", {
     repo: ContextRepo.Ref,
+    // TODO: make first cell/node a first class thingy?
     cells: types.optional(types.array(types.union(NodeCell, LabelCell)), []),
     x: types.optional(types.number, 0),
     y: types.optional(types.number, 0)
@@ -363,26 +375,27 @@ const BOOL = "B";
 const NUM = "N";
 const STRING = "S";
 
-const createFieldModel = (name, ...args) => types.compose(name, NodeCell, types.model(...args));
+const createFieldModel = (name, ...args) =>
+  types.compose(name, NodeCell, types.model(...args));
 
-export const BoolField = createFieldModel("BoolField", {
+const BoolField = createFieldModel("BoolField", {
   checked: types.boolean,
   label: presetText("True?")
 });
 
-export const NumField = createFieldModel("NumField", {
+const NumField = createFieldModel("NumField", {
   number: types.number,
   label: presetText("Value")
 });
 
-export const StringField = createFieldModel("StringField", {
+const StringField = createFieldModel("StringField", {
   string: types.string,
   label: presetText("Value")
 });
 
 const opList = ops.map(label => ({ value: label, label }));
 
-export const OpField = createFieldModel("OpField", {
+const OpField = createFieldModel("OpField", {
   search: presetText("")
   // op: types.optional(OpEnum, ".") // TODO: remove hard-coded default
 })
@@ -395,12 +408,15 @@ export const OpField = createFieldModel("OpField", {
     }
   }))
   .actions(self => ({
+    onKey() {
+      console.log("keyed boi");
+    },
     handleSelect({ value }) {
       self.op = value;
     }
   }));
 
-export const LinkField = createFieldModel("LinkField", {
+const LinkField = createFieldModel("LinkField", {
   repo: ContextRepo.Ref,
   search: types.string,
   linkRef: types.reference(Link)
@@ -419,7 +435,7 @@ export const LinkField = createFieldModel("LinkField", {
     }
   }));
 
-export const InputRefField = createFieldModel("InputField", {
+const InputRefField = createFieldModel("InputField", {
   repo: ContextRepo.Ref,
   search: types.string,
   inputRef: types.reference(Input)
@@ -438,7 +454,7 @@ export const InputRefField = createFieldModel("InputField", {
     }
   }));
 
-export const ValForm = createFieldModel("ValForm", {
+const ValForm = createFieldModel("ValForm", {
   // TODO: this needs to be a radio form/set of fields
   valType: types.enumeration("ValType", [BOOL, NUM, STRING]),
   boolField: BoolField,
@@ -457,17 +473,17 @@ export const ValForm = createFieldModel("ValForm", {
   }
 }));
 
-export const InputArg = createFieldModel("InputArg", {
+const InputArg = createFieldModel("InputArg", {
   input: types.reference(Input),
   valForm: ValForm
 });
 
-export const RefForm = createFieldModel("RefForm", {
+const RefForm = createFieldModel("RefForm", {
   linkField: LinkField,
   inputArgs: types.maybe(types.array(InputArg))
 });
 
-export const DepRefField = createFieldModel("DepField", {
+const DepRefField = createFieldModel("DepField", {
   repo: ContextRepo.Ref,
   search: types.string,
   depRef: types.reference(Dependency)
@@ -488,11 +504,16 @@ export const DepRefField = createFieldModel("DepField", {
 
 export const LinkForm = types
   .model("LinkForm", {
-    formId: optionalId,
-    nodeFields: types.optional(types.array(types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)), []),
-    addButton: types.maybe(types.late(() => LinkAddButton)),
     x: types.optional(types.number, 0),
-    y: types.optional(types.number, 0)
+    y: types.optional(types.number, 0),
+    formId: optionalId,
+    nodeFields: types.optional(
+      types.array(
+        types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)
+      ),
+      []
+    ),
+    addButton: types.maybe(types.late(() => LinkAddButton))
   })
   .views(self => ({
     get cells() {
@@ -533,10 +554,25 @@ const LinkAddButton = extendPosCell("LinkAddButton", {
   form: types.reference(LinkForm),
   text: presetText("Add Node"),
   color: presetText("green")
-}).actions(self => ({
-  onKey() {
-    self.form.addNodeField();
-  }
-}));
+})
+  .actions(self => ({
+    onKey() {
+      self.form.addNodeField();
+    }
+  }))
+  .actions(self => ({
+    // TODO: for testing only, remove
+    afterCreate() {
+      if (!self.user.selectedCell) {
+        self.user.selectedCell = self;
+      }
+    }
+  }));
 
-export const Cell = types.union(LinkCell, LeafCell, NodeCell, OpField, LinkAddButton);
+export const Cell = types.union(
+  LinkCell,
+  LeafCell,
+  NodeCell,
+  OpField,
+  LinkAddButton
+);
