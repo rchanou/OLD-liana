@@ -1,7 +1,7 @@
 import { types, getType, clone } from "mobx-state-tree";
 
 import { setupContext } from "./context";
-import { Val, Op, InputRef, DepRef, Link } from "./core";
+import { Val, Op, InputRef, DepRef, LinkRef, Link, ContextRepo } from "./core";
 
 let idCounter = 0;
 const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
@@ -212,6 +212,101 @@ const LeafCell = types
   .views(self => ({
     get selected() {
       return self === self.user.selectedCell;
+    }
+  }));
+
+const PosCell = types // TODO: rename all cells
+  .model("PosCell", {
+    user: ContextUser.Ref,
+    cellId,
+    node: types.union(Val, Op, InputRef, DepRef, LinkRef, Link),
+    x: types.number,
+    y: types.number,
+    selectable: types.optional(types.boolean, true),
+    width: types.optional(types.number, 2)
+  })
+  .views(self => ({
+    get selected() {
+      return self === self.user.selectedCell;
+    },
+    get text() {
+      return self.node.label;
+    },
+    get color() {
+      return self.node.color;
+    },
+    setPos(x, y) {
+      self.x = x;
+      self.y = y;
+    }
+  }));
+
+const LabelCell = types
+  .model("LabelCell", {
+    cellId,
+    x: types.number,
+    y: types.number,
+    width: types.optional(types.number, 2),
+    text: types.string,
+    color: types.optional(types.string, "#eee") // TODO: remove hard-code
+  })
+  .views(self => ({
+    get selected() {
+      return false;
+    },
+    get selectable() {
+      return false;
+    },
+    setPos(x, y) {
+      self.x = x;
+      self.y = y;
+    }
+  }));
+
+export const CellList = types
+  .model("CellList", {
+    repo: ContextRepo.Ref,
+    cells: types.optional(types.array(types.union(PosCell, LabelCell)), [])
+  })
+  .actions(self => ({
+    setPos(x, y) {
+      let currentX = x - 1;
+      let currentY = y - 1;
+
+      self.cells.forEach(cell => {
+        if (!cell.selectable) {
+          currentX = x;
+          currentY++;
+        }
+
+        cell.setPos(currentX, currentY);
+        currentX += cell.width;
+      });
+    },
+    afterCreate() {
+      const cells = [];
+
+      self.repo.links.forEach(link => {
+        const { nodes, label } = link;
+
+        cells.push({
+          x: 0,
+          y: 0,
+          text: label
+          // node: clone(link)
+        });
+
+        for (const node of nodes) {
+          cells.push({
+            x: 0,
+            y: 0,
+            node: clone(node)
+          });
+        }
+      });
+
+      self.cells = cells;
+      self.setPos(0, 0);
     }
   }));
 

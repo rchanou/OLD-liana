@@ -5,7 +5,7 @@ import { Tree } from "./view-tree";
 import { List } from "./view-list";
 import { LinkForm } from "./view-form";
 import { Field } from "./field";
-import { LinkCell, ContextUser } from "./cell";
+import { LinkCell, ContextUser, CellList } from "./cell";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -17,9 +17,10 @@ export const Editor = types
     // tree: Tree,
     root: types.maybe(LinkCell),
     list: types.optional(List, {}),
+    cellList: types.optional(CellList, {}),
     form: types.maybe(LinkForm),
     // selectedField: types.maybe(types.reference(Field)),
-    currentView: types.optional(types.enumeration([TREE, LIST]), TREE),
+    currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
     keyMap: types.map(types.string)
   })
   .views(self => ({
@@ -33,6 +34,8 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
+      return self.cellList.cells;
+
       if (self.root) {
         return self.root.rootBoxes;
       }

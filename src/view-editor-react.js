@@ -9,6 +9,8 @@ import { ReactLinkForm } from "./view-form-react";
 const containerStyle = {};
 
 export const ReactEditor = observer(({ editor }) => {
+  return <ReactTree cells={editor.cells} />;
+
   const { currentView } = editor;
 
   let mainEl;

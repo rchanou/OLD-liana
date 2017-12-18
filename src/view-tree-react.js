@@ -47,12 +47,12 @@ const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
 const noStyle = {};
 
 export const ReactTree = observer(({ cells }) => {
-  const displayNodes = cells.map(({ x, y, size, color, key, form, text, category, selected }) => {
+  const displayNodes = cells.map(({ x, y, width, size, color, key, form, text, category, selected }) => {
     const style = {
       ...nodeStyle,
       top: `calc(100vh - ${(y + 1) * unit}px)`,
       left: x * unit,
-      width: size * unit + 0.5 * spacer,
+      width: (width || size) * unit + 0.5 * spacer,
       background: color,
       ...(selected ? selectedStyle : noStyle)
     };
