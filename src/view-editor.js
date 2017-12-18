@@ -29,7 +29,7 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
-      return [...self.cellList.cells, ...self.form.nodeFields];
+      return [...self.cellList.cells, ...self.form.cells];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -124,7 +124,7 @@ export const Editor = types
           break;
 
         case "open":
-          self[ContextUser.Key].selectCellRef();
+          self[ContextUser.Key].selectedCell.onKey();
           break;
           projection.open();
           break;

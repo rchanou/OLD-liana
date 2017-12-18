@@ -224,21 +224,37 @@ const LeafCell = types
     }
   }));
 
-export const PosCell = types // TODO: rename all cells
+const PosCell = types
   .model("PosCell", {
     user: ContextUser.Ref,
     cellId,
-    node: types.union(Val, Op, InputRef, DepRef, LinkRef, Link),
     x: types.number,
     y: types.number,
-    selectable: types.optional(types.boolean, true),
     width: types.optional(types.number, 2),
-    cellRef: types.maybe(types.reference(types.late(() => PosCell)))
+    selectable: types.optional(types.boolean, true)
   })
   .views(self => ({
     get selected() {
       return self === self.user.selectedCell;
-    },
+    }
+  }))
+  .actions(self => ({
+    // TODO: for testing only, remove
+    afterCreate() {
+      if (!self.user.selectedCell) {
+        self.user.selectedCell = self;
+      }
+    }
+  }));
+
+const extendPosCell = (name, ...args) => types.compose(name, PosCell, types.model(...args));
+
+// TODO: rename all cells
+const NodeCell = extendPosCell("NodeCell", {
+  node: types.union(Val, Op, InputRef, DepRef, LinkRef, Link),
+  cellRef: types.maybe(types.reference(types.late(() => NodeCell)))
+})
+  .views(self => ({
     get text() {
       return self.node.label;
     },
@@ -251,11 +267,8 @@ export const PosCell = types // TODO: rename all cells
     }
   }))
   .actions(self => ({
-    // TODO: for testing only, remove
-    afterCreate() {
-      if (!self.user.selectedCell) {
-        self.user.selectedCell = self;
-      }
+    onKey() {
+      self.user.selectCellRef();
     }
   }));
 
@@ -284,7 +297,7 @@ const LabelCell = types
 export const CellList = types
   .model("CellList", {
     repo: ContextRepo.Ref,
-    cells: types.optional(types.array(types.union(PosCell, LabelCell)), []),
+    cells: types.optional(types.array(types.union(NodeCell, LabelCell)), []),
     x: types.optional(types.number, 0),
     y: types.optional(types.number, 0)
   })
@@ -350,7 +363,7 @@ const BOOL = "B";
 const NUM = "N";
 const STRING = "S";
 
-const createFieldModel = (name, ...args) => types.compose(name, PosCell, types.model(...args));
+const createFieldModel = (name, ...args) => types.compose(name, NodeCell, types.model(...args));
 
 export const BoolField = createFieldModel("BoolField", {
   checked: types.boolean,
@@ -475,10 +488,17 @@ export const DepRefField = createFieldModel("DepField", {
 
 export const LinkForm = types
   .model("LinkForm", {
+    formId: optionalId,
     nodeFields: types.optional(types.array(types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)), []),
+    addButton: types.maybe(types.late(() => LinkAddButton)),
     x: types.optional(types.number, 0),
     y: types.optional(types.number, 0)
   })
+  .views(self => ({
+    get cells() {
+      return [...self.nodeFields, self.addButton];
+    }
+  }))
   .actions(self => ({
     addNodeField() {
       const { nodeFields } = self;
@@ -486,18 +506,37 @@ export const LinkForm = types
       const lastNodeField = nodeFields[nodeFields.length - 1];
 
       nodeFields.push({
-        op: ".",
-        x: lastNodeField.x,
-        y: lastNodeField.y + 1
-      }); // TODO: remove hard-code
+        node: { op: "." }, // TODO: remove hard-code
+        x: lastNodeField.x + 2,
+        y: lastNodeField.y
+      });
+      self.addButton.x = self.addButton.x + 2;
     },
     afterCreate() {
+      const { x, y } = self;
+
       self.nodeFields.push({
         node: { op: "." },
-        x: self.x,
-        y: self.y
+        x,
+        y
       });
+
+      self.addButton = {
+        form: self,
+        x: x + 2,
+        y
+      };
     }
   }));
 
-export const Cell = types.union(LinkCell, LeafCell, PosCell, OpField);
+const LinkAddButton = extendPosCell("LinkAddButton", {
+  form: types.reference(LinkForm),
+  text: presetText("Add Node"),
+  color: presetText("green")
+}).actions(self => ({
+  onKey() {
+    self.form.addNodeField();
+  }
+}));
+
+export const Cell = types.union(LinkCell, LeafCell, NodeCell, OpField, LinkAddButton);
