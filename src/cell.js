@@ -1,10 +1,25 @@
 import { types, getType, clone } from "mobx-state-tree";
 
 import { setupContext } from "./context";
-import { Val, Op, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
+import {
+  Val,
+  Op,
+  ops,
+  LinkRef,
+  InputRef,
+  DepRef,
+  Link,
+  Input,
+  Dependency,
+  ContextRepo
+} from "./core";
+import * as Color from "./color";
 
 let idCounter = 0;
-const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
+const optionalId = types.optional(
+  types.identifier(types.number),
+  () => idCounter++
+);
 
 const cellId = optionalId;
 
@@ -171,7 +186,8 @@ export const LinkCell = types
             break;
           case Val:
             const { val } = subCell;
-            const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+            const boxSize =
+              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
               size: boxSize
@@ -196,7 +212,9 @@ export const LinkCell = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) -
+          x +
+          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
@@ -221,7 +239,8 @@ export const LinkCell = types
       if (!self.subCells) {
         // TODO: rename all ref props to "link"?
         self.subCells = self.link.nodes.map(
-          node => (node.ref ? { opened: false, link: node.ref } : { node: clone(node) })
+          node =>
+            node.ref ? { opened: false, link: node.ref } : { node: clone(node) }
         );
       }
 
@@ -266,7 +285,8 @@ const PosCell = types
   }))
   .actions(self => makeKeyActions());
 
-const extendPosCell = (name, ...args) => types.compose(name, PosCell, types.model(...args));
+const extendPosCell = (name, ...args) =>
+  types.compose(name, PosCell, types.model(...args));
 
 // TODO: rename all cells
 const NodeCell = extendPosCell("NodeCell", {
@@ -377,7 +397,10 @@ export const CellList = types
           self.cells.push({
             x: 0,
             y: 0,
-            text: valType === "function" ? "func" : valType === "object" ? "obj" : JSON.stringify(val) || ""
+            text:
+              valType === "function"
+                ? "func"
+                : valType === "object" ? "obj" : JSON.stringify(val) || ""
           });
         });
 
@@ -399,7 +422,8 @@ const BOOL = "B";
 const NUM = "N";
 const STRING = "S";
 
-const createFieldModel = (name, ...args) => types.compose(name, NodeCell, types.model(...args));
+const createFieldModel = (name, ...args) =>
+  types.compose(name, NodeCell, types.model(...args));
 
 const BoolField = createFieldModel("BoolField", {
   checked: types.boolean,
@@ -546,17 +570,45 @@ const DepRefField = createFieldModel("DepField", {
     }
   }));
 
+const NodeForm = extendPosCell("NodeForm", {
+  subForm: types.maybe(
+    types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)
+  ),
+  text: presetText("insert type here"),
+  color: Color.op
+})
+  .actions(self => ({
+    afterCreate() {
+      self.subForm = {
+        x: self.x,
+        y: self.y + 1,
+        node: { op: "." }
+      };
+    }
+  }))
+  .actions(self =>
+    makeKeyActions({
+      7: {
+        2() {}
+      }
+    })
+  );
+
 export const LinkForm = types
   .model("LinkForm", {
     x: types.optional(types.number, 0),
     y: types.optional(types.number, 0),
     formId: optionalId,
-    nodeFields: types.optional(types.array(types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)), []),
+    nodeFields: types.optional(types.array(NodeForm), []),
     addButton: types.maybe(types.late(() => LinkAddButton))
   })
   .views(self => ({
     get cells() {
-      return [...self.nodeFields, self.addButton];
+      return [
+        ...self.nodeFields,
+        ...self.nodeFields.map(field => field.subForm),
+        self.addButton
+      ];
     }
   }))
   .actions(self => ({
@@ -566,7 +618,6 @@ export const LinkForm = types
       const lastNodeField = nodeFields[nodeFields.length - 1];
 
       nodeFields.push({
-        node: { op: "." }, // TODO: remove hard-code
         x: lastNodeField.x + 2,
         y: lastNodeField.y
       });
@@ -576,7 +627,6 @@ export const LinkForm = types
       const { x, y } = self;
 
       self.nodeFields.push({
-        node: { op: "." },
         x,
         y
       });
@@ -610,4 +660,11 @@ const LinkAddButton = extendPosCell("LinkAddButton", {
     }
   }));
 
-export const Cell = types.union(LinkCell, LeafCell, NodeCell, OpField, LinkAddButton);
+export const Cell = types.union(
+  LinkCell,
+  LeafCell,
+  NodeCell,
+  NodeForm,
+  OpField,
+  LinkAddButton
+);
