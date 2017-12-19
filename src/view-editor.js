@@ -96,7 +96,8 @@ export const Editor = types
   }))
   .actions(self => {
     const keyLayout = {
-      78: [7, 2]
+      78: [7, 2],
+      69: [8, 2]
     };
 
     const handleKeyUp = e => {

@@ -440,6 +440,16 @@ const OpField = createFieldModel("OpField", {
       7: {
         2() {
           const selectedOpIndex = ops.indexOf(self.node.op);
+          let nextOpIndex = selectedOpIndex - 1;
+          if (nextOpIndex === -1) {
+            nextOpIndex = ops.length - 1;
+          }
+          self.node.op = ops[nextOpIndex];
+        }
+      },
+      8: {
+        2() {
+          const selectedOpIndex = ops.indexOf(self.node.op);
           let nextOpIndex = selectedOpIndex + 1;
           if (nextOpIndex === ops.length) {
             nextOpIndex = 0;
