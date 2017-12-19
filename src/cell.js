@@ -362,13 +362,15 @@ export const CellList = types
             }
           }
 
+          const valType = typeof val;
+
           self.cells.push({
             x: 0,
             y: 0,
             text:
-              typeof val === "function"
-                ? "{f}"
-                : (JSON.stringify(val) || "").slice(0, 9)
+              valType === "function"
+                ? "func"
+                : valType === "object" ? "obj" : JSON.stringify(val) || ""
           });
         });
 
@@ -424,7 +426,12 @@ const OpField = createFieldModel("OpField", {
   }))
   .actions(self => ({
     onKey() {
-      console.log("keyed boi");
+      const selectedOpIndex = ops.indexOf(self.node.op);
+      let nextOpIndex = selectedOpIndex + 1;
+      if (nextOpIndex === ops.length) {
+        nextOpIndex = 0;
+      }
+      self.node.op = ops[nextOpIndex];
     },
     handleSelect({ value }) {
       self.op = value;
