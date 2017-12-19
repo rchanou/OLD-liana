@@ -95,12 +95,24 @@ export const Editor = types
     }
   }))
   .actions(self => {
+    const keyLayout = {
+      78: [7, 2]
+    };
+
     const handleKeyUp = e => {
       e.preventDefault();
 
       const { keyCode } = e;
       const actionName = self.keyMap.get(keyCode);
       const { projection } = self;
+
+      console.log(keyCode);
+
+      const keyCoords = keyLayout[keyCode];
+      const didCellAction = self[ContextUser.Key].selectedCell.onKey(keyCoords);
+      if (didCellAction) {
+        return;
+      }
 
       switch (actionName) {
         case "left":
@@ -143,7 +155,6 @@ export const Editor = types
           break;
 
         default:
-          console.log(keyCode);
           const action = projection[actionName];
           if (typeof action === "function") {
             action(projection);

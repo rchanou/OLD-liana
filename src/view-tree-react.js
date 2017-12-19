@@ -44,7 +44,8 @@ const selectableStyle = {
 };
 
 const labelStyle = {
-  fontWeight: "bold"
+  fontWeight: "bold",
+  background: "none"
 };
 
 const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
