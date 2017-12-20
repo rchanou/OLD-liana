@@ -1,9 +1,10 @@
-import { types, getType, clone } from "mobx-state-tree";
+import { types, getType, clone, destroy, detach } from "mobx-state-tree";
 
 import { setupContext } from "./context";
 import {
   Val,
   Op,
+  OpEnum,
   ops,
   LinkRef,
   InputRef,
@@ -442,13 +443,16 @@ const StringField = createFieldModel("StringField", {
 
 const opList = ops.map(label => ({ value: label, label }));
 
-const OpField = createFieldModel("OpField", {
-  search: presetText("")
+const OpField = extendPosCell("OpField", {
   // op: types.optional(OpEnum, ".") // TODO: remove hard-coded default
+  node: types.optional(Op, { op: "." })
 })
   .views(self => ({
-    get selection() {
-      return self.node.op;
+    get text() {
+      return self.node.label;
+    },
+    get color() {
+      return self.node.color;
     },
     get options() {
       return opList;
@@ -456,7 +460,7 @@ const OpField = createFieldModel("OpField", {
   }))
   .actions(self => ({
     handleSelect({ value }) {
-      self.op = value;
+      self.node.op = value;
     }
   }))
   .actions(self =>
@@ -502,6 +506,31 @@ const LinkField = createFieldModel("LinkField", {
       self.linkRef = value;
     }
   }));
+
+const LinkRefField = extendPosCell("LinkRefField", {
+  repo: ContextRepo.Ref,
+  node: types.maybe(LinkRef)
+})
+  .views(self => ({
+    get firstLinkId() {
+      return self.repo.linkList[0].value;
+    }
+  }))
+  .actions(self => ({
+    afterCreate() {
+      self.node = { ref: self.firstLinkId };
+    }
+  }))
+  .actions(self =>
+    makeKeyActions({
+      7: {
+        2() {}
+      },
+      8: {
+        3() {}
+      }
+    })
+  );
 
 const InputRefField = createFieldModel("InputField", {
   repo: ContextRepo.Ref,
@@ -571,25 +600,41 @@ const DepRefField = createFieldModel("DepField", {
   }));
 
 const NodeForm = extendPosCell("NodeForm", {
-  subForm: types.maybe(
-    types.union(ValForm, RefForm, OpField, InputRefField, DepRefField)
-  ),
+  subForm: types.maybe(types.union(LinkRefField, OpField)),
   text: presetText("insert type here"),
-  color: Color.op
+  color: "steelblue" // TODO: different color
 })
   .actions(self => ({
-    afterCreate() {
+    changeSubForm(node) {
+      if (self.subForm) {
+        detach(self.subForm);
+        console.log("y do");
+      }
+
       self.subForm = {
         x: self.x,
         y: self.y + 1,
-        node: { op: "." }
+        node
       };
+      console.log("sup b");
+    },
+    afterCreate() {
+      self.changeSubForm({ op: "." });
     }
   }))
   .actions(self =>
     makeKeyActions({
       7: {
-        2() {}
+        2() {
+          const subFormType = getType(self.subForm);
+
+          switch (subFormType) {
+            case OpField:
+              // destroy(self.subForm);
+              // console.log("here bro");
+              self.changeSubForm({ ref: "0" });
+          }
+        }
       }
     })
   );
@@ -666,5 +711,6 @@ export const Cell = types.union(
   NodeCell,
   NodeForm,
   OpField,
+  LinkRefField,
   LinkAddButton
 );
