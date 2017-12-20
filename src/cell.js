@@ -481,7 +481,29 @@ const OpField = extendPosCell("OpField", {
       }
     })
   );
-window.o = OpField;
+
+const BoolField = extendPosCell("BoolValField", {
+  val: types.optional(Val, { val: false })
+  // checked:types.optional(types.boolean,false)
+})
+  .views(self => ({
+    get text() {
+      return self.val.label;
+    },
+    get color() {
+      return self.val.color;
+    }
+  }))
+  .actions(self =>
+    makeKeyActions({
+      7: {
+        2() {
+          self.val.val = !self.val.val;
+        }
+      }
+    })
+  );
+
 // const LinkField = createFieldModel("LinkField", {
 //   repo: ContextRepo.Ref,
 //   search: types.string,
@@ -504,7 +526,6 @@ window.o = OpField;
 const LinkRefField = extendPosCell("LinkRefField", {
   repo: ContextRepo.Ref,
   selectedlinkListIndex: types.optional(types.number, 0)
-  // node: types.maybe(types.reference(Link))
 })
   .views(self => ({
     get selectedLink() {
@@ -609,17 +630,25 @@ const LinkRefField = extendPosCell("LinkRefField", {
 
 const subFormList = [
   { node: { op: "." } },
-  {} // TODO: make more specific as I add more field types
+  {}, // TODO: make more specific as I add more field types
+  { checked: false }
 ];
 const subFormListLength = subFormList.length;
+const subFormTypes = [OpField, BoolField, LinkRefField];
 
 const NodeForm = extendPosCell("NodeForm", {
   subForm: types.maybe(
-    types.union(
-      snap => (!snap || snap.node ? OpField : LinkRefField),
-      OpField,
-      LinkRefField
-    )
+    types.union(snap => {
+      if (!snap || snap.node) {
+        return OpField;
+      }
+
+      if ("checked" in snap) {
+        return BoolField;
+      }
+
+      return LinkRefField;
+    }, ...subFormTypes)
   ),
   text: presetText("insert type here"),
   color: "steelblue" // TODO: different color
@@ -738,7 +767,6 @@ export const Cell = types.union(
   LeafCell,
   NodeCell,
   NodeForm,
-  OpField,
-  LinkRefField,
+  ...subFormTypes,
   LinkAddButton
 );
