@@ -434,11 +434,6 @@ const OpField = extendPosCell("OpField", {
       return opList;
     }
   }))
-  .actions(self => ({
-    handleSelect({ value }) {
-      self.node.op = value;
-    }
-  }))
   .actions(self =>
     makeKeyActions({
       7: {
@@ -463,7 +458,7 @@ const OpField = extendPosCell("OpField", {
       }
     })
   );
-
+window.o = OpField;
 // const LinkField = createFieldModel("LinkField", {
 //   repo: ContextRepo.Ref,
 //   search: types.string,
@@ -485,31 +480,39 @@ const OpField = extendPosCell("OpField", {
 
 const LinkRefField = extendPosCell("LinkRefField", {
   repo: ContextRepo.Ref,
-  node: types.maybe(LinkRef)
+  selectedlinkListIndex: types.optional(types.number, 0)
+  // node: types.maybe(types.reference(Link))
 })
   .views(self => ({
+    get selectedLink() {
+      return self.repo.linkList[self.selectedlinkListIndex];
+    },
     get text() {
-      return self.node.label;
+      return self.selectedLink.label;
     },
     get color() {
-      return self.node.color;
-    },
-    get firstLinkId() {
-      return self.repo.linkList[0].value;
-    }
-  }))
-  .actions(self => ({
-    afterCreate() {
-      self.node = { ref: self.firstLinkId };
+      return self.selectedLink.color;
     }
   }))
   .actions(self =>
     makeKeyActions({
       7: {
-        2() {}
+        2() {
+          let prevIndex = self.selectedlinkListIndex - 1;
+          if (prevIndex === -1) {
+            prevIndex = self.repo.linkList.length - 1;
+          }
+          self.selectedlinkListIndex = prevIndex;
+        }
       },
       8: {
-        3() {}
+        2() {
+          let nextIndex = self.selectedlinkListIndex + 1;
+          if (nextIndex === self.repo.linkList.length) {
+            nextIndex = 0;
+          }
+          self.selectedlinkListIndex = nextIndex;
+        }
       }
     })
   );
@@ -582,24 +585,24 @@ const LinkRefField = extendPosCell("LinkRefField", {
 //   }));
 
 const NodeForm = extendPosCell("NodeForm", {
-  subForm: types.maybe(types.union(LinkRefField, OpField)),
+  subForm: types.maybe(types.union(snap => (!snap || snap.node ? OpField : LinkRefField), OpField, LinkRefField)),
   text: presetText("insert type here"),
   color: "steelblue" // TODO: different color
 })
   .actions(self => ({
-    changeSubForm(node) {
+    changeSubForm(newSubForm) {
       if (self.subForm) {
         destroy(self.subForm);
       }
-
+      // console.log("say what brah");
       self.subForm = {
         x: self.x,
         y: self.y + 1,
-        node
+        ...newSubForm
       };
     },
     afterCreate() {
-      self.changeSubForm({ op: "." });
+      self.changeSubForm({ node: { op: "." } });
     }
   }))
   .actions(self =>
@@ -610,10 +613,10 @@ const NodeForm = extendPosCell("NodeForm", {
 
           switch (subFormType) {
             case OpField:
-              self.changeSubForm({ ref: "0" });
+              self.changeSubForm({});
               break;
             case LinkRefField:
-              self.changeSubForm({ op: "." });
+              self.changeSubForm({ node: { op: "." } });
               break;
           }
         }

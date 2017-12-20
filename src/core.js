@@ -445,7 +445,7 @@ export const Repo = types
   })
   .views(self => ({
     get linkList() {
-      return self.links.values().map(link => ({ value: link.linkId, label: link.label }));
+      return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
     },
     get inputList() {
       return self.inputs.values().map(input => ({ value: input.inputId, label: input.label }));

@@ -14,7 +14,7 @@ export const Editor = types
     // tree: Tree,
     root: types.maybe(LinkCell),
     cellList: types.optional(CellList, {}),
-    form: types.optional(LinkForm, { x: 2, y: 15 }),
+    form: types.optional(LinkForm, { x: 2, y: 15 }), // TODO: remove hard-code
     currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
     keyMap: types.map(types.string)
   })

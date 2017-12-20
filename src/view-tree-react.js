@@ -90,7 +90,9 @@ const ReactCell = observer(({ cell }) => {
 });
 
 export const ReactTree = observer(({ cells }) => {
-  const displayNodes = cells.map(cell => <ReactCell key={cell.cellId} cell={cell} />);
+  let throwawayIdCounter = 0;
+
+  const displayNodes = cells.map(cell => <ReactCell key={cell ? cell.cellId : throwawayIdCounter++} cell={cell} />);
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });
