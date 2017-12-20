@@ -52,39 +52,45 @@ const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
 
 const noStyle = {};
 
+const ReactCell = observer(({ cell }) => {
+  if (!cell) {
+    return null;
+  }
+
+  const { x, y, width, size, color, cellId, key, form, text, category, selected, selectable } = cell;
+
+  const style = {
+    ...nodeStyle,
+    top: y * unit, //`calc(100vh - ${(y + 1) * unit}px)`,
+    left: x * unit,
+    width: (width || size) * unit + 0.5 * spacer,
+    background: color,
+    ...(selectable ? selectableStyle : labelStyle),
+    ...(selected ? selectedStyle : noStyle)
+  };
+
+  const connector =
+    category === Link ? (
+      <div
+        key={`${key}L`}
+        style={{
+          ...lineStyle,
+          left: unit * (x + 0.5) - 3 * spacer,
+          top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
+        }}
+      />
+    ) : null;
+
+  return [
+    connector,
+    <div key={cellId || key} style={style}>
+      {text}
+    </div>
+  ];
+});
+
 export const ReactTree = observer(({ cells }) => {
-  const displayNodes = cells.map(
-    ({ x, y, width, size, color, cellId, key, form, text, category, selected, selectable }) => {
-      const style = {
-        ...nodeStyle,
-        top: y * unit, //`calc(100vh - ${(y + 1) * unit}px)`,
-        left: x * unit,
-        width: (width || size) * unit + 0.5 * spacer,
-        background: color,
-        ...(selectable ? selectableStyle : labelStyle),
-        ...(selected ? selectedStyle : noStyle)
-      };
-
-      const connector =
-        category === Link ? (
-          <div
-            key={`${key}L`}
-            style={{
-              ...lineStyle,
-              left: unit * (x + 0.5) - 3 * spacer,
-              top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
-            }}
-          />
-        ) : null;
-
-      return [
-        connector,
-        <div key={cellId || key} style={style}>
-          {text}
-        </div>
-      ];
-    }
-  );
+  const displayNodes = cells.map(cell => <ReactCell key={cell.cellId} cell={cell} />);
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });

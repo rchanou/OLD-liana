@@ -217,12 +217,7 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [
-  stringType,
-  numType,
-  boolType,
-  anyType
-]);
+export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
 
 // is there a better way of doing this?
 class Hole {
@@ -290,14 +285,7 @@ export const InputRef = types
 
 curry.placeholder = Input;
 
-export const Node = types.union(
-  Val,
-  Op,
-  InputRef,
-  types.late(() => LinkRef),
-  types.late(() => SubRef),
-  DepRef
-);
+export const Node = types.union(Val, Op, InputRef, types.late(() => LinkRef), types.late(() => SubRef), DepRef);
 
 export const Link = types
   .model("Link", {
@@ -371,10 +359,7 @@ export const LinkRef = types
         const holeInputIds = Object.keys(linkVal.inputs);
 
         return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [
-            holeInputIds[i],
-            input
-          ]);
+          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
           return self.ref.with(allInputs);
@@ -420,15 +405,7 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(
-  Val,
-  Op,
-  InputRef,
-  LinkRef,
-  SubParam,
-  SubLink,
-  types.late(() => SubRef)
-);
+export const SubNode = types.union(Val, Op, InputRef, LinkRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
@@ -468,19 +445,13 @@ export const Repo = types
   })
   .views(self => ({
     get linkList() {
-      return self.links
-        .entries()
-        .map(link => ({ value: link.linkId, label: link.label }));
+      return self.links.values().map(link => ({ value: link.linkId, label: link.label }));
     },
     get inputList() {
-      return self.inputs
-        .entries()
-        .map(input => ({ value: input.inputId, label: input.label }));
+      return self.inputs.values().map(input => ({ value: input.inputId, label: input.label }));
     },
     get depList() {
-      return self.dependencies
-        .entries()
-        .map(dep => ({ value: dep.depId, label: dep.label }));
+      return self.dependencies.values().map(dep => ({ value: dep.depId, label: dep.label }));
     }
   }))
   .actions(self => ({
