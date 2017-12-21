@@ -28,14 +28,14 @@ export const Editor = types
     get projection() {
       return self.projectionMap[self.currentView];
     },
-    get cells() {
-      return [...self.cellList.cells, ...self.form.cells];
+    get boxes() {
+      return [...self.cellList.cells, ...self.form.boxes];
 
       if (self.root) {
         return self.root.rootBoxes;
       }
       // TODO: switch on type here
-      return self.projection.cells;
+      return self.projection.boxes;
     }
   }))
   .actions(self => ({
@@ -46,10 +46,10 @@ export const Editor = types
       self.form = self.form ? null : { nodeForms };
     },
     moveUp() {
-      const { cells } = self;
+      const { boxes } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = cells.find(
+      const gotoCell = boxes.find(
         cell =>
           cell.selectable &&
           cell.x === selectedCell.x &&
@@ -61,10 +61,10 @@ export const Editor = types
       }
     },
     moveDown() {
-      const { cells } = self;
+      const { boxes } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = cells.find(
+      const gotoCell = boxes.find(
         cell =>
           cell.selectable &&
           cell.x === selectedCell.x &&
@@ -76,10 +76,10 @@ export const Editor = types
       }
     },
     moveLeft() {
-      const { cells } = self;
+      const { boxes } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = cells.find(
+      const gotoCell = boxes.find(
         cell =>
           cell.selectable &&
           cell.x === selectedCell.x - 2 &&
@@ -91,10 +91,10 @@ export const Editor = types
       }
     },
     moveRight() {
-      const { cells } = self;
+      const { boxes } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = cells.find(
+      const gotoCell = boxes.find(
         cell =>
           cell.selectable &&
           cell.x === selectedCell.x + 2 &&

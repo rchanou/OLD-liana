@@ -652,14 +652,16 @@ export const LinkForm = types
     y: types.optional(types.number, 0),
     formId: optionalId,
     nodeForms: types.optional(types.array(NodeForm), []),
-    addButton: types.maybe(types.late(() => LinkAddButton))
+    addButton: types.maybe(types.late(() => AddNodeFormButton)),
+    submitButton: types.maybe(types.late(() => SubmitLinkFormButton))
   })
   .views(self => ({
-    get cells() {
+    get boxes() {
       return [
         ...self.nodeForms,
         ...self.nodeForms.map(field => field.subForm),
-        self.addButton
+        self.addButton,
+        self.submitButton
       ];
     }
   }))
@@ -674,6 +676,7 @@ export const LinkForm = types
         y: lastNodeField.y
       });
       self.addButton.x = self.addButton.x + 2;
+      self.submitButton.x = self.submitButton.x + 2;
     },
     afterCreate() {
       const { x, y } = self;
@@ -688,10 +691,35 @@ export const LinkForm = types
         x: x + 2,
         y
       };
+
+      self.submitButton = {
+        form: self,
+        x: x + 4,
+        y
+      };
+    },
+    detachNodes() {
+      // const nodes = self.nodeForms.map(nF => nF.subForm.node);
+      const nodes = [];
+
+      self.nodeForms.forEach(nF => {
+        if (!nF.subForm) {
+          return;
+        }
+        console.log(nF);
+        // detach(nF.subForm.node);
+        nodes.push(clone(nF.subForm.node));
+      });
+
+      // for (const node of nodes) {
+      //   detach(node);
+      // }
+
+      return nodes;
     }
   }));
 
-const LinkAddButton = extendPosCell("LinkAddButton", {
+const AddNodeFormButton = extendPosCell("AddNodeFormButton", {
   form: types.reference(LinkForm),
   text: presetText("Add Node"),
   color: presetText("green")
@@ -713,7 +741,7 @@ const LinkAddButton = extendPosCell("LinkAddButton", {
   }));
 
 let tempTestIdCounter = 0;
-const LinkSubmitButton = extendPosCell("LinkSubmitButton", {
+const SubmitLinkFormButton = extendPosCell("SubmitLinkFormButton", {
   repo: ContextRepo.Ref,
   form: types.reference(LinkForm),
   text: presetText("Submit Node"),
@@ -723,9 +751,11 @@ const LinkSubmitButton = extendPosCell("LinkSubmitButton", {
     makeKeyActions({
       8: {
         2() {
-          self.repo.links.put({
+          const nodes = self.form.detachNodes();
+          console.log("dem nodes", nodes);
+          self.repo.putLink({
             linkId: `L${tempTestIdCounter++}`,
-            nodes: self.form.nodeForms.map(nF => clone(nF.subForm.node))
+            nodes: [{ op: "." }]
           });
         }
       }
@@ -746,6 +776,6 @@ export const Cell = types.union(
   NodeCell,
   NodeForm,
   ...subFormTypes,
-  LinkAddButton,
-  LinkSubmitButton
+  AddNodeFormButton,
+  SubmitLinkFormButton
 );

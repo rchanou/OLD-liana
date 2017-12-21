@@ -54,16 +54,16 @@ const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
 
 const emptyObj = {};
 
-const makeInputProps = createTransformer(cell => ({
+const makeInputProps = createTransformer(box => ({
   onKeyDown(e) {
     // console.log("kd", e);
     if (e.keyCode == 13) {
-      cell.leaveInputMode();
+      box.leaveInputMode();
     }
   },
   onChange(e) {
     // console.log("chg", e);
-    cell.setVal(e.target.value);
+    box.setVal(e.target.value);
   }
 }));
 
@@ -77,8 +77,8 @@ class Input extends React.Component {
   }
 }
 
-const ReactCell = observer(({ cell }) => {
-  if (!cell) {
+const ReactBox = observer(({ box }) => {
+  if (!box) {
     return null;
   }
 
@@ -96,7 +96,7 @@ const ReactCell = observer(({ cell }) => {
     selected,
     selectable,
     inputMode
-  } = cell;
+  } = box;
 
   const style = {
     ...nodeStyle,
@@ -113,7 +113,7 @@ const ReactCell = observer(({ cell }) => {
       key={cellId || key}
       value={text}
       style={style}
-      {...makeInputProps(cell)}
+      {...makeInputProps(box)}
     />
   ) : (
     <div key={cellId || key} style={style}>
@@ -136,11 +136,11 @@ const ReactCell = observer(({ cell }) => {
   return [connector, element];
 });
 
-export const ReactTree = observer(({ cells }) => {
+export const ReactTree = observer(({ boxes }) => {
   let throwawayIdCounter = 0;
 
-  const displayNodes = cells.map(cell => (
-    <ReactCell key={cell ? cell.cellId : throwawayIdCounter++} cell={cell} />
+  const displayNodes = boxes.map(box => (
+    <ReactBox key={box ? box.cellId : throwawayIdCounter++} box={box} />
   ));
 
   return <div style={containerStyle}>{displayNodes}</div>;
