@@ -462,21 +462,26 @@ const OpField = extendPosCell("OpField", {
   );
 
 const BoolValField = extendPosCell("BoolValField", {
-  val: types.optional(Val, { val: false })
+  node: types.optional(Val, { val: false })
 })
   .views(self => ({
     get text() {
-      return self.val.label;
+      return self.node.label;
     },
     get color() {
-      return self.val.color;
+      return self.node.color;
     }
   }))
   .actions(self =>
     makeKeyActions({
       7: {
         2() {
-          self.val.val = !self.val.val;
+          self.node.val = false;
+        }
+      },
+      8: {
+        2() {
+          self.node.val = true;
         }
       }
     })
@@ -484,23 +489,23 @@ const BoolValField = extendPosCell("BoolValField", {
 
 const StringValField = extendPosCell("StringValField", {
   inputMode: types.optional(types.boolean, false),
-  val: types.optional(Val, { val: "" })
+  node: types.optional(Val, { val: "" })
 })
   .views(self => ({
     get text() {
       if (self.inputMode) {
-        return self.val.val;
+        return self.node.val;
       }
 
-      return self.val.label;
+      return self.node.label;
     },
     get color() {
-      return self.val.color;
+      return self.node.color;
     }
   }))
   .actions(self => ({
     setVal(newVal) {
-      self.val.val = newVal;
+      self.node.val = newVal;
     },
     leaveInputMode() {
       self.inputMode = false;
@@ -521,6 +526,9 @@ const LinkRefField = extendPosCell("LinkRefField", {
   selectedlinkListIndex: types.optional(types.number, 0)
 })
   .views(self => ({
+    get node() {
+      return { ref: self.selectedLink.linkId };
+    },
     get selectedLink() {
       return self.repo.linkList[self.selectedlinkListIndex];
     },
@@ -557,8 +565,8 @@ const LinkRefField = extendPosCell("LinkRefField", {
 const subFormList = [
   { node: { op: "." } },
   {}, // TODO: make more specific as I add more field types
-  { val: { val: false } },
-  { val: { val: "" } }
+  { node: { val: false } },
+  { node: { val: "" } }
 ];
 const subFormListLength = subFormList.length;
 const subFormTypes = [OpField, BoolValField, StringValField, LinkRefField];
@@ -566,21 +574,30 @@ const subFormTypes = [OpField, BoolValField, StringValField, LinkRefField];
 const NodeForm = extendPosCell("NodeForm", {
   subForm: types.maybe(
     types.union(snap => {
-      if (!snap || snap.node) {
+      if (!snap) {
         return OpField;
       }
 
-      if (snap.val) {
-        const { val } = snap.val;
-        if (typeof val === "boolean") {
-          return BoolValField;
-        }
-        if (typeof val === "string") {
-          return StringValField;
-        }
+      const { node } = snap;
+
+      if (!node) {
+        // TODO: maybe change this (and model) to be more in line with rest...
+        return LinkRefField;
       }
 
-      return LinkRefField;
+      if (node.op) {
+        return OpField;
+      }
+
+      const { val } = node;
+
+      if (typeof val === "boolean") {
+        return BoolValField;
+      }
+
+      if (typeof val === "string") {
+        return StringValField;
+      }
     }, ...subFormTypes)
   ),
   text: presetText("insert type here"),
@@ -634,25 +651,25 @@ export const LinkForm = types
     x: types.optional(types.number, 0),
     y: types.optional(types.number, 0),
     formId: optionalId,
-    nodeFields: types.optional(types.array(NodeForm), []),
+    nodeForms: types.optional(types.array(NodeForm), []),
     addButton: types.maybe(types.late(() => LinkAddButton))
   })
   .views(self => ({
     get cells() {
       return [
-        ...self.nodeFields,
-        ...self.nodeFields.map(field => field.subForm),
+        ...self.nodeForms,
+        ...self.nodeForms.map(field => field.subForm),
         self.addButton
       ];
     }
   }))
   .actions(self => ({
     addNodeField() {
-      const { nodeFields } = self;
+      const { nodeForms } = self;
 
-      const lastNodeField = nodeFields[nodeFields.length - 1];
+      const lastNodeField = nodeForms[nodeForms.length - 1];
 
-      nodeFields.push({
+      nodeForms.push({
         x: lastNodeField.x + 2,
         y: lastNodeField.y
       });
@@ -661,7 +678,7 @@ export const LinkForm = types
     afterCreate() {
       const { x, y } = self;
 
-      self.nodeFields.push({
+      self.nodeForms.push({
         x,
         y
       });
@@ -681,8 +698,36 @@ const LinkAddButton = extendPosCell("LinkAddButton", {
 })
   .actions(self =>
     makeKeyActions({
-      7: {
+      8: {
         2: self.form.addNodeField
+      }
+    })
+  )
+  .actions(self => ({
+    // TODO: for testing only, remove
+    afterCreate() {
+      if (!self.user.selectedCell) {
+        self.user.selectedCell = self;
+      }
+    }
+  }));
+
+let tempTestIdCounter = 0;
+const LinkSubmitButton = extendPosCell("LinkSubmitButton", {
+  repo: ContextRepo.Ref,
+  form: types.reference(LinkForm),
+  text: presetText("Submit Node"),
+  color: presetText("orchid")
+})
+  .actions(self =>
+    makeKeyActions({
+      8: {
+        2() {
+          self.repo.links.put({
+            linkId: `L${tempTestIdCounter++}`,
+            nodes: self.form.nodeForms.map(nF => clone(nF.subForm.node))
+          });
+        }
       }
     })
   )
@@ -701,5 +746,6 @@ export const Cell = types.union(
   NodeCell,
   NodeForm,
   ...subFormTypes,
-  LinkAddButton
+  LinkAddButton,
+  LinkSubmitButton
 );
