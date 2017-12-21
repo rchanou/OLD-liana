@@ -7,8 +7,8 @@ import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
 import { ContextUser } from "../src/cell";
-import { Editor, TREE, LIST } from "../src/view-editor";
-import { ReactEditor } from "../src/view-editor-react";
+import { Editor, TREE, LIST } from "../src/editor";
+import { ReactEditor } from "../src/editor-react";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 

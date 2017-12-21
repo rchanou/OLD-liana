@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import { Node, ContextRepo } from "./core";
-// import { Tree } from "./view-tree";
+// import { Tree } from "./tree";
 import { LinkCell, ContextUser, CellList, LinkForm } from "./cell";
 
 export const TREE = "TREE";
