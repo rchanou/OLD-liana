@@ -50,7 +50,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCell) {
@@ -62,7 +65,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCell) {
@@ -74,7 +80,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCell) {
@@ -86,11 +95,22 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCell) {
         self[ContextUser.Key].selectedCell = gotoCell;
+      }
+    }
+  }))
+  .actions(self => ({
+    onInput(val) {
+      const { selectedCell } = self[ContextUser.Key];
+      if (selectedCell) {
+        selectedCell.val = val;
       }
     }
   }))
@@ -101,17 +121,22 @@ export const Editor = types
     };
 
     const handleKeyUp = e => {
-      e.preventDefault();
-
       const { keyCode } = e;
       const actionName = self.keyMap.get(keyCode);
       const { projection } = self;
 
+      // TODO: pull this block of logic into own function?
+      const keyCoords = keyLayout[keyCode];
+      const { selectedCell } = self[ContextUser.Key];
+      if (selectedCell.inputMode) {
+        return;
+      }
+
+      e.preventDefault();
       console.log(keyCode);
 
-      const keyCoords = keyLayout[keyCode];
-      const didCellAction = self[ContextUser.Key].selectedCell.onKey(keyCoords);
-      if (didCellAction) {
+      const didCellKeyAction = selectedCell.onKey(keyCoords);
+      if (didCellKeyAction) {
         return;
       }
 

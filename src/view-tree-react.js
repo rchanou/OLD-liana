@@ -1,4 +1,6 @@
 import React from "react";
+import { findDOMNode } from "react-dom";
+import { createTransformer } from "mobx";
 import { observer } from "mobx-react";
 
 import { Link } from "./core";
@@ -50,14 +52,51 @@ const labelStyle = {
 
 const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
 
-const noStyle = {};
+const emptyObj = {};
+
+const makeInputProps = createTransformer(cell => ({
+  onKeyDown(e) {
+    // console.log("kd", e);
+    if (e.keyCode == 13) {
+      cell.leaveInputMode();
+    }
+  },
+  onChange(e) {
+    // console.log("chg", e);
+    cell.setVal(e.target.value);
+  }
+}));
+
+class Input extends React.Component {
+  componentDidMount() {
+    findDOMNode(this).focus();
+  }
+
+  render() {
+    return <input {...this.props} />;
+  }
+}
 
 const ReactCell = observer(({ cell }) => {
   if (!cell) {
     return null;
   }
 
-  const { x, y, width, size, color, cellId, key, form, text, category, selected, selectable } = cell;
+  const {
+    x,
+    y,
+    width,
+    size,
+    color,
+    cellId,
+    key,
+    form,
+    text,
+    category,
+    selected,
+    selectable,
+    inputMode
+  } = cell;
 
   const style = {
     ...nodeStyle,
@@ -66,8 +105,21 @@ const ReactCell = observer(({ cell }) => {
     width: (width || size) * unit + 0.5 * spacer,
     background: color,
     ...(selectable ? selectableStyle : labelStyle),
-    ...(selected ? selectedStyle : noStyle)
+    ...(selected ? selectedStyle : emptyObj)
   };
+
+  const element = inputMode ? (
+    <Input
+      key={cellId || key}
+      value={text}
+      style={style}
+      {...makeInputProps(cell)}
+    />
+  ) : (
+    <div key={cellId || key} style={style}>
+      {text}
+    </div>
+  );
 
   const connector =
     category === Link ? (
@@ -81,18 +133,15 @@ const ReactCell = observer(({ cell }) => {
       />
     ) : null;
 
-  return [
-    connector,
-    <div key={cellId || key} style={style}>
-      {text}
-    </div>
-  ];
+  return [connector, element];
 });
 
 export const ReactTree = observer(({ cells }) => {
   let throwawayIdCounter = 0;
 
-  const displayNodes = cells.map(cell => <ReactCell key={cell ? cell.cellId : throwawayIdCounter++} cell={cell} />);
+  const displayNodes = cells.map(cell => (
+    <ReactCell key={cell ? cell.cellId : throwawayIdCounter++} cell={cell} />
+  ));
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });
