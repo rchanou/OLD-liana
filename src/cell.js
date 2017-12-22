@@ -60,7 +60,8 @@ const Cell = types.model("Cell", {
   text: types.maybe(types.string),
   color: types.maybe(types.string),
   kind: types.maybe(types.enumeration("CellKind", ["AddNode", "LinkRef"])),
-  gotoCellKey: types.maybe(types.string)
+  gotoCellKey: types.maybe(types.string),
+  addButtonForLink: types.maybe(types.reference(Link))
 });
 
 const User = types
@@ -328,13 +329,6 @@ export const CellList = types
           selected: selectedCellKey === key,
           selectable: false,
           text: label
-          // keyGrid: {
-          //   7: {
-          //     2() {
-          //       self.user.selectCell.key(key);
-          //     }
-          //   }
-          // }
         });
 
         for (let i = 0; i < nodes.length; i++) {
@@ -353,13 +347,6 @@ export const CellList = types
             selectable: true,
             text: node.label,
             color: node.color
-            // keyGrid: {
-            //   7: {
-            //     2() {
-            //       self.user.selectCellKey(key);
-            //     }
-            //   }
-            // }
           };
           if (node.ref) {
             newCell.gotoCellKey = `CL-${node.ref.linkId}-0`;
@@ -381,13 +368,6 @@ export const CellList = types
           selectable: false,
           text:
             valType === "function" ? "func" : valType === "object" ? "obj" : val
-          // keyGrid: {
-          //   7: {
-          //     2() {
-          //       self.user.selectCellKey(key);
-          //     }
-          //   }
-          // }
         });
       });
 
@@ -640,9 +620,8 @@ const addButtonKey = "LFA";
 
 export const LinkForm = types
   .model("LinkForm", {
-    // editingLink:types.reference(Link),
+    editingLink: types.maybe(types.reference(Link)),
     user: ContextUser.Ref
-    // nodeForms: types.optional(types.array(NodeForm), [])
   })
   .views(self => ({
     cells(x = 0, y = 0) {
@@ -653,6 +632,7 @@ export const LinkForm = types
       x += 2;
 
       cells.push({
+        addButtonForLink: self.editingLink.linkId,
         key: addButtonKey,
         x,
         y,
@@ -665,42 +645,7 @@ export const LinkForm = types
 
       return cells;
     }
-  }))
-  .actions(self => ({
-    addNodeField() {
-      const { nodeForms } = self;
-
-      const lastNodeField = nodeForms[nodeForms.length - 1];
-
-      nodeForms.push({
-        x: lastNodeField.x + 2,
-        y: lastNodeField.y
-      });
-      self.addButton.x = self.addButton.x + 2;
-      self.submitButton.x = self.submitButton.x + 2;
-    }
   }));
-
-// const AddNodeFormButton = extendPosCell("AddNodeFormButton", {
-//   form: types.reference(LinkForm),
-//   text: presetText("Add Node"),
-//   color: presetText("green")
-// })
-//   .actions(self =>
-//     makeKeyActions({
-//       8: {
-//         2: self.form.addNodeField
-//       }
-//     })
-//   )
-//   .actions(self => ({
-//     // TODO: for testing only, remove
-//     afterCreate() {
-//       if (!self.user.selectedCell) {
-//         self.user.selectedCell = self;
-//       }
-//     }
-//   }));
 
 let tempTestIdCounter = 0;
 const SubmitLinkFormButton = extendPosCell("SubmitLinkFormButton", {
@@ -731,12 +676,3 @@ const SubmitLinkFormButton = extendPosCell("SubmitLinkFormButton", {
       }
     }
   }));
-
-// export const Cell = types.union(
-//   LinkCell,
-//   LeafCell,
-//   NodeForm,
-//   ...subFormTypes,
-//   AddNodeFormButton,
-//   SubmitLinkFormButton
-// );

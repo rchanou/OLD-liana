@@ -139,14 +139,24 @@ export const Editor = types
       e.preventDefault();
       console.log(keyCode);
 
-      if (selectedCell.gotoCellKey && coords) {
+      if (coords) {
         const [x, y] = coords;
-        if (x === 8 && y === 2) {
-          const gotoCell = self.cells.find(
-            cell => cell.key === selectedCell.gotoCellKey
-          );
-          if (gotoCell) {
-            self[ContextUser.Key].setSelectedCell(gotoCell);
+
+        if (selectedCell.gotoCellKey) {
+          if (x === 8 && y === 2) {
+            const gotoCell = self.cells.find(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
+            if (gotoCell) {
+              self[ContextUser.Key].setSelectedCell(gotoCell);
+              return;
+            }
+          }
+        }
+
+        if (selectedCell.addButtonForLink) {
+          if (x === 8 && y === 2) {
+            selectedCell.addButtonForLink.addNode();
             return;
           }
         }

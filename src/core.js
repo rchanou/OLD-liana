@@ -355,6 +355,11 @@ export const Link = types
     get color() {
       return Color.pending;
     }
+  }))
+  .actions(self => ({
+    addNode() {
+      self.nodes.push({ val: "🍆" }); // TODO: extend functionality, remove test string
+    }
   }));
 
 export const LinkRef = types
