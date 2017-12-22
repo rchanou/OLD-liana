@@ -140,7 +140,7 @@ export const ReactTree = observer(({ boxes }) => {
   let throwawayIdCounter = 0;
 
   const displayNodes = boxes.map(box => (
-    <ReactBox key={box ? box.cellId : throwawayIdCounter++} box={box} />
+    <ReactBox key={box ? box.key : throwawayIdCounter++} box={box} />
   ));
 
   return <div style={containerStyle}>{displayNodes}</div>;

@@ -29,7 +29,8 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get boxes() {
-      return [...self.cellList.cells, ...self.form.boxes];
+      // return [...self.cellList.boxes(0,0), ...self.form.boxes];
+      return [...self.cellList.boxes(0, 0)];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -57,7 +58,8 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        // self[ContextUser.Key].selectedCell = gotoCell;
+        self[ContextUser.Key].selectedCellKey = gotoCell.key;
       }
     },
     moveDown() {
@@ -72,7 +74,8 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        // self[ContextUser.Key].selectedCell = gotoCell;
+        self[ContextUser.Key].selectedCellKey = gotoCell.key;
       }
     },
     moveLeft() {
@@ -87,7 +90,8 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        // self[ContextUser.Key].selectedCell = gotoCell;
+        self[ContextUser.Key].selectedCellKey = gotoCell.key;
       }
     },
     moveRight() {
@@ -102,7 +106,8 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        // self[ContextUser.Key].selectedCell = gotoCell;
+        self[ContextUser.Key].selectedCellKey = gotoCell.key;
       }
     }
   }))

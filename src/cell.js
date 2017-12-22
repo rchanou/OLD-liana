@@ -53,9 +53,13 @@ export const ContextUser = setupContext(
   types.optional(
     types
       .model("User", {
+        selectedCellKey: types.maybe(types.string),
         selectedCell: types.maybe(types.reference(types.late(() => Cell)))
       })
       .actions(self => ({
+        selectCellKey(key) {
+          self.selectedCellKey = key;
+        },
         selectCellRef() {
           const { cellRef } = self.selectedCell;
 
@@ -321,7 +325,8 @@ const LabelCell = types
     y: types.number,
     width: types.optional(types.number, 2),
     text: types.string,
-    color: types.optional(types.string, "#eee") // TODO: remove hard-code
+    color: types.optional(types.string, "#eee"), // TODO: remove hard-code
+    wrap: types.optional(types.boolean, false)
   })
   .views(self => ({
     get selected() {
@@ -329,92 +334,152 @@ const LabelCell = types
     },
     get selectable() {
       return false;
-    },
-    setPos(x, y) {
-      self.x = x;
-      self.y = y;
     }
+    // setPos(x, y) {
+    //   self.x = x;
+    //   self.y = y;
+    // }
   }));
 
 export const CellList = types
   .model("CellList", {
-    repo: ContextRepo.Ref,
-    // TODO: make first cell/node a first class thingy?
-    cells: types.optional(types.array(types.union(NodeCell, LabelCell)), []),
-    x: types.optional(types.number, 0),
-    y: types.optional(types.number, 0)
+    user: ContextUser.Ref,
+    repo: ContextRepo.Ref
   })
-  .actions(self => {
-    let wrapMap = {};
+  .views(self => ({
+    boxes(x = 0, y = 0) {
+      const boxes = [];
 
-    return {
-      setPos(x, y) {
-        let currentX = x - 1;
-        let currentY = y - 1;
+      let currentX = x;
+      let currentY = y - 1;
 
-        self.cells.forEach(cell => {
-          if (wrapMap[cell.cellId]) {
-            currentX = x;
-            currentY++;
-          }
+      const { repo, user } = self;
 
-          cell.setPos(currentX, currentY);
-          currentX += cell.width;
-        });
-      },
-      afterCreate() {
-        const linkCellMap = {};
-        const linkCells = [];
+      repo.links.forEach(link => {
+        const { linkId, nodes, val, label } = link;
 
-        self.repo.links.forEach(link => {
-          const { nodes, val, label } = link;
+        currentX = x;
+        currentY++;
 
-          self.cells.push({
-            x: 0,
-            y: 0,
-            text: label
-          });
+        const key = `CL-${linkId}`;
 
-          wrapMap[self.cells[self.cells.length - 1].cellId] = true;
-
-          for (let i = 0; i < nodes.length; i++) {
-            const node = nodes[i];
-
-            const nodeCell = {
-              x: 0,
-              y: 0,
-              node: clone(node)
-            };
-
-            self.cells.push(nodeCell);
-
-            if (i === 0) {
-              linkCellMap[link.linkId] = self.cells[self.cells.length - 1];
+        boxes.push({
+          key,
+          selected: self.user.selectedCellKey === key,
+          selectable: false,
+          x: currentX,
+          y: currentY,
+          width: 2,
+          text: label,
+          keyGrid: {
+            7: {
+              2() {
+                self.user.selectCellKey(key);
+              }
             }
           }
-
-          const valType = typeof val;
-
-          self.cells.push({
-            x: 0,
-            y: 0,
-            text:
-              valType === "function"
-                ? "func"
-                : valType === "object" ? "obj" : JSON.stringify(val) || ""
-          });
         });
 
-        for (const cell of self.cells) {
-          if (cell.node && cell.node.ref) {
-            cell.cellRef = linkCellMap[cell.node.ref.linkId];
-          }
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+
+          const key = `CL-${linkId}-${i}`;
+
+          currentX += 2;
+
+          boxes.push({
+            key,
+            selected: self.user.selectedCellKey === key,
+            selectable: true,
+            x: currentX,
+            y: currentY,
+            width: 2,
+            text: node.label,
+            color: node.color,
+            keyGrid: {
+              7: {
+                2() {
+                  self.user.selectCellKey(key);
+                }
+              }
+            }
+          });
         }
 
-        self.setPos(self.x, self.y);
-      }
-    };
-  });
+        currentX += 2;
+
+        const valType = typeof val;
+
+        boxes.push({
+          key: `${key}-V`,
+          selected: self.user.selectedCellKey === key,
+          selectable: false,
+          x: currentX,
+          y: currentY,
+          width: 2,
+          text:
+            valType === "function"
+              ? "func"
+              : valType === "object" ? "obj" : val,
+          keyGrid: {
+            7: {
+              2() {
+                self.user.selectCellKey(key);
+              }
+            }
+          }
+        });
+      });
+
+      return boxes;
+    }
+  }));
+// .actions(self => ({
+//   afterCreate() {
+//     const cells = [];
+
+//     self.repo.links.forEach(link => {
+//       const { nodes, val, label } = link;
+
+//       cells.push({
+//         text: label,
+//         wrap: true
+//       });
+
+//       for (let i = 0; i < nodes.length; i++) {
+//         const node = nodes[i];
+
+//         const nodeCell = {
+//           node: clone(node)
+//         };
+
+//         cells.push(nodeCell);
+
+//         // if (i === 0) {
+//         //   linkCellMap[link.linkId] = self.cells[self.cells.length - 1];
+//         // }
+//       }
+
+//       const valType = typeof val;
+
+//       cells.push({
+//         text:
+//           valType === "function"
+//             ? "func"
+//             : valType === "object" ? "obj" : JSON.stringify(val) || ""
+//       });
+//     });
+
+//     return cells;
+//     // for (const cell of self.cells) {
+//     //   if (cell.node && cell.node.ref) {
+//     //     cell.cellRef = linkCellMap[cell.node.ref.linkId];
+//     //   }
+//     // }
+
+//     // self.setPos(self.x, self.y);
+//   }
+// }));
 
 // placeholder prop for localizable labels
 const presetText = text => types.optional(types.string, text);
@@ -496,7 +561,7 @@ const StringValField = extendPosCell("StringValField", {
       if (self.inputMode) {
         return self.node.val;
       }
-
+      ("–");
       return self.node.label;
     },
     get color() {
