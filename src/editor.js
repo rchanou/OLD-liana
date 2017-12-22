@@ -1,7 +1,6 @@
 import { types } from "mobx-state-tree";
 
 import { Node, ContextRepo } from "./core";
-// import { Tree } from "./tree";
 import { LinkCell, ContextUser, CellList, LinkForm } from "./cell";
 
 export const TREE = "TREE";
@@ -29,7 +28,6 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
-      // return [...self.cellList.boxes(0,0), ...self.form.boxes];
       return [...self.cellList.cells(0, 0)];
 
       if (self.root) {
@@ -55,7 +53,6 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        // self[ContextUser.Key].selectedCell = gotoCell;
         self[ContextUser.Key].selectedCell = gotoCell;
       }
     },
@@ -68,7 +65,6 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        // self[ContextUser.Key].selectedCell = gotoCell;
         self[ContextUser.Key].selectedCell = gotoCell;
       }
     },
@@ -81,7 +77,6 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        // self[ContextUser.Key].selectedCell = gotoCell;
         self[ContextUser.Key].selectedCell = gotoCell;
       }
     },
@@ -94,7 +89,6 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        // self[ContextUser.Key].selectedCell = gotoCell;
         self[ContextUser.Key].selectedCell = gotoCell;
       }
     }

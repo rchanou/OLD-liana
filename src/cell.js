@@ -51,18 +51,6 @@ export const ContextUser = setupContext(
     types.model("User", {
       selectedCell: types.maybe(Cell)
     }),
-    // .actions(self => ({
-    //   selectCellKey(key) {
-    //     self.selectedCellKey = key;
-    //   },
-    //   selectCellRef() {
-    //     const { cellRef } = self.selectedCell;
-
-    //     if (cellRef) {
-    //       self.selectedCell = cellRef;
-    //     }
-    //   }
-    // }))
     {}
   )
 );
@@ -325,10 +313,6 @@ const LabelCell = types
     get selectable() {
       return false;
     }
-    // setPos(x, y) {
-    //   self.x = x;
-    //   self.y = y;
-    // }
   }));
 
 export const CellList = types
