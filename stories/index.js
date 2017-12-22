@@ -110,6 +110,11 @@ const simpleSnapshot = {
       linkId: "15",
       nodes: [{ ref: "8" }, { ref: "13", inputs: {} }],
       labelSet: "counter store"
+    },
+    16: {
+      linkId: "16",
+      nodes: [{ op: "+" }, { val: "lol" }, { val: "no" }],
+      labelSet: "test"
     }
   }
 };
@@ -154,7 +159,9 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
+const snapshotToLoad = storedSnapshot
+  ? JSON.parse(storedSnapshot)
+  : defaultSnapshot;
 
 const simpleEditor = Editor.create(
   { ...defaultSnapshot, keyMap },

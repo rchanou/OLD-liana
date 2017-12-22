@@ -51,9 +51,13 @@ const opFuncs = {
     return obj[key];
   },
   [add](...nums) {
-    let sum = 0;
-    for (const num of nums) {
-      sum += num;
+    let sum;
+    for (let i = 0; i < nums.length; i++) {
+      if (i === 0) {
+        sum = nums[i];
+      } else {
+        sum += nums[i];
+      }
     }
     return sum;
   },

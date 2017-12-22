@@ -1,11 +1,26 @@
 import { types, getType, clone, destroy, detach } from "mobx-state-tree";
 
 import { setupContext } from "./context";
-import { Val, Op, OpEnum, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
+import {
+  Val,
+  Op,
+  OpEnum,
+  ops,
+  LinkRef,
+  InputRef,
+  DepRef,
+  Link,
+  Input,
+  Dependency,
+  ContextRepo
+} from "./core";
 import * as Color from "./color";
 
 let idCounter = 0;
-const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
+const optionalId = types.optional(
+  types.identifier(types.number),
+  () => idCounter++
+);
 
 const cellId = optionalId;
 
@@ -43,17 +58,22 @@ const Cell = types.model("Cell", {
   selected: types.maybe(types.boolean),
   selectable: types.maybe(types.boolean),
   text: types.maybe(types.string),
-  color: types.maybe(types.string)
+  color: types.maybe(types.string),
+  kind: types.maybe(types.enumeration("CellKind", ["AddNode", "LinkRef"])),
+  gotoCellKey: types.maybe(types.string)
 });
 
-export const ContextUser = setupContext(
-  types.optional(
-    types.model("User", {
-      selectedCell: types.maybe(Cell)
-    }),
-    {}
-  )
-);
+const User = types
+  .model("User", {
+    selectedCell: types.maybe(Cell)
+  })
+  .actions(self => ({
+    setSelectedCell(cell) {
+      self.selectedCell = cell;
+    }
+  }));
+
+export const ContextUser = setupContext(types.optional(User, {}));
 
 export const LinkCell = types
   .model("LinkCell", {
@@ -174,7 +194,8 @@ export const LinkCell = types
             break;
           case Val:
             const { val } = subCell;
-            const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+            const boxSize =
+              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
               size: boxSize
@@ -199,7 +220,9 @@ export const LinkCell = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) -
+          x +
+          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
@@ -224,7 +247,8 @@ export const LinkCell = types
       if (!self.subCells) {
         // TODO: rename all ref props to "link"?
         self.subCells = self.link.nodes.map(
-          node => (node.ref ? { opened: false, link: node.ref } : { node: clone(node) })
+          node =>
+            node.ref ? { opened: false, link: node.ref } : { node: clone(node) }
         );
       }
 
@@ -269,7 +293,8 @@ const PosCell = types
   }))
   .actions(self => makeKeyActions());
 
-const extendPosCell = (name, ...args) => types.compose(name, PosCell, types.model(...args));
+const extendPosCell = (name, ...args) =>
+  types.compose(name, PosCell, types.model(...args));
 
 export const CellList = types
   .model("CellList", {
@@ -319,7 +344,7 @@ export const CellList = types
 
           currentX += 2;
 
-          cells.push({
+          const newCell = {
             key,
             x: currentX,
             y: currentY,
@@ -335,7 +360,12 @@ export const CellList = types
             //     }
             //   }
             // }
-          });
+          };
+          if (node.ref) {
+            newCell.gotoCellKey = `CL-${node.ref.linkId}-0`;
+          }
+
+          cells.push(newCell);
         }
 
         currentX += 2;
@@ -349,7 +379,8 @@ export const CellList = types
           width: 2,
           selected: selectedCellKey === key,
           selectable: false,
-          text: valType === "function" ? "func" : valType === "object" ? "obj" : val
+          text:
+            valType === "function" ? "func" : valType === "object" ? "obj" : val
           // keyGrid: {
           //   7: {
           //     2() {
@@ -408,6 +439,10 @@ const OpField = extendPosCell("OpField", {
       }
     })
   );
+
+const OpSelect = types.model("OpField", {
+  node: types.optional(Op, { op: "." })
+});
 
 const BoolValField = extendPosCell("BoolValField", {
   node: types.optional(Val, { val: false })
@@ -520,84 +555,92 @@ const subFormListLength = subFormList.length;
 const subFormTypes = [OpField, BoolValField, StringValField, LinkRefField];
 
 const NodeForm = extendPosCell("NodeForm", {
-  subForm: types.maybe(
-    types.union(snap => {
-      if (!snap) {
-        return OpField;
-      }
+  subForm: types.maybe(types.union(OpSelect)),
+  //   types.union(snap => {
+  //     if (!snap) {
+  //       return OpField;
+  //     }
 
-      const { node } = snap;
+  //     const { node } = snap;
 
-      if (!node) {
-        // TODO: maybe change this (and model) to be more in line with rest...
-        return LinkRefField;
-      }
+  //     if (!node) {
+  //       // TODO: maybe change this (and model) to be more in line with rest...
+  //       return LinkRefField;
+  //     }
 
-      if (node.op) {
-        return OpField;
-      }
+  //     if (node.op) {
+  //       return OpSelect;
+  //       return OpField;
+  //     }
 
-      const { val } = node;
+  //     const { val } = node;
 
-      if (typeof val === "boolean") {
-        return BoolValField;
-      }
+  //     if (typeof val === "boolean") {
+  //       return BoolValField;
+  //     }
 
-      if (typeof val === "string") {
-        return StringValField;
-      }
-    }, ...subFormTypes)
-  ),
+  //     if (typeof val === "string") {
+  //       return StringValField;
+  //     }
+  //   }, ...subFormTypes)
+  // ),
   text: presetText("insert type here"),
   color: "steelblue" // TODO: different color
-}).actions(self => {
-  let subFormIndex = 0;
-
-  const changeSubForm = shift => {
-    if (self.subForm) {
-      destroy(self.subForm);
+})
+  .views(self => ({
+    boxes(x = 0, y = 0) {
+      return;
     }
+  }))
+  .actions(self => {
+    let subFormIndex = 0;
 
-    subFormIndex += shift;
-
-    if (subFormIndex >= subFormListLength) {
-      subFormIndex = 0;
-    } else if (subFormIndex < 0) {
-      subFormIndex = subFormListLength - 1;
-    }
-
-    const newSubForm = subFormList[subFormIndex];
-
-    self.subForm = {
-      x: self.x,
-      y: self.y + 1,
-      ...newSubForm
-    };
-  };
-
-  return {
-    afterCreate() {
-      changeSubForm(0);
-    },
-    ...makeKeyActions({
-      7: {
-        2() {
-          changeSubForm(-1);
-        }
-      },
-      8: {
-        2() {
-          changeSubForm(+1);
-        }
+    const changeSubForm = shift => {
+      if (self.subForm) {
+        destroy(self.subForm);
       }
-    })
-  };
-});
+
+      subFormIndex += shift;
+
+      if (subFormIndex >= subFormListLength) {
+        subFormIndex = 0;
+      } else if (subFormIndex < 0) {
+        subFormIndex = subFormListLength - 1;
+      }
+
+      const newSubForm = subFormList[subFormIndex];
+
+      self.subForm = {
+        x: self.x,
+        y: self.y + 1,
+        ...newSubForm
+      };
+    };
+
+    return {
+      afterCreate() {
+        changeSubForm(0);
+      },
+      ...makeKeyActions({
+        7: {
+          2() {
+            changeSubForm(-1);
+          }
+        },
+        8: {
+          2() {
+            changeSubForm(+1);
+          }
+        }
+      })
+    };
+  });
 
 const addButtonKey = "LFA";
 
 export const LinkForm = types
   .model("LinkForm", {
+    // editingLink:types.reference(Link),
     user: ContextUser.Ref
     // nodeForms: types.optional(types.array(NodeForm), [])
   })
@@ -606,6 +649,8 @@ export const LinkForm = types
       const selectedCellKey = self.user.selectedCell.key;
 
       const cells = [];
+
+      x += 2;
 
       cells.push({
         key: addButtonKey,
@@ -636,26 +681,26 @@ export const LinkForm = types
     }
   }));
 
-const AddNodeFormButton = extendPosCell("AddNodeFormButton", {
-  form: types.reference(LinkForm),
-  text: presetText("Add Node"),
-  color: presetText("green")
-})
-  .actions(self =>
-    makeKeyActions({
-      8: {
-        2: self.form.addNodeField
-      }
-    })
-  )
-  .actions(self => ({
-    // TODO: for testing only, remove
-    afterCreate() {
-      if (!self.user.selectedCell) {
-        self.user.selectedCell = self;
-      }
-    }
-  }));
+// const AddNodeFormButton = extendPosCell("AddNodeFormButton", {
+//   form: types.reference(LinkForm),
+//   text: presetText("Add Node"),
+//   color: presetText("green")
+// })
+//   .actions(self =>
+//     makeKeyActions({
+//       8: {
+//         2: self.form.addNodeField
+//       }
+//     })
+//   )
+//   .actions(self => ({
+//     // TODO: for testing only, remove
+//     afterCreate() {
+//       if (!self.user.selectedCell) {
+//         self.user.selectedCell = self;
+//       }
+//     }
+//   }));
 
 let tempTestIdCounter = 0;
 const SubmitLinkFormButton = extendPosCell("SubmitLinkFormButton", {

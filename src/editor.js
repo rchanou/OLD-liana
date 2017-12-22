@@ -28,7 +28,10 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
-      return [...self.cellList.cells(0, 0), ...self.form.cells(2, 15)];
+      return [
+        ...self.cellList.cells(0, 0),
+        ...self.form.cells(0, self[ContextRepo.Key].links.size)
+      ];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -49,7 +52,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCell) {
@@ -61,7 +67,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCell) {
@@ -73,7 +82,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCell) {
@@ -85,7 +97,10 @@ export const Editor = types
       const { selectedCell } = self[ContextUser.Key];
 
       const gotoCell = cells.find(
-        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCell) {
@@ -107,20 +122,35 @@ export const Editor = types
       69: [8, 2]
     };
 
+    const keyTree = {};
+
     const handleKeyUp = e => {
       const { keyCode } = e;
       const actionName = self.keyMap.get(keyCode);
       const { projection } = self;
 
       // TODO: pull this block of logic into own function?
-      const keyCoords = keyLayout[keyCode];
+      const coords = keyLayout[keyCode];
       const { selectedCell } = self[ContextUser.Key];
-      if (selectedCell.inputMode) {
-        return;
-      }
+      // if (selectedCell.inputMode) {
+      //   return;
+      // }
 
       e.preventDefault();
       console.log(keyCode);
+
+      if (selectedCell.gotoCellKey && coords) {
+        const [x, y] = coords;
+        if (x === 8 && y === 2) {
+          const gotoCell = self.cells.find(
+            cell => cell.key === selectedCell.gotoCellKey
+          );
+          if (gotoCell) {
+            self[ContextUser.Key].setSelectedCell(gotoCell);
+            return;
+          }
+        }
+      }
 
       // const didCellKeyAction = selectedCell.onKey(keyCoords);
       // if (didCellKeyAction) {
