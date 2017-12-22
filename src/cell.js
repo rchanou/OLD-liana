@@ -1,26 +1,11 @@
 import { types, getType, clone, destroy, detach } from "mobx-state-tree";
 
 import { setupContext } from "./context";
-import {
-  Val,
-  Op,
-  OpEnum,
-  ops,
-  LinkRef,
-  InputRef,
-  DepRef,
-  Link,
-  Input,
-  Dependency,
-  ContextRepo
-} from "./core";
+import { Val, Op, OpEnum, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
 import * as Color from "./color";
 
 let idCounter = 0;
-const optionalId = types.optional(
-  types.identifier(types.number),
-  () => idCounter++
-);
+const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
 
 const cellId = optionalId;
 
@@ -49,25 +34,35 @@ const makeKeyActions = keyMap => ({
   }
 });
 
+const Cell = types.model("Cell", {
+  key: types.string,
+  x: types.number,
+  y: types.number,
+  width: types.maybe(types.number),
+  height: types.maybe(types.number),
+  selected: types.maybe(types.boolean),
+  selectable: types.maybe(types.boolean),
+  text: types.maybe(types.string),
+  color: types.maybe(types.string)
+});
+
 export const ContextUser = setupContext(
   types.optional(
-    types
-      .model("User", {
-        selectedCellKey: types.maybe(types.string),
-        selectedCell: types.maybe(types.reference(types.late(() => Cell)))
-      })
-      .actions(self => ({
-        selectCellKey(key) {
-          self.selectedCellKey = key;
-        },
-        selectCellRef() {
-          const { cellRef } = self.selectedCell;
+    types.model("User", {
+      selectedCell: types.maybe(Cell)
+    }),
+    // .actions(self => ({
+    //   selectCellKey(key) {
+    //     self.selectedCellKey = key;
+    //   },
+    //   selectCellRef() {
+    //     const { cellRef } = self.selectedCell;
 
-          if (cellRef) {
-            self.selectedCell = cellRef;
-          }
-        }
-      })),
+    //     if (cellRef) {
+    //       self.selectedCell = cellRef;
+    //     }
+    //   }
+    // }))
     {}
   )
 );
@@ -191,8 +186,7 @@ export const LinkCell = types
             break;
           case Val:
             const { val } = subCell;
-            const boxSize =
-              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+            const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
               size: boxSize
@@ -217,9 +211,7 @@ export const LinkCell = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) -
-          x +
-          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
@@ -244,8 +236,7 @@ export const LinkCell = types
       if (!self.subCells) {
         // TODO: rename all ref props to "link"?
         self.subCells = self.link.nodes.map(
-          node =>
-            node.ref ? { opened: false, link: node.ref } : { node: clone(node) }
+          node => (node.ref ? { opened: false, link: node.ref } : { node: clone(node) })
         );
       }
 
@@ -290,8 +281,7 @@ const PosCell = types
   }))
   .actions(self => makeKeyActions());
 
-const extendPosCell = (name, ...args) =>
-  types.compose(name, PosCell, types.model(...args));
+const extendPosCell = (name, ...args) => types.compose(name, PosCell, types.model(...args));
 
 // TODO: rename all cells
 const NodeCell = extendPosCell("NodeCell", {
@@ -347,8 +337,10 @@ export const CellList = types
     repo: ContextRepo.Ref
   })
   .views(self => ({
-    boxes(x = 0, y = 0) {
-      const boxes = [];
+    cells(x = 0, y = 0) {
+      const selectedCellKey = self.user.selectedCell.key;
+
+      const cells = [];
 
       let currentX = x;
       let currentY = y - 1;
@@ -363,21 +355,21 @@ export const CellList = types
 
         const key = `CL-${linkId}`;
 
-        boxes.push({
+        cells.push({
           key,
-          selected: self.user.selectedCellKey === key,
+          selected: selectedCellKey === key,
           selectable: false,
           x: currentX,
           y: currentY,
           width: 2,
-          text: label,
-          keyGrid: {
-            7: {
-              2() {
-                self.user.selectCellKey(key);
-              }
-            }
-          }
+          text: label
+          // keyGrid: {
+          //   7: {
+          //     2() {
+          //       self.user.selectCell.key(key);
+          //     }
+          //   }
+          // }
         });
 
         for (let i = 0; i < nodes.length; i++) {
@@ -387,22 +379,22 @@ export const CellList = types
 
           currentX += 2;
 
-          boxes.push({
+          cells.push({
             key,
-            selected: self.user.selectedCellKey === key,
+            selected: selectedCellKey === key,
             selectable: true,
             x: currentX,
             y: currentY,
             width: 2,
             text: node.label,
-            color: node.color,
-            keyGrid: {
-              7: {
-                2() {
-                  self.user.selectCellKey(key);
-                }
-              }
-            }
+            color: node.color
+            // keyGrid: {
+            //   7: {
+            //     2() {
+            //       self.user.selectCellKey(key);
+            //     }
+            //   }
+            // }
           });
         }
 
@@ -410,28 +402,25 @@ export const CellList = types
 
         const valType = typeof val;
 
-        boxes.push({
+        cells.push({
           key: `${key}-V`,
-          selected: self.user.selectedCellKey === key,
+          selected: selectedCellKey === key,
           selectable: false,
           x: currentX,
           y: currentY,
           width: 2,
-          text:
-            valType === "function"
-              ? "func"
-              : valType === "object" ? "obj" : val,
-          keyGrid: {
-            7: {
-              2() {
-                self.user.selectCellKey(key);
-              }
-            }
-          }
+          text: valType === "function" ? "func" : valType === "object" ? "obj" : val
+          // keyGrid: {
+          //   7: {
+          //     2() {
+          //       self.user.selectCellKey(key);
+          //     }
+          //   }
+          // }
         });
       });
 
-      return boxes;
+      return cells;
     }
   }));
 // .actions(self => ({
@@ -722,12 +711,7 @@ export const LinkForm = types
   })
   .views(self => ({
     get boxes() {
-      return [
-        ...self.nodeForms,
-        ...self.nodeForms.map(field => field.subForm),
-        self.addButton,
-        self.submitButton
-      ];
+      return [...self.nodeForms, ...self.nodeForms.map(field => field.subForm), self.addButton, self.submitButton];
     }
   }))
   .actions(self => ({
@@ -835,12 +819,12 @@ const SubmitLinkFormButton = extendPosCell("SubmitLinkFormButton", {
     }
   }));
 
-export const Cell = types.union(
-  LinkCell,
-  LeafCell,
-  NodeCell,
-  NodeForm,
-  ...subFormTypes,
-  AddNodeFormButton,
-  SubmitLinkFormButton
-);
+// export const Cell = types.union(
+//   LinkCell,
+//   LeafCell,
+//   NodeCell,
+//   NodeForm,
+//   ...subFormTypes,
+//   AddNodeFormButton,
+//   SubmitLinkFormButton
+// );

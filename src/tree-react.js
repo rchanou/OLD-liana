@@ -82,21 +82,7 @@ const ReactBox = observer(({ box }) => {
     return null;
   }
 
-  const {
-    x,
-    y,
-    width,
-    size,
-    color,
-    cellId,
-    key,
-    form,
-    text,
-    category,
-    selected,
-    selectable,
-    inputMode
-  } = box;
+  const { x, y, width, size, color, cellId, key, form, text, category, selected, selectable, inputMode } = box;
 
   const style = {
     ...nodeStyle,
@@ -109,12 +95,7 @@ const ReactBox = observer(({ box }) => {
   };
 
   const element = inputMode ? (
-    <Input
-      key={cellId || key}
-      value={text}
-      style={style}
-      {...makeInputProps(box)}
-    />
+    <Input key={cellId || key} value={text} style={style} {...makeInputProps(box)} />
   ) : (
     <div key={cellId || key} style={style}>
       {text}
@@ -136,12 +117,10 @@ const ReactBox = observer(({ box }) => {
   return [connector, element];
 });
 
-export const ReactTree = observer(({ boxes }) => {
+export const ReactTree = observer(({ cells }) => {
   let throwawayIdCounter = 0;
 
-  const displayNodes = boxes.map(box => (
-    <ReactBox key={box ? box.key : throwawayIdCounter++} box={box} />
-  ));
+  const displayNodes = cells.map(cell => <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} />);
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });

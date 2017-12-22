@@ -6,6 +6,4 @@ import { ReactTree } from "./tree-react";
 
 const containerStyle = {};
 
-export const ReactEditor = observer(({ editor }) => (
-  <ReactTree boxes={editor.boxes} />
-));
+export const ReactEditor = observer(({ editor }) => <ReactTree cells={editor.cells} />);

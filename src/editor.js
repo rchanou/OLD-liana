@@ -12,7 +12,7 @@ export const Editor = types
     ...ContextRepo.Mixin,
     ...ContextUser.Mixin,
     // tree: Tree,
-    root: types.maybe(LinkCell),
+    // root: types.maybe(LinkCell),
     cellList: types.optional(CellList, {}),
     form: types.optional(LinkForm, { x: 2, y: 15 }), // TODO: remove hard-code
     currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
@@ -28,9 +28,9 @@ export const Editor = types
     get projection() {
       return self.projectionMap[self.currentView];
     },
-    get boxes() {
+    get cells() {
       // return [...self.cellList.boxes(0,0), ...self.form.boxes];
-      return [...self.cellList.boxes(0, 0)];
+      return [...self.cellList.cells(0, 0)];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -47,67 +47,55 @@ export const Editor = types
       self.form = self.form ? null : { nodeForms };
     },
     moveUp() {
-      const { boxes } = self;
+      const { cells } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = boxes.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
       if (gotoCell) {
         // self[ContextUser.Key].selectedCell = gotoCell;
-        self[ContextUser.Key].selectedCellKey = gotoCell.key;
+        self[ContextUser.Key].selectedCell = gotoCell;
       }
     },
     moveDown() {
-      const { boxes } = self;
+      const { cells } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = boxes.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
       if (gotoCell) {
         // self[ContextUser.Key].selectedCell = gotoCell;
-        self[ContextUser.Key].selectedCellKey = gotoCell.key;
+        self[ContextUser.Key].selectedCell = gotoCell;
       }
     },
     moveLeft() {
-      const { boxes } = self;
+      const { cells } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = boxes.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
-          cell.y === selectedCell.y
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
       );
 
       if (gotoCell) {
         // self[ContextUser.Key].selectedCell = gotoCell;
-        self[ContextUser.Key].selectedCellKey = gotoCell.key;
+        self[ContextUser.Key].selectedCell = gotoCell;
       }
     },
     moveRight() {
-      const { boxes } = self;
+      const { cells } = self;
       const { selectedCell } = self[ContextUser.Key];
 
-      const gotoCell = boxes.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
-          cell.y === selectedCell.y
+      const gotoCell = cells.find(
+        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
       );
 
       if (gotoCell) {
         // self[ContextUser.Key].selectedCell = gotoCell;
-        self[ContextUser.Key].selectedCellKey = gotoCell.key;
+        self[ContextUser.Key].selectedCell = gotoCell;
       }
     }
   }))
@@ -140,10 +128,10 @@ export const Editor = types
       e.preventDefault();
       console.log(keyCode);
 
-      const didCellKeyAction = selectedCell.onKey(keyCoords);
-      if (didCellKeyAction) {
-        return;
-      }
+      // const didCellKeyAction = selectedCell.onKey(keyCoords);
+      // if (didCellKeyAction) {
+      //   return;
+      // }
 
       switch (actionName) {
         case "left":

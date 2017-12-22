@@ -141,18 +141,20 @@ const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
   // tree: simpleTree,
   root: { cellId: testCellId, link: testRoot },
-  // [ContextUser.Key]: {
-  //   selectedCell: testCellId
-  // },
+  [ContextUser.Key]: {
+    selectedCell: {
+      key: "CL-0-0",
+      x: 2,
+      y: 0
+    }
+  },
   currentView: TREE,
   keyMap
 };
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot
-  ? JSON.parse(storedSnapshot)
-  : defaultSnapshot;
+const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
 
 const simpleEditor = Editor.create(
   { ...defaultSnapshot, keyMap },
