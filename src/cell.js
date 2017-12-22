@@ -61,7 +61,9 @@ const Cell = types.model("Cell", {
   color: types.maybe(types.string),
   kind: types.maybe(types.enumeration("CellKind", ["AddNode", "LinkRef"])),
   gotoCellKey: types.maybe(types.string),
-  addButtonForLink: types.maybe(types.reference(Link))
+  addButtonForLink: types.maybe(types.reference(Link)),
+  forLink: types.maybe(types.reference(Link)),
+  forNodeIndex: types.maybe(types.number)
 });
 
 const User = types
@@ -617,10 +619,12 @@ const NodeForm = extendPosCell("NodeForm", {
   });
 
 const addButtonKey = "LFA";
+const changeTypeButtonKey = "LFCT";
 
 export const LinkForm = types
   .model("LinkForm", {
     editingLink: types.maybe(types.reference(Link)),
+    editingNodeIndex: types.optional(types.number, 1),
     user: ContextUser.Ref
   })
   .views(self => ({
@@ -632,7 +636,24 @@ export const LinkForm = types
       x += 2;
 
       cells.push({
-        addButtonForLink: self.editingLink.linkId,
+        // changeTypeForLinkNode: [self.editingLink.linkId,],
+        forLink: self.editingLink,
+        forNodeIndex: self.editingNodeIndex,
+        key: changeTypeButtonKey,
+        x,
+        y,
+        width: 2,
+        selected: selectedCellKey === changeTypeButtonKey,
+        selectable: true,
+        text: "Change Node",
+        color: "green"
+      });
+
+      x += 2;
+
+      cells.push({
+        forLink: self.editingLink,
+        // addButton:true,
         key: addButtonKey,
         x,
         y,

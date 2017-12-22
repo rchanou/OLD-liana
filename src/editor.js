@@ -118,11 +118,22 @@ export const Editor = types
   }))
   .actions(self => {
     const keyLayout = {
-      78: [7, 2],
-      69: [8, 2]
+      78: [6, 2],
+      85: [7, 1],
+      69: [7, 2],
+      188: [7, 3],
+      73: [8, 2]
     };
 
     const keyTree = {};
+
+    const newNodeMap = {
+      7: {
+        1: { val: 1 },
+        2: { val: 0 },
+        3: { val: 2 }
+      }
+    };
 
     const handleKeyUp = e => {
       const { keyCode } = e;
@@ -142,8 +153,32 @@ export const Editor = types
       if (coords) {
         const [x, y] = coords;
 
+        if (typeof selectedCell.forNodeIndex === "number") {
+          const xNodeMap = newNodeMap[x];
+
+          if (!xNodeMap) {
+            return;
+          }
+
+          const newNode = xNodeMap[y];
+
+          if (!newNode) {
+            return;
+          }
+
+          selectedCell.forLink.setNode(selectedCell.forNodeIndex, newNode);
+          return;
+        }
+
+        if (selectedCell.forLink) {
+          if (x === 7 && y === 2) {
+            selectedCell.forLink.addNode();
+            return;
+          }
+        }
+
         if (selectedCell.gotoCellKey) {
-          if (x === 8 && y === 2) {
+          if (x === 7 && y === 2) {
             const gotoCell = self.cells.find(
               cell => cell.key === selectedCell.gotoCellKey
             );
@@ -154,11 +189,8 @@ export const Editor = types
           }
         }
 
-        if (selectedCell.addButtonForLink) {
-          if (x === 8 && y === 2) {
-            selectedCell.addButtonForLink.addNode();
-            return;
-          }
+        if (x === 8 && y === 2) {
+          return;
         }
       }
 

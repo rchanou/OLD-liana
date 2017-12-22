@@ -18,6 +18,7 @@ const spacer = 0.1 * unit;
 const darkGray = "#888";
 
 const nodeStyle = {
+  transition: 0.3,
   position: "absolute",
   height: unit - 3 * spacer,
   display: "flex",
@@ -82,7 +83,21 @@ const ReactBox = observer(({ box }) => {
     return null;
   }
 
-  const { x, y, width, size, color, cellId, key, form, text, category, selected, selectable, inputMode } = box;
+  const {
+    x,
+    y,
+    width,
+    size,
+    color,
+    cellId,
+    key,
+    form,
+    text,
+    category,
+    selected,
+    selectable,
+    inputMode
+  } = box;
 
   const style = {
     ...nodeStyle,
@@ -95,7 +110,12 @@ const ReactBox = observer(({ box }) => {
   };
 
   const element = inputMode ? (
-    <Input key={cellId || key} value={text} style={style} {...makeInputProps(box)} />
+    <Input
+      key={cellId || key}
+      value={text}
+      style={style}
+      {...makeInputProps(box)}
+    />
   ) : (
     <div key={cellId || key} style={style}>
       {text}
@@ -120,7 +140,9 @@ const ReactBox = observer(({ box }) => {
 export const ReactTree = observer(({ cells }) => {
   let throwawayIdCounter = 0;
 
-  const displayNodes = cells.map(cell => <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} />);
+  const displayNodes = cells.map(cell => (
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} />
+  ));
 
   return <div style={containerStyle}>{displayNodes}</div>;
 });
