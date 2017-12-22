@@ -140,7 +140,6 @@ const keyMap = {
 const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
   // tree: simpleTree,
-  root: { cellId: testCellId, link: testRoot },
   [ContextUser.Key]: {
     selectedCell: {
       key: "CL-0-0",
@@ -148,6 +147,7 @@ const defaultSnapshot = {
       y: 0
     }
   },
+  root: { cellId: testCellId, link: testRoot },
   currentView: TREE,
   keyMap
 };

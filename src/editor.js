@@ -13,7 +13,7 @@ export const Editor = types
     // tree: Tree,
     // root: types.maybe(LinkCell),
     cellList: types.optional(CellList, {}),
-    form: types.optional(LinkForm, { x: 2, y: 15 }), // TODO: remove hard-code
+    form: types.optional(LinkForm, {}), // TODO: remove hard-code
     currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
     keyMap: types.map(types.string)
   })
@@ -28,7 +28,7 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
-      return [...self.cellList.cells(0, 0)];
+      return [...self.cellList.cells(0, 0), ...self.form.cells(2, 15)];
 
       if (self.root) {
         return self.root.rootBoxes;

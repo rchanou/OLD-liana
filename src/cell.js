@@ -297,11 +297,11 @@ export const CellList = types
 
         cells.push({
           key,
-          selected: selectedCellKey === key,
-          selectable: false,
           x: currentX,
           y: currentY,
           width: 2,
+          selected: selectedCellKey === key,
+          selectable: false,
           text: label
           // keyGrid: {
           //   7: {
@@ -321,11 +321,11 @@ export const CellList = types
 
           cells.push({
             key,
-            selected: selectedCellKey === key,
-            selectable: true,
             x: currentX,
             y: currentY,
             width: 2,
+            selected: selectedCellKey === key,
+            selectable: true,
             text: node.label,
             color: node.color
             // keyGrid: {
@@ -344,11 +344,11 @@ export const CellList = types
 
         cells.push({
           key: `${key}-V`,
-          selected: selectedCellKey === key,
-          selectable: false,
           x: currentX,
           y: currentY,
           width: 2,
+          selected: selectedCellKey === key,
+          selectable: false,
           text: valType === "function" ? "func" : valType === "object" ? "obj" : val
           // keyGrid: {
           //   7: {
@@ -594,18 +594,31 @@ const NodeForm = extendPosCell("NodeForm", {
   };
 });
 
+const addButtonKey = "LFA";
+
 export const LinkForm = types
   .model("LinkForm", {
-    x: types.optional(types.number, 0),
-    y: types.optional(types.number, 0),
-    formId: optionalId,
-    nodeForms: types.optional(types.array(NodeForm), []),
-    addButton: types.maybe(types.late(() => AddNodeFormButton)),
-    submitButton: types.maybe(types.late(() => SubmitLinkFormButton))
+    user: ContextUser.Ref
+    // nodeForms: types.optional(types.array(NodeForm), [])
   })
   .views(self => ({
-    get boxes() {
-      return [...self.nodeForms, ...self.nodeForms.map(field => field.subForm), self.addButton, self.submitButton];
+    cells(x = 0, y = 0) {
+      const selectedCellKey = self.user.selectedCell.key;
+
+      const cells = [];
+
+      cells.push({
+        key: addButtonKey,
+        x,
+        y,
+        width: 2,
+        selected: selectedCellKey === addButtonKey,
+        selectable: true,
+        text: "Add Node",
+        color: "green"
+      });
+
+      return cells;
     }
   }))
   .actions(self => ({
@@ -620,45 +633,6 @@ export const LinkForm = types
       });
       self.addButton.x = self.addButton.x + 2;
       self.submitButton.x = self.submitButton.x + 2;
-    },
-    afterCreate() {
-      const { x, y } = self;
-
-      self.nodeForms.push({
-        x,
-        y
-      });
-
-      self.addButton = {
-        form: self,
-        x: x + 2,
-        y
-      };
-
-      self.submitButton = {
-        form: self,
-        x: x + 4,
-        y
-      };
-    },
-    detachNodes() {
-      // const nodes = self.nodeForms.map(nF => nF.subForm.node);
-      const nodes = [];
-
-      self.nodeForms.forEach(nF => {
-        if (!nF.subForm) {
-          return;
-        }
-        console.log(nF);
-        // detach(nF.subForm.node);
-        nodes.push(clone(nF.subForm.node));
-      });
-
-      // for (const node of nodes) {
-      //   detach(node);
-      // }
-
-      return nodes;
     }
   }));
 
