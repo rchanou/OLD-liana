@@ -271,50 +271,6 @@ const PosCell = types
 
 const extendPosCell = (name, ...args) => types.compose(name, PosCell, types.model(...args));
 
-// TODO: rename all cells
-const NodeCell = extendPosCell("NodeCell", {
-  node: types.union(Val, Op, InputRef, DepRef, LinkRef, Link),
-  cellRef: types.maybe(types.reference(types.late(() => NodeCell)))
-})
-  .views(self => ({
-    get text() {
-      return self.node.label;
-    },
-    get color() {
-      return self.node.color;
-    },
-    setPos(x, y) {
-      self.x = x;
-      self.y = y;
-    }
-  }))
-  .actions(self =>
-    makeKeyActions({
-      7: {
-        2: self.user.selectCellRef
-      }
-    })
-  );
-
-const LabelCell = types
-  .model("LabelCell", {
-    cellId,
-    x: types.number,
-    y: types.number,
-    width: types.optional(types.number, 2),
-    text: types.string,
-    color: types.optional(types.string, "#eee"), // TODO: remove hard-code
-    wrap: types.optional(types.boolean, false)
-  })
-  .views(self => ({
-    get selected() {
-      return false;
-    },
-    get selectable() {
-      return false;
-    }
-  }));
-
 export const CellList = types
   .model("CellList", {
     user: ContextUser.Ref,
@@ -407,52 +363,6 @@ export const CellList = types
       return cells;
     }
   }));
-// .actions(self => ({
-//   afterCreate() {
-//     const cells = [];
-
-//     self.repo.links.forEach(link => {
-//       const { nodes, val, label } = link;
-
-//       cells.push({
-//         text: label,
-//         wrap: true
-//       });
-
-//       for (let i = 0; i < nodes.length; i++) {
-//         const node = nodes[i];
-
-//         const nodeCell = {
-//           node: clone(node)
-//         };
-
-//         cells.push(nodeCell);
-
-//         // if (i === 0) {
-//         //   linkCellMap[link.linkId] = self.cells[self.cells.length - 1];
-//         // }
-//       }
-
-//       const valType = typeof val;
-
-//       cells.push({
-//         text:
-//           valType === "function"
-//             ? "func"
-//             : valType === "object" ? "obj" : JSON.stringify(val) || ""
-//       });
-//     });
-
-//     return cells;
-//     // for (const cell of self.cells) {
-//     //   if (cell.node && cell.node.ref) {
-//     //     cell.cellRef = linkCellMap[cell.node.ref.linkId];
-//     //   }
-//     // }
-
-//     // self.setPos(self.x, self.y);
-//   }
-// }));
 
 // placeholder prop for localizable labels
 const presetText = text => types.optional(types.string, text);
@@ -806,7 +716,6 @@ const SubmitLinkFormButton = extendPosCell("SubmitLinkFormButton", {
 // export const Cell = types.union(
 //   LinkCell,
 //   LeafCell,
-//   NodeCell,
 //   NodeForm,
 //   ...subFormTypes,
 //   AddNodeFormButton,
