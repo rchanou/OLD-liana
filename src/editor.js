@@ -38,6 +38,9 @@ export const Editor = types
       }
       // TODO: switch on type here
       return self.projection.boxes;
+    },
+    get keyBoxes() {
+      return [];
     }
   }))
   .actions(self => ({

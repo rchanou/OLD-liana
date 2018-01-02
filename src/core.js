@@ -40,7 +40,7 @@ export const strictEqual = "===";
 export const notEqual = "!=";
 export const notStrictEqual = "!==";
 
-export const swap = "@";
+export const mutate = "@";
 
 const opFuncs = {
   [global](val) {
@@ -132,7 +132,7 @@ export const ops = [
   strictEqual,
   notEqual,
   notStrictEqual,
-  swap
+  mutate
 ];
 
 export const OpEnum = types.enumeration("OpEnum", ops);

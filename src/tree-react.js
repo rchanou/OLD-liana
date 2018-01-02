@@ -7,9 +7,6 @@ import { Link } from "./core";
 
 const containerStyle = {
   position: "absolute",
-  height: "100vh",
-  width: "100vw",
-  overflow: "hidden",
   textAlign: "center"
 };
 
