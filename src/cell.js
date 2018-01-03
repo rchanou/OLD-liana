@@ -69,6 +69,7 @@ const Cell = types.model("Cell", {
 const User = types
   .model("User", {
     selectedCell: types.maybe(Cell),
+    inputMode: types.optional(types.boolean, false),
     changeCellMode: types.optional(types.boolean, false)
   })
   .actions(self => ({
@@ -77,6 +78,9 @@ const User = types
     },
     toggleChangeCellMode() {
       self.changeCellMode = !self.changeCellMode;
+    },
+    toggleInputMode() {
+      self.inputMode = !self.inputMode;
     }
   }));
 
@@ -344,18 +348,23 @@ export const CellList = types
 
           currentX += 2;
 
+          const selected = selectedCellKey === key;
+          const inputting = selected && self.user.inputMode;
+
           const newCell = {
             key,
             x: currentX,
             y: currentY,
             width: 2,
-            selected: selectedCellKey === key,
+            selected,
             selectable: true,
             forLink: link,
             nodeIndex: i,
-            text: node.label,
+            onChange: inputting && (val => link.setVal(i, val)),
+            text: inputting ? node.val : node.label,
             color: node.color
           };
+
           if (node.ref) {
             newCell.gotoCellKey = `CL-${node.ref.linkId}-0`;
           }

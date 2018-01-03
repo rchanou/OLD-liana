@@ -172,12 +172,20 @@ export const Editor = types
 
       console.log(keyCode);
 
+      const user = self[ContextUser.Key];
+      const { inputMode, selectedCell, changeCellMode } = user;
+
+      if (inputMode) {
+        if (e.keyCode == 13) {
+          user.toggleInputMode();
+        }
+        return;
+      }
+
       if (coords) {
         e.preventDefault();
 
         const [x, y] = coords;
-        const user = self[ContextUser.Key];
-        const { selectedCell, changeCellMode } = user;
 
         const { forLink, nodeIndex } = selectedCell;
 
@@ -246,14 +254,16 @@ export const Editor = types
             const gotoCell = self.cells.find(
               cell => cell.key === selectedCell.gotoCellKey
             );
+
             if (gotoCell) {
-              self[ContextUser.Key].setSelectedCell(gotoCell);
+              user.setSelectedCell(gotoCell);
               return;
             }
           }
         }
 
         if (x === 8 && y === 2) {
+          user.toggleInputMode();
           return;
         }
       }

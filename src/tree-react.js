@@ -93,7 +93,7 @@ const ReactBox = observer(({ box }) => {
     category,
     selected,
     selectable,
-    inputMode
+    onChange
   } = box;
 
   const style = {
@@ -106,12 +106,12 @@ const ReactBox = observer(({ box }) => {
     ...(selected ? selectedStyle : emptyObj)
   };
 
-  const element = inputMode ? (
+  const element = onChange ? (
     <Input
       key={cellId || key}
       value={text}
       style={style}
-      {...makeInputProps(box)}
+      onChange={e => onChange(e.target.value)}
     />
   ) : (
     <div key={cellId || key} style={style}>

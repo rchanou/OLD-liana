@@ -103,6 +103,11 @@ export const Val = types
     get color() {
       return Color.val;
     }
+  }))
+  .actions(self => ({
+    select(val) {
+      self.val = val;
+    }
   }));
 
 export const ops = [
@@ -367,6 +372,9 @@ export const Link = types
       if (self.nodes.length > 1) {
         self.nodes.splice(index, 1);
       }
+    },
+    setVal(index, val) {
+      self.nodes[index].select(val);
     }
   }));
 
