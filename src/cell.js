@@ -68,11 +68,15 @@ const Cell = types.model("Cell", {
 
 const User = types
   .model("User", {
-    selectedCell: types.maybe(Cell)
+    selectedCell: types.maybe(Cell),
+    changeCellMode: types.optional(types.boolean, false)
   })
   .actions(self => ({
     setSelectedCell(cell) {
       self.selectedCell = cell;
+    },
+    toggleChangeCellMode() {
+      self.changeCellMode = !self.changeCellMode;
     }
   }));
 

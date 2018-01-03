@@ -170,27 +170,68 @@ export const Editor = types
 
       // TODO: pull this block of logic into own function?
       const coords = keyLayout[keyCode];
-      const { selectedCell } = self[ContextUser.Key];
       // if (selectedCell.inputMode) {
       //   return;
       // }
 
-      e.preventDefault();
       console.log(keyCode);
 
       if (coords) {
+        e.preventDefault();
+
         const [x, y] = coords;
+        const user = self[ContextUser.Key];
+        const { selectedCell, changeCellMode } = user;
 
-        if ("nodeIndex" in selectedCell) {
+        const { forLink, nodeIndex } = selectedCell;
+
+        if (x === 6 && y === 3) {
+          user.toggleChangeCellMode();
+          return;
+        }
+
+        if (changeCellMode) {
+          if (x === 6 && y === 1) {
+            forLink.setNode(nodeIndex, { val: 0 });
+            return;
+          }
+          if (x === 7 && y === 1) {
+            forLink.setNode(nodeIndex, { val: "" });
+            return;
+          }
+          if (x === 8 && y === 1) {
+            forLink.setNode(nodeIndex, { val: false });
+            return;
+          }
+          if (x === 6 && y === 2) {
+            forLink.setNode(nodeIndex, { op: "." });
+            return;
+          }
+          if (x === 7 && y === 2) {
+            forLink.setNode(nodeIndex, {
+              ref: self[ContextRepo.Key].linkList[0]
+            });
+            return;
+          }
+          if (x === 8 && y === 2) {
+            forLink.setNode(nodeIndex, {
+              input: self[ContextRepo.Key].inputList[0]
+            });
+            return;
+          }
           if (x === 9 && y === 2) {
-            const deleted = selectedCell.forLink.deleteNode(
-              selectedCell.nodeIndex
-            );
+            forLink.setNode(nodeIndex, {
+              dep: self[ContextRepo.Key].depList[0]
+            });
+            return;
+          }
+        }
 
-            if (
-              selectedCell.nodeIndex >
-              selectedCell.forLink.nodes.length - 1
-            ) {
+        if (typeof nodeIndex === "number") {
+          if (x === 9 && y === 2) {
+            const deleted = selectedCell.forLink.deleteNode(nodeIndex);
+
+            if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
               self.moveLeft();
             }
             return;
