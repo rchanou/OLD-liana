@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import { Node, ContextRepo } from "./core";
-import { LinkCell, ContextUser, CellList, LinkForm } from "./cell";
+import { LinkCell, ContextUser, CellList } from "./cell";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -13,7 +13,6 @@ export const Editor = types
     // tree: Tree,
     // root: types.maybe(LinkCell),
     cellList: types.optional(CellList, {}),
-    form: types.optional(LinkForm, {}), // TODO: remove hard-code
     currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
     keyMap: types.map(types.string)
   })
@@ -28,10 +27,7 @@ export const Editor = types
       return self.projectionMap[self.currentView];
     },
     get cells() {
-      return [
-        ...self.cellList.cells(0, 0),
-        ...self.form.cells(0, self[ContextRepo.Key].links.size)
-      ];
+      return self.cellList.cells(0, 0);
 
       if (self.root) {
         return self.root.rootBoxes;
