@@ -362,6 +362,11 @@ export const Link = types
     },
     setNode(index, newNode) {
       self.nodes[index] = newNode;
+    },
+    deleteNode(index) {
+      if (self.nodes.length > 1) {
+        self.nodes.splice(index, 1);
+      }
     }
   }));
 

@@ -121,11 +121,13 @@ export const Editor = types
   }))
   .actions(self => {
     const keyLayout = {
+      76: [6, 1],
       78: [6, 2],
       85: [7, 1],
       69: [7, 2],
       188: [7, 3],
-      73: [8, 2]
+      73: [8, 2],
+      79: [9, 2]
     };
 
     const keyTree = {};
@@ -156,25 +158,24 @@ export const Editor = types
       if (coords) {
         const [x, y] = coords;
 
-        if (typeof selectedCell.forNodeIndex === "number") {
-          const xNodeMap = newNodeMap[x];
+        if ("nodeIndex" in selectedCell) {
+          if (x === 9 && y === 2) {
+            const deleted = selectedCell.forLink.deleteNode(
+              selectedCell.nodeIndex
+            );
 
-          if (!xNodeMap) {
+            if (
+              selectedCell.nodeIndex >
+              selectedCell.forLink.nodes.length - 1
+            ) {
+              self.moveLeft();
+            }
             return;
           }
-
-          const newNode = xNodeMap[y];
-
-          if (!newNode) {
-            return;
-          }
-
-          selectedCell.forLink.setNode(selectedCell.forNodeIndex, newNode);
-          return;
         }
 
         if (selectedCell.forLink) {
-          if (x === 7 && y === 2) {
+          if (x === 6 && y === 1) {
             selectedCell.forLink.addNode();
             return;
           }

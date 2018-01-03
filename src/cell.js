@@ -63,7 +63,7 @@ const Cell = types.model("Cell", {
   gotoCellKey: types.maybe(types.string),
   addButtonForLink: types.maybe(types.reference(Link)),
   forLink: types.maybe(types.reference(Link)),
-  forNodeIndex: types.maybe(types.number)
+  nodeIndex: types.maybe(types.number)
 });
 
 const User = types
@@ -347,6 +347,8 @@ export const CellList = types
             width: 2,
             selected: selectedCellKey === key,
             selectable: true,
+            forLink: link,
+            nodeIndex: i,
             text: node.label,
             color: node.color
           };
@@ -636,9 +638,7 @@ export const LinkForm = types
       x += 2;
 
       cells.push({
-        // changeTypeForLinkNode: [self.editingLink.linkId,],
         forLink: self.editingLink,
-        forNodeIndex: self.editingNodeIndex,
         key: changeTypeButtonKey,
         x,
         y,
@@ -649,20 +649,20 @@ export const LinkForm = types
         color: "green"
       });
 
-      x += 2;
+      // x += 2;
 
-      cells.push({
-        forLink: self.editingLink,
-        // addButton:true,
-        key: addButtonKey,
-        x,
-        y,
-        width: 2,
-        selected: selectedCellKey === addButtonKey,
-        selectable: true,
-        text: "Add Node",
-        color: "green"
-      });
+      // cells.push({
+      //   forLink: self.editingLink,
+      //   // addButton:true,
+      //   key: addButtonKey,
+      //   x,
+      //   y,
+      //   width: 2,
+      //   selected: selectedCellKey === addButtonKey,
+      //   selectable: true,
+      //   text: "Add Node",
+      //   color: "green"
+      // });
 
       return cells;
     }
