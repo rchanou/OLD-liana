@@ -125,21 +125,22 @@ Anything not idempotent can be called "unbounded".
 * String val selected, change mode - TEXT MODE
 
 * Link/Input/Dep Ref selected
+
   * Open change mode
 
-- Link/Input/Dep change mode search selected
+* Link/Input/Dep change mode search selected
 
   * Enter search change mode - TEXT MODE
 
-- Link/Input/Dep search option selected
+* Link/Input/Dep search option selected
 
   * Change to
 
-- Link/Input/Dep selected
+* Link/Input/Dep selected
 
   * Add comment
   * Open edit comments
 
-- Link/Input/Dep edit comment mode, comment selected
+* Link/Input/Dep edit comment mode, comment selected
   * Enter edit mode - TEXT
   * Delete

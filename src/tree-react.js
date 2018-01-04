@@ -98,7 +98,7 @@ const ReactBox = observer(({ box }) => {
 
   const style = {
     ...nodeStyle,
-    top: y * unit, //`calc(100vh - ${(y + 1) * unit}px)`,
+    top: y * unit,
     left: x * unit,
     width: (width || size) * unit + 0.5 * spacer,
     background: color,

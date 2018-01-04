@@ -106,6 +106,17 @@ export const Val = types
   }))
   .actions(self => ({
     select(val) {
+      if (typeof self.val === "number") {
+        const numVal = Number(val);
+
+        if (isNaN(numVal)) {
+          return;
+        }
+
+        self.val = numVal;
+        return;
+      }
+
       self.val = val;
     }
   }));
