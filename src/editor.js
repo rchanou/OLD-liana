@@ -13,8 +13,8 @@ export const Editor = types
     // tree: Tree,
     // root: types.maybe(LinkCell),
     cellList: types.optional(CellList, {}),
-    currentView: types.optional(types.enumeration([TREE, LIST]), LIST),
-    keyMap: types.map(types.string)
+    currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
+    // keyMap: types.map(types.string)
   })
   .views(self => ({
     get projectionMap() {
@@ -161,11 +161,10 @@ export const Editor = types
 
     const handleKeyPress = e => {
       const { keyCode } = e;
-      const actionName = self.keyMap.get(keyCode);
-      const { projection } = self;
+      // const actionName = self.keyMap.get(keyCode);
+      // const { projection } = self;
 
       // TODO: pull this block of logic into own function?
-      const coords = keyLayout[keyCode];
       // if (selectedCell.inputMode) {
       //   return;
       // }
@@ -182,144 +181,159 @@ export const Editor = types
         return;
       }
 
-      if (coords) {
-        e.preventDefault();
+      const coords = keyLayout[keyCode];
+      if (!coords) {
+        return;
+      }
+      e.preventDefault();
 
-        const [x, y] = coords;
+      const [x, y] = coords;
 
-        const { forLink, nodeIndex } = selectedCell;
+      const { forLink, nodeIndex } = selectedCell;
 
-        if (x === 6 && y === 3) {
-          user.toggleChangeCellMode();
+      if (x === 6 && y === 3) {
+        user.toggleChangeCellMode();
+        return;
+      }
+
+      if (changeCellMode) {
+        if (x === 6 && y === 1) {
+          forLink.setNode(nodeIndex, { val: 0 });
           return;
         }
-
-        if (changeCellMode) {
-          if (x === 6 && y === 1) {
-            forLink.setNode(nodeIndex, { val: 0 });
-            return;
-          }
-          if (x === 7 && y === 1) {
-            forLink.setNode(nodeIndex, { val: "" });
-            return;
-          }
-          if (x === 8 && y === 1) {
-            forLink.setNode(nodeIndex, { val: false });
-            return;
-          }
-          if (x === 6 && y === 2) {
-            forLink.setNode(nodeIndex, { op: "." });
-            return;
-          }
-          if (x === 7 && y === 2) {
-            forLink.setNode(nodeIndex, {
-              ref: self[ContextRepo.Key].linkList[0]
-            });
-            return;
-          }
-          if (x === 8 && y === 2) {
-            forLink.setNode(nodeIndex, {
-              input: self[ContextRepo.Key].inputList[0]
-            });
-            return;
-          }
-          if (x === 9 && y === 2) {
-            forLink.setNode(nodeIndex, {
-              dep: self[ContextRepo.Key].depList[0]
-            });
-            return;
-          }
+        if (x === 7 && y === 1) {
+          forLink.setNode(nodeIndex, { val: "" });
+          return;
         }
-
-        if (typeof nodeIndex === "number") {
-          if (x === 9 && y === 2) {
-            const deleted = selectedCell.forLink.deleteNode(nodeIndex);
-
-            if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
-              self.moveLeft();
-            }
-            return;
-          }
+        if (x === 8 && y === 1) {
+          forLink.setNode(nodeIndex, { val: false });
+          return;
         }
-
-        if (selectedCell.forLink) {
-          if (x === 6 && y === 1) {
-            selectedCell.forLink.addNode();
-            return;
-          }
+        if (x === 6 && y === 2) {
+          forLink.setNode(nodeIndex, { op: "." });
+          return;
         }
-
-        if (selectedCell.gotoCellKey) {
-          if (x === 7 && y === 2) {
-            const gotoCell = self.cells.find(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
-
-            if (gotoCell) {
-              user.setSelectedCell(gotoCell);
-              return;
-            }
-          }
+        if (x === 7 && y === 2) {
+          forLink.setNode(nodeIndex, {
+            ref: self[ContextRepo.Key].linkList[0]
+          });
+          return;
         }
-
         if (x === 8 && y === 2) {
-          user.toggleInputMode();
+          forLink.setNode(nodeIndex, {
+            input: self[ContextRepo.Key].inputList[0]
+          });
+          return;
+        }
+        if (x === 9 && y === 2) {
+          forLink.setNode(nodeIndex, {
+            dep: self[ContextRepo.Key].depList[0]
+          });
           return;
         }
       }
 
-      // const didCellKeyAction = selectedCell.onKey(keyCoords);
-      // if (didCellKeyAction) {
-      //   return;
-      // }
+      if (typeof nodeIndex === "number") {
+        if (x === 9 && y === 2) {
+          const deleted = selectedCell.forLink.deleteNode(nodeIndex);
 
-      switch (actionName) {
-        case "left":
-          self.moveLeft();
-          // projection.move(-1);
-          break;
-
-        case "right":
-          self.moveRight();
-          // projection.move(+1);
-          break;
-
-        case "up":
-          self.moveUp();
-          // projection.up();
-          break;
-
-        case "down":
-          self.moveDown();
-          // projection.down();
-          break;
-
-        case "open":
-          self[ContextUser.Key].selectedCell.onKey();
-          break;
-          projection.open();
-          break;
-
-        case "changeView":
-          const { currentView } = self;
-          if (currentView === TREE) {
-            self.setView(LIST);
-          } else {
-            self.setView(TREE);
+          if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
+            self.moveLeft();
           }
-          break;
+          return;
+        }
+      }
 
-        case "create":
-          self.toggleForm();
-          break;
+      if (selectedCell.forLink) {
+        if (x === 6 && y === 1) {
+          selectedCell.forLink.addNode();
+          return;
+        }
+      }
 
-        default:
-          const action = projection[actionName];
-          if (typeof action === "function") {
-            action(projection);
+      if (selectedCell.gotoCellKey) {
+        if (x === 7 && y === 2) {
+          const gotoCell = self.cells.find(
+            cell => cell.key === selectedCell.gotoCellKey
+          );
+
+          if (gotoCell) {
+            user.setSelectedCell(gotoCell);
+            return;
           }
+        }
+      }
+
+      if (x === 8 && y === 2) {
+        user.toggleInputMode();
+        return;
+      }
+
+      if (x === 2 && y === 1) {
+        self.moveUp();
+      }
+      if (x === 2 && y === 2) {
+        self.moveDown();
+      }
+      if (x === 1 && y === 2) {
+        self.moveLeft();
+      }
+      if (x === 3 && y === 2) {
+        self.moveRight();
       }
     };
+
+    // const didCellKeyAction = selectedCell.onKey(keyCoords);
+    // if (didCellKeyAction) {
+    //   return;
+    // }
+
+    // switch (actionName) {
+    //   case "left":
+    //     self.moveLeft();
+    //     // projection.move(-1);
+    //     break;
+
+    //   case "right":
+    //     self.moveRight();
+    //     // projection.move(+1);
+    //     break;
+
+    //   case "up":
+    //     self.moveUp();
+    //     // projection.up();
+    //     break;
+
+    //   case "down":
+    //     self.moveDown();
+    //     // projection.down();
+    //     break;
+
+    //   case "open":
+    //     self[ContextUser.Key].selectedCell.onKey();
+    //     break;
+    //     projection.open();
+    //     break;
+
+    //   case "changeView":
+    //     const { currentView } = self;
+    //     if (currentView === TREE) {
+    //       self.setView(LIST);
+    //     } else {
+    //       self.setView(TREE);
+    //     }
+    //     break;
+
+    //   case "create":
+    //     self.toggleForm();
+    //     break;
+
+    //   default:
+    //     const action = projection[actionName];
+    //     if (typeof action === "function") {
+    //       action(projection);
+    //     }
+    // }
 
     return {
       afterCreate() {

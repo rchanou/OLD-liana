@@ -131,16 +131,16 @@ const testCellId = -1;
 //   selectedIndex: 0
 // };
 
-const keyMap = {
-  70: "up",
-  82: "left",
-  83: "down",
-  84: "right",
-  69: "open",
-  76: "changeView",
-  78: "open",
-  85: "create"
-};
+// const keyMap = {
+//   70: "up",
+//   82: "left",
+//   83: "down",
+//   84: "right",
+//   69: "open",
+//   76: "changeView",
+//   78: "open",
+//   85: "create"
+// };
 
 const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
@@ -154,8 +154,8 @@ const defaultSnapshot = {
   },
   form: { editingLink: "16" },
   root: { cellId: testCellId, link: testRoot },
-  currentView: TREE,
-  keyMap
+  currentView: TREE
+  // keyMap
 };
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -165,7 +165,7 @@ const snapshotToLoad = storedSnapshot
   : defaultSnapshot;
 
 const simpleEditor = Editor.create(
-  { ...defaultSnapshot, keyMap },
+  { ...defaultSnapshot /*keyMap*/ },
   {
     system: SystemJS
   }
