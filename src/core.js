@@ -362,7 +362,7 @@ export const Link = types
     },
     get label() {
       if (!self.labelSet) {
-        return `(${link.linkId})`;
+        return `(${self.linkId})`;
       }
 
       // TODO: handle maps for localization, icon labels, etc.
@@ -493,6 +493,8 @@ export const SubRef = types
     }
   }));
 
+let newLinkIdCounter = 0;
+
 export const Repo = types
   .model("Repo", {
     dependencies: optionalMap(Dependency),
@@ -518,6 +520,12 @@ export const Repo = types
     }
   }))
   .actions(self => ({
+    addLink() {
+      self.links.put({
+        linkId: `N${newLinkIdCounter++}`,
+        nodes: [{ op: "+" }]
+      });
+    },
     putLink(newLink) {
       self.links.put(newLink);
     },

@@ -253,6 +253,10 @@ export const Editor = types
         return;
       }
 
+      if (x === 5 && y === 1) {
+        self[ContextRepo.Key].addLink();
+      }
+
       if (x === 2 && y === 1) {
         self.moveUp();
       }
