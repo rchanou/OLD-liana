@@ -18,41 +18,14 @@ import * as Color from "./color";
 
 const optionalBoolean = types.optional(types.boolean, false);
 
-let idCounter = 0;
-const optionalId = types.optional(
-  types.identifier(types.number),
-  () => idCounter++
-);
-
-const cellId = optionalId;
-
-const makeKeyActions = keyMap => ({
-  onKey(coords) {
-    if (!coords) {
-      return false;
-    }
-
-    const [kx, ky] = coords;
-
-    const xActions = keyMap[kx];
-
-    if (!xActions) {
-      return false;
-    }
-
-    const action = xActions[ky];
-
-    if (action) {
-      action();
-      return true;
-    }
-
-    return false;
-  }
-});
+// placeholder prop for localizable labels
+const presetText = text => types.optional(types.string, text);
 
 const Cell = types
   .model("Cell", {
+    // key: presetText("CURSOR"),
+    // forCellKey: types.maybe(types.string),
+    value: types.maybe(types.string),
     x: types.number,
     y: types.number,
     width: types.optional(types.number, 2),
@@ -61,18 +34,29 @@ const Cell = types
     forLink: types.maybe(types.reference(Link)),
     nodeIndex: types.maybe(types.number)
   })
-  .views(self => ({
-    get cursor() {
-      return true;
-    },
-    get key() {
-      return "CURSOR";
+  .actions(self => ({
+    setValue(value) {
+      self.value = value;
     }
   }));
+// .views(self => ({
+//   get cursor() {
+//     return true;
+//   },
+//   get key() {
+//     return "CURSOR";
+//   }
+// }));
+
+// const NodeRef = types.model("NodeRef", {
+//   link: types.reference(Link),
+//   index: types.maybe(types.number)
+// });
 
 const User = types
   .model("User", {
     selectedCell: types.maybe(Cell),
+    // settingNode: types.maybe(NodeRef),
     inputMode: optionalBoolean,
     changeCellMode: optionalBoolean,
     changeOpMode: optionalBoolean
@@ -82,8 +66,15 @@ const User = types
       self.selectedCell = cell;
     },
     toggleInputMode() {
+      self.selectedCell.value = "";
       self.inputMode = !self.inputMode;
     },
+    // beginSettingNode(nodeRef) {
+    //   self.settingNode = nodeRef;
+    // },
+    // endSettingNode() {
+    //   self.settingNode = null;
+    // },
     toggleChangeCellMode() {
       self.changeCellMode = !self.changeCellMode;
     },
@@ -97,7 +88,7 @@ export const ContextUser = setupContext(types.optional(User, {}));
 export const LinkCell = types
   .model("LinkCell", {
     user: ContextUser.Ref,
-    cellId,
+    // cellId,
     link: types.reference(Link),
     subCells: types.maybe(types.array(types.late(() => Cell))),
     opened: types.optional(types.boolean, true)
@@ -283,46 +274,14 @@ export const LinkCell = types
     }
   }));
 
-const LeafCell = types
-  .model("LeafCell", {
-    user: ContextUser.Ref,
-    cellId,
-    node: types.union(Val, Op, InputRef, DepRef)
-  })
-  .views(self => ({
-    get selected() {
-      return self === self.user.selectedCell;
-    }
-  }));
-
-const PosCell = types
-  .model("PosCell", {
-    user: ContextUser.Ref,
-    cellId,
-    x: types.number,
-    y: types.number,
-    width: types.optional(types.number, 2),
-    height: types.optional(types.number, 1),
-    selectable: types.optional(types.boolean, true)
-  })
-  .views(self => ({
-    get selected() {
-      return self === self.user.selectedCell;
-    }
-  }))
-  .actions(self => makeKeyActions());
-
-const extendPosCell = (name, ...args) =>
-  types.compose(name, PosCell, types.model(...args));
-
 export const CellList = types
   .model("CellList", {
-    user: ContextUser.Ref,
+    // user: ContextUser.Ref,
     repo: ContextRepo.Ref
   })
   .views(self => ({
     cells(x = 0, y = 0) {
-      const selectedCellKey = self.user.selectedCell.key;
+      // const selectedCellKey = self.user.selectedCell.key;
 
       const cells = [];
 
@@ -356,8 +315,8 @@ export const CellList = types
 
           currentX += 2;
 
-          const selected = selectedCellKey === key;
-          const inputting = selected && self.user.inputMode;
+          // const selected = selectedCellKey === key;
+          // const inputting = selected && self.user.inputMode;
 
           const newCell = {
             key,
@@ -368,8 +327,9 @@ export const CellList = types
             selectable: true,
             forLink: link,
             nodeIndex: i,
-            onChange: inputting && (val => link.setVal(i, val)),
-            text: inputting ? node.val : node.label,
+            // onChange: inputting && (val => link.setVal(i, val)),
+            // text: inputting ? node.val : node.label,
+            text: node.label,
             fill: node.color
           };
 
@@ -389,7 +349,7 @@ export const CellList = types
           x: currentX,
           y: currentY,
           width: 2,
-          selected: selectedCellKey === key,
+          // selected: selectedCellKey === key,
           selectable: false,
           text:
             valType === "function" ? "func" : valType === "object" ? "obj" : val
@@ -400,243 +360,305 @@ export const CellList = types
     }
   }));
 
-// placeholder prop for localizable labels
-const presetText = text => types.optional(types.string, text);
+// let idCounter = 0;
+// const optionalId = types.optional(
+//   types.identifier(types.number),
+//   () => idCounter++
+// );
 
-const opList = ops.map(label => ({ value: label, label }));
+// const cellId = optionalId;
 
-const OpField = extendPosCell("OpField", {
-  // op: types.optional(OpEnum, ".") // TODO: remove hard-coded default
-  node: types.optional(Op, { op: "." }) // TODO: change name to op? uncomment above and use that instead?
-})
-  .views(self => ({
-    get text() {
-      return self.node.label;
-    },
-    get color() {
-      return self.node.color;
-    },
-    get options() {
-      return opList;
-    }
-  }))
-  .actions(self =>
-    makeKeyActions({
-      7: {
-        2() {
-          const selectedOpIndex = ops.indexOf(self.node.op);
-          let nextOpIndex = selectedOpIndex - 1;
-          if (nextOpIndex === -1) {
-            nextOpIndex = ops.length - 1;
-          }
-          self.node.op = ops[nextOpIndex];
-        }
-      },
-      8: {
-        2() {
-          const selectedOpIndex = ops.indexOf(self.node.op);
-          let nextOpIndex = selectedOpIndex + 1;
-          if (nextOpIndex === ops.length) {
-            nextOpIndex = 0;
-          }
-          self.node.op = ops[nextOpIndex];
-        }
-      }
-    })
-  );
+// const makeKeyActions = keyMap => ({
+//   onKey(coords) {
+//     if (!coords) {
+//       return false;
+//     }
 
-const OpSelect = types.model("OpField", {
-  node: types.optional(Op, { op: "." })
-});
+//     const [kx, ky] = coords;
 
-const BoolValField = extendPosCell("BoolValField", {
-  node: types.optional(Val, { val: false })
-})
-  .views(self => ({
-    get text() {
-      return self.node.label;
-    },
-    get color() {
-      return self.node.color;
-    }
-  }))
-  .actions(self =>
-    makeKeyActions({
-      7: {
-        2() {
-          self.node.val = false;
-        }
-      },
-      8: {
-        2() {
-          self.node.val = true;
-        }
-      }
-    })
-  );
+//     const xActions = keyMap[kx];
 
-const StringValField = extendPosCell("StringValField", {
-  inputMode: optionalBoolean,
-  node: types.optional(Val, { val: "" })
-})
-  .views(self => ({
-    get text() {
-      if (self.inputMode) {
-        return self.node.val;
-      }
-      ("–");
-      return self.node.label;
-    },
-    get color() {
-      return self.node.color;
-    }
-  }))
-  .actions(self => ({
-    setVal(newVal) {
-      self.node.val = newVal;
-    },
-    leaveInputMode() {
-      self.inputMode = false;
-    }
-  }))
-  .actions(self =>
-    makeKeyActions({
-      8: {
-        2() {
-          self.inputMode = true;
-        }
-      }
-    })
-  );
+//     if (!xActions) {
+//       return false;
+//     }
 
-const LinkRefField = extendPosCell("LinkRefField", {
-  repo: ContextRepo.Ref,
-  selectedlinkListIndex: types.optional(types.number, 0)
-})
-  .views(self => ({
-    get node() {
-      return { ref: self.selectedLink.linkId };
-    },
-    get selectedLink() {
-      return self.repo.linkList[self.selectedlinkListIndex];
-    },
-    get text() {
-      return self.selectedLink.label;
-    },
-    get color() {
-      return self.selectedLink.color;
-    }
-  }))
-  .actions(self =>
-    makeKeyActions({
-      7: {
-        2() {
-          let prevIndex = self.selectedlinkListIndex - 1;
-          if (prevIndex === -1) {
-            prevIndex = self.repo.linkList.length - 1;
-          }
-          self.selectedlinkListIndex = prevIndex;
-        }
-      },
-      8: {
-        2() {
-          let nextIndex = self.selectedlinkListIndex + 1;
-          if (nextIndex === self.repo.linkList.length) {
-            nextIndex = 0;
-          }
-          self.selectedlinkListIndex = nextIndex;
-        }
-      }
-    })
-  );
+//     const action = xActions[ky];
 
-const subFormList = [
-  { node: { op: "." } },
-  {}, // TODO: make more specific as I add more field types
-  { node: { val: false } },
-  { node: { val: "" } }
-];
-const subFormListLength = subFormList.length;
-const subFormTypes = [OpField, BoolValField, StringValField, LinkRefField];
+//     if (action) {
+//       action();
+//       return true;
+//     }
 
-const NodeForm = extendPosCell("NodeForm", {
-  subForm: types.maybe(types.union(OpSelect)),
-  //   types.union(snap => {
-  //     if (!snap) {
-  //       return OpField;
-  //     }
+//     return false;
+//   }
+// });
 
-  //     const { node } = snap;
+// const LeafCell = types
+//   .model("LeafCell", {
+//     user: ContextUser.Ref,
+//     cellId,
+//     node: types.union(Val, Op, InputRef, DepRef)
+//   })
+//   .views(self => ({
+//     get selected() {
+//       return self === self.user.selectedCell;
+//     }
+//   }));
 
-  //     if (!node) {
-  //       // TODO: maybe change this (and model) to be more in line with rest...
-  //       return LinkRefField;
-  //     }
+// const PosCell = types
+//   .model("PosCell", {
+//     user: ContextUser.Ref,
+//     cellId,
+//     x: types.number,
+//     y: types.number,
+//     width: types.optional(types.number, 2),
+//     height: types.optional(types.number, 1),
+//     selectable: types.optional(types.boolean, true)
+//   })
+//   .views(self => ({
+//     get selected() {
+//       return self === self.user.selectedCell;
+//     }
+//   }))
+//   .actions(self => makeKeyActions());
 
-  //     if (node.op) {
-  //       return OpSelect;
-  //       return OpField;
-  //     }
+// const extendPosCell = (name, ...args) =>
+//   types.compose(name, PosCell, types.model(...args));
 
-  //     const { val } = node;
+// const opList = ops.map(label => ({ value: label, label }));
 
-  //     if (typeof val === "boolean") {
-  //       return BoolValField;
-  //     }
+// const OpField = extendPosCell("OpField", {
+//   // op: types.optional(OpEnum, ".") // TODO: remove hard-coded default
+//   node: types.optional(Op, { op: "." }) // TODO: change name to op? uncomment above and use that instead?
+// })
+//   .views(self => ({
+//     get text() {
+//       return self.node.label;
+//     },
+//     get color() {
+//       return self.node.color;
+//     },
+//     get options() {
+//       return opList;
+//     }
+//   }))
+//   .actions(self =>
+//     makeKeyActions({
+//       7: {
+//         2() {
+//           const selectedOpIndex = ops.indexOf(self.node.op);
+//           let nextOpIndex = selectedOpIndex - 1;
+//           if (nextOpIndex === -1) {
+//             nextOpIndex = ops.length - 1;
+//           }
+//           self.node.op = ops[nextOpIndex];
+//         }
+//       },
+//       8: {
+//         2() {
+//           const selectedOpIndex = ops.indexOf(self.node.op);
+//           let nextOpIndex = selectedOpIndex + 1;
+//           if (nextOpIndex === ops.length) {
+//             nextOpIndex = 0;
+//           }
+//           self.node.op = ops[nextOpIndex];
+//         }
+//       }
+//     })
+//   );
 
-  //     if (typeof val === "string") {
-  //       return StringValField;
-  //     }
-  //   }, ...subFormTypes)
-  // ),
-  text: presetText("insert type here"),
-  color: "steelblue" // TODO: different color
-})
-  .views(self => ({
-    boxes(x = 0, y = 0) {
-      return;
-    }
-  }))
-  .actions(self => {
-    let subFormIndex = 0;
+// const OpSelect = types.model("OpField", {
+//   node: types.optional(Op, { op: "." })
+// });
 
-    const changeSubForm = shift => {
-      if (self.subForm) {
-        destroy(self.subForm);
-      }
+// const BoolValField = extendPosCell("BoolValField", {
+//   node: types.optional(Val, { val: false })
+// })
+//   .views(self => ({
+//     get text() {
+//       return self.node.label;
+//     },
+//     get color() {
+//       return self.node.color;
+//     }
+//   }))
+//   .actions(self =>
+//     makeKeyActions({
+//       7: {
+//         2() {
+//           self.node.val = false;
+//         }
+//       },
+//       8: {
+//         2() {
+//           self.node.val = true;
+//         }
+//       }
+//     })
+//   );
 
-      subFormIndex += shift;
+// const StringValField = extendPosCell("StringValField", {
+//   inputMode: optionalBoolean,
+//   node: types.optional(Val, { val: "" })
+// })
+//   .views(self => ({
+//     get text() {
+//       if (self.inputMode) {
+//         return self.node.val;
+//       }
+//       ("–");
+//       return self.node.label;
+//     },
+//     get color() {
+//       return self.node.color;
+//     }
+//   }))
+//   .actions(self => ({
+//     setVal(newVal) {
+//       self.node.val = newVal;
+//     },
+//     leaveInputMode() {
+//       self.inputMode = false;
+//     }
+//   }))
+//   .actions(self =>
+//     makeKeyActions({
+//       8: {
+//         2() {
+//           self.inputMode = true;
+//         }
+//       }
+//     })
+//   );
 
-      if (subFormIndex >= subFormListLength) {
-        subFormIndex = 0;
-      } else if (subFormIndex < 0) {
-        subFormIndex = subFormListLength - 1;
-      }
+// const LinkRefField = extendPosCell("LinkRefField", {
+//   repo: ContextRepo.Ref,
+//   selectedlinkListIndex: types.optional(types.number, 0)
+// })
+//   .views(self => ({
+//     get node() {
+//       return { ref: self.selectedLink.linkId };
+//     },
+//     get selectedLink() {
+//       return self.repo.linkList[self.selectedlinkListIndex];
+//     },
+//     get text() {
+//       return self.selectedLink.label;
+//     },
+//     get color() {
+//       return self.selectedLink.color;
+//     }
+//   }))
+//   .actions(self =>
+//     makeKeyActions({
+//       7: {
+//         2() {
+//           let prevIndex = self.selectedlinkListIndex - 1;
+//           if (prevIndex === -1) {
+//             prevIndex = self.repo.linkList.length - 1;
+//           }
+//           self.selectedlinkListIndex = prevIndex;
+//         }
+//       },
+//       8: {
+//         2() {
+//           let nextIndex = self.selectedlinkListIndex + 1;
+//           if (nextIndex === self.repo.linkList.length) {
+//             nextIndex = 0;
+//           }
+//           self.selectedlinkListIndex = nextIndex;
+//         }
+//       }
+//     })
+//   );
 
-      const newSubForm = subFormList[subFormIndex];
+// const subFormList = [
+//   { node: { op: "." } },
+//   {}, // TODO: make more specific as I add more field types
+//   { node: { val: false } },
+//   { node: { val: "" } }
+// ];
+// const subFormListLength = subFormList.length;
+// const subFormTypes = [OpField, BoolValField, StringValField, LinkRefField];
 
-      self.subForm = {
-        x: self.x,
-        y: self.y + 1,
-        ...newSubForm
-      };
-    };
+// const NodeForm = extendPosCell("NodeForm", {
+//   subForm: types.maybe(types.union(OpSelect)),
+//   //   types.union(snap => {
+//   //     if (!snap) {
+//   //       return OpField;
+//   //     }
 
-    return {
-      afterCreate() {
-        changeSubForm(0);
-      },
-      ...makeKeyActions({
-        7: {
-          2() {
-            changeSubForm(-1);
-          }
-        },
-        8: {
-          2() {
-            changeSubForm(+1);
-          }
-        }
-      })
-    };
-  });
+//   //     const { node } = snap;
+
+//   //     if (!node) {
+//   //       // TODO: maybe change this (and model) to be more in line with rest...
+//   //       return LinkRefField;
+//   //     }
+
+//   //     if (node.op) {
+//   //       return OpSelect;
+//   //       return OpField;
+//   //     }
+
+//   //     const { val } = node;
+
+//   //     if (typeof val === "boolean") {
+//   //       return BoolValField;
+//   //     }
+
+//   //     if (typeof val === "string") {
+//   //       return StringValField;
+//   //     }
+//   //   }, ...subFormTypes)
+//   // ),
+//   text: presetText("insert type here"),
+//   color: "steelblue" // TODO: different color
+// })
+//   .views(self => ({
+//     boxes(x = 0, y = 0) {
+//       return;
+//     }
+//   }))
+//   .actions(self => {
+//     let subFormIndex = 0;
+
+//     const changeSubForm = shift => {
+//       if (self.subForm) {
+//         destroy(self.subForm);
+//       }
+
+//       subFormIndex += shift;
+
+//       if (subFormIndex >= subFormListLength) {
+//         subFormIndex = 0;
+//       } else if (subFormIndex < 0) {
+//         subFormIndex = subFormListLength - 1;
+//       }
+
+//       const newSubForm = subFormList[subFormIndex];
+
+//       self.subForm = {
+//         x: self.x,
+//         y: self.y + 1,
+//         ...newSubForm
+//       };
+//     };
+
+//     return {
+//       afterCreate() {
+//         changeSubForm(0);
+//       },
+//       ...makeKeyActions({
+//         7: {
+//           2() {
+//             changeSubForm(-1);
+//           }
+//         },
+//         8: {
+//           2() {
+//             changeSubForm(+1);
+//           }
+//         }
+//       })
+//     };
+//   });

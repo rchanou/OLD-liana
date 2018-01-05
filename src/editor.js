@@ -62,25 +62,44 @@ export const Editor = types
     ...ContextUser.Mixin,
     // tree: Tree,
     // root: types.maybe(LinkCell),
-    cellList: types.optional(CellList, {}),
-    currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
+    cellList: types.optional(CellList, {})
+    // currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
     // keyMap: types.map(types.string)
   })
   .views(self => ({
-    get projectionMap() {
-      return {
-        [TREE]: self.tree,
-        [LIST]: self.list
-      };
-    },
-    get projection() {
-      return self.projectionMap[self.currentView];
+    // get projectionMap() {
+    //   return {
+    //     [TREE]: self.tree,
+    //     [LIST]: self.list
+    //   };
+    // },
+    // get projection() {
+    //   return self.projectionMap[self.currentView];
+    // },
+    get user() {
+      return self[ContextUser.Key];
     },
     get selectedCell() {
-      return self[ContextUser.Key].selectedCell;
+      return self.user.selectedCell;
+    },
+    get cursorCell() {
+      const { inputMode } = self.user;
+      const { selectedCell } = self;
+
+      const finalCell = {
+        ...selectedCell,
+        input: inputMode,
+        key: "CURSOR"
+      };
+
+      if (inputMode) {
+        finalCell.value = selectedCell.value;
+      }
+
+      return finalCell;
     },
     get cells() {
-      return [...self.cellList.cells(0, 0), self.selectedCell];
+      return [...self.cellList.cells(0, 0), self.cursorCell];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -93,15 +112,14 @@ export const Editor = types
     }
   }))
   .actions(self => ({
-    setView(view) {
-      self.currentView = view;
-    },
-    toggleForm() {
-      self.form = self.form ? null : { nodeForms };
-    },
+    // setView(view) {
+    //   self.currentView = view;
+    // },
+    // toggleForm() {
+    //   self.form = self.form ? null : { nodeForms };
+    // },
     moveUp() {
-      const { cells } = self;
-      const { selectedCell } = self[ContextUser.Key];
+      const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
         cell =>
@@ -111,12 +129,11 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        user.selectedCell = gotoCell;
       }
     },
     moveDown() {
-      const { cells } = self;
-      const { selectedCell } = self[ContextUser.Key];
+      const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
         cell =>
@@ -126,12 +143,11 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        user.selectedCell = gotoCell;
       }
     },
     moveLeft() {
-      const { cells } = self;
-      const { selectedCell } = self[ContextUser.Key];
+      const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
         cell =>
@@ -141,12 +157,11 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        user.selectedCell = gotoCell;
       }
     },
     moveRight() {
-      const { cells } = self;
-      const { selectedCell } = self[ContextUser.Key];
+      const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
         cell =>
@@ -156,17 +171,21 @@ export const Editor = types
       );
 
       if (gotoCell) {
-        self[ContextUser.Key].selectedCell = gotoCell;
+        user.selectedCell = gotoCell;
       }
     }
   }))
   .actions(self => ({
-    onInput(val) {
-      const { selectedCell } = self[ContextUser.Key];
-      if (selectedCell) {
-        selectedCell.val = val;
-      }
+    handleInput(e) {
+      self.selectedCell.value = e.target.value;
+      // console.log("dat input doe", e.target.value);
     }
+    // onInput(val) {
+    //   const { selectedCell } = self[ContextUser.Key];
+    //   if (selectedCell) {
+    //     selectedCell.val = val;
+    //   }
+    // }
   }))
   .actions(self => {
     const handleKeyPress = e => {
@@ -174,11 +193,14 @@ export const Editor = types
 
       console.log(keyCode);
 
-      const user = self[ContextUser.Key];
-      const { selectedCell } = user;
+      const { user, selectedCell } = self;
 
       if (user.inputMode) {
         if (e.keyCode == 13) {
+          selectedCell.forLink.setVal(
+            selectedCell.nodeIndex,
+            selectedCell.value
+          );
           user.toggleInputMode();
         }
         return;

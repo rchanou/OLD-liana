@@ -35,7 +35,7 @@ const lineStyle = {
 };
 
 const cursorStyle = {
-  border: "3px solid yellow",
+  border: "3px double green",
   background: "none"
 };
 
@@ -51,19 +51,19 @@ class Input extends React.Component {
   }
 }
 
-const getShades = hsl => {
-  if (typeof hsl !== "object") {
-    return { base: hsl, dark: hsl };
-  }
+// const getShades = hsl => {
+//   if (typeof hsl !== "object") {
+//     return { base: hsl, dark: hsl };
+//   }
 
-  const { h, s, l } = hsl;
-  return {
-    base: `hsl(${h},${s}%,${l}%)`,
-    dark: `hsl(${h},${s}%,${l - 11}%)`
-  };
-};
+//   const { h, s, l } = hsl;
+//   return {
+//     base: `hsl(${h},${s}%,${l}%)`,
+//     dark: `hsl(${h},${s}%,${l - 11}%)`
+//   };
+// };
 
-const ReactBox = observer(({ box }) => {
+const ReactBox = observer(({ box, onInput }) => {
   if (!box) {
     return null;
   }
@@ -78,8 +78,10 @@ const ReactBox = observer(({ box }) => {
     key,
     form,
     text,
+    value,
     category,
     onChange,
+    input,
     cursor
   } = box;
 
@@ -90,7 +92,7 @@ const ReactBox = observer(({ box }) => {
     width: (width || size) * unit /*+ 0.5 * spacer*/,
     background: fill,
     color: fill ? "#eee" : "#333",
-    ...(cursor ? cursorStyle : emptyObj)
+    ...(key === "CURSOR" ? cursorStyle : emptyObj) // TODO: remove hard-coded key check HACK
   };
   if (fill) {
     style.borderRight = "1px solid hsla(0,0%,0%,0.3)";
@@ -99,18 +101,24 @@ const ReactBox = observer(({ box }) => {
     style.fontWeight = "550";
   }
 
-  const element = onChange ? (
-    <Input
-      key={cellId || key}
-      value={text}
-      style={style}
-      onChange={e => onChange(e.target.value)}
-    />
-  ) : (
-    <div key={cellId || key} style={style}>
-      {text}
-    </div>
-  );
+  let element;
+  if (input) {
+    style.background = "#eee";
+    element = (
+      <Input
+        key={cellId || key}
+        value={text || value}
+        style={style}
+        onChange={onInput}
+      />
+    );
+  } else {
+    element = (
+      <div key={cellId || key} style={style}>
+        {text}
+      </div>
+    );
+  }
 
   const connector =
     category === Link ? (
@@ -127,11 +135,15 @@ const ReactBox = observer(({ box }) => {
   return [connector, element];
 });
 
-export const ReactTree = observer(({ cells }) => {
+export const ReactTree = observer(({ cells, onInput }) => {
   let throwawayIdCounter = 0;
 
   const displayNodes = cells.map(cell => (
-    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} />
+    <ReactBox
+      key={cell ? cell.key : throwawayIdCounter++}
+      box={cell}
+      onInput={onInput}
+    />
   ));
 
   return <div style={containerStyle}>{displayNodes}</div>;

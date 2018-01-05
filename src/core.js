@@ -385,6 +385,10 @@ export const Link = types
     },
     setVal(index, val) {
       self.nodes[index].select(val);
+    },
+    setLabel(text) {
+      // TODO: allowing setting for specific label set
+      self.labelSet = text;
     }
   }));
 

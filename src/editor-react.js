@@ -7,5 +7,9 @@ import { ReactTree } from "./tree-react";
 const containerStyle = {};
 
 export const ReactEditor = observer(({ editor }) => (
-  <ReactTree cells={editor.cells} keys={editor.keyBoxes} />
+  <ReactTree
+    cells={editor.cells}
+    keys={editor.keyBoxes}
+    onInput={editor.handleInput}
+  />
 ));
