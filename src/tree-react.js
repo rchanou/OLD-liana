@@ -15,7 +15,7 @@ const spacer = 0.1 * unit;
 const darkGray = "#888";
 
 const nodeStyle = {
-  transition: 0.3,
+  transition: "0.1s",
   position: "absolute",
   height: unit - 3 * spacer,
   display: "flex",
@@ -34,36 +34,12 @@ const lineStyle = {
   borderRight: "thin solid #333"
 };
 
-const selectableStyle = {
-  color: "#fff",
-  borderWidth: 0.5 * spacer,
-  borderStyle: "solid",
-  borderColor: "#333",
-  borderRadius: 0.5 * spacer,
-  boxShadow: "1px 1px 1px 1px hsla(0,0%,55%,0.5)"
-};
-
-const labelStyle = {
-  fontWeight: "bold",
+const cursorStyle = {
+  border: "3px solid yellow",
   background: "none"
 };
 
-const selectedStyle = { borderWidth: 3, borderColor: "yellow", zIndex: 1 };
-
 const emptyObj = {};
-
-const makeInputProps = createTransformer(box => ({
-  onKeyDown(e) {
-    // console.log("kd", e);
-    if (e.keyCode == 13) {
-      box.leaveInputMode();
-    }
-  },
-  onChange(e) {
-    // console.log("chg", e);
-    box.setVal(e.target.value);
-  }
-}));
 
 class Input extends React.Component {
   componentDidMount() {
@@ -75,6 +51,18 @@ class Input extends React.Component {
   }
 }
 
+const getShades = hsl => {
+  if (typeof hsl !== "object") {
+    return { base: hsl, dark: hsl };
+  }
+
+  const { h, s, l } = hsl;
+  return {
+    base: `hsl(${h},${s}%,${l}%)`,
+    dark: `hsl(${h},${s}%,${l - 11}%)`
+  };
+};
+
 const ReactBox = observer(({ box }) => {
   if (!box) {
     return null;
@@ -85,26 +73,31 @@ const ReactBox = observer(({ box }) => {
     y,
     width,
     size,
-    color,
+    fill,
     cellId,
     key,
     form,
     text,
     category,
-    selected,
-    selectable,
-    onChange
+    onChange,
+    cursor
   } = box;
 
   const style = {
     ...nodeStyle,
     top: y * unit,
     left: x * unit,
-    width: (width || size) * unit + 0.5 * spacer,
-    background: color,
-    ...(selectable ? selectableStyle : labelStyle),
-    ...(selected ? selectedStyle : emptyObj)
+    width: (width || size) * unit /*+ 0.5 * spacer*/,
+    background: fill,
+    color: fill ? "#eee" : "#333",
+    ...(cursor ? cursorStyle : emptyObj)
   };
+  if (fill) {
+    style.borderRight = "1px solid hsla(0,0%,0%,0.3)";
+    style.borderBottom = "1px solid hsla(0,0%,0%,0.3)";
+  } else {
+    style.fontWeight = "550";
+  }
 
   const element = onChange ? (
     <Input

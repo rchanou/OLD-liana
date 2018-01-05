@@ -16,6 +16,8 @@ import {
 } from "./core";
 import * as Color from "./color";
 
+const optionalBoolean = types.optional(types.boolean, false);
+
 let idCounter = 0;
 const optionalId = types.optional(
   types.identifier(types.number),
@@ -49,38 +51,44 @@ const makeKeyActions = keyMap => ({
   }
 });
 
-const Cell = types.model("Cell", {
-  key: types.string,
-  x: types.number,
-  y: types.number,
-  width: types.maybe(types.number),
-  height: types.maybe(types.number),
-  selected: types.maybe(types.boolean),
-  selectable: types.maybe(types.boolean),
-  text: types.maybe(types.string),
-  color: types.maybe(types.string),
-  kind: types.maybe(types.enumeration("CellKind", ["AddNode", "LinkRef"])),
-  gotoCellKey: types.maybe(types.string),
-  addButtonForLink: types.maybe(types.reference(Link)),
-  forLink: types.maybe(types.reference(Link)),
-  nodeIndex: types.maybe(types.number)
-});
+const Cell = types
+  .model("Cell", {
+    x: types.number,
+    y: types.number,
+    width: types.optional(types.number, 2),
+    height: types.optional(types.number, 1),
+    gotoCellKey: types.maybe(types.string),
+    forLink: types.maybe(types.reference(Link)),
+    nodeIndex: types.maybe(types.number)
+  })
+  .views(self => ({
+    get cursor() {
+      return true;
+    },
+    get key() {
+      return "CURSOR";
+    }
+  }));
 
 const User = types
   .model("User", {
     selectedCell: types.maybe(Cell),
-    inputMode: types.optional(types.boolean, false),
-    changeCellMode: types.optional(types.boolean, false)
+    inputMode: optionalBoolean,
+    changeCellMode: optionalBoolean,
+    changeOpMode: optionalBoolean
   })
   .actions(self => ({
     setSelectedCell(cell) {
       self.selectedCell = cell;
     },
+    toggleInputMode() {
+      self.inputMode = !self.inputMode;
+    },
     toggleChangeCellMode() {
       self.changeCellMode = !self.changeCellMode;
     },
-    toggleInputMode() {
-      self.inputMode = !self.inputMode;
+    toggleChangeOpMode() {
+      self.changeOpMode = !self.changeOpMode;
     }
   }));
 
@@ -336,8 +344,8 @@ export const CellList = types
           x: currentX,
           y: currentY,
           width: 2,
-          selected: selectedCellKey === key,
-          selectable: false,
+          // selected: selectedCellKey === key,
+          selectable: true,
           text: label
         });
 
@@ -356,13 +364,13 @@ export const CellList = types
             x: currentX,
             y: currentY,
             width: 2,
-            selected,
+            // selected,
             selectable: true,
             forLink: link,
             nodeIndex: i,
             onChange: inputting && (val => link.setVal(i, val)),
             text: inputting ? node.val : node.label,
-            color: node.color
+            fill: node.color
           };
 
           if (node.ref) {
@@ -468,7 +476,7 @@ const BoolValField = extendPosCell("BoolValField", {
   );
 
 const StringValField = extendPosCell("StringValField", {
-  inputMode: types.optional(types.boolean, false),
+  inputMode: optionalBoolean,
   node: types.optional(Val, { val: "" })
 })
   .views(self => ({

@@ -39,6 +39,23 @@ const keyLayout = {
   "191": [9, 3]
 };
 
+const opYXGrid = {
+  0: {
+    0: "@",
+    1: "[",
+    2: "{",
+    3: ".",
+    4: "g",
+    5: "+",
+    6: "-",
+    7: "*",
+    8: "/",
+    9: "%"
+  },
+  1: { 1: "f", 2: "s", 3: "?", 6: "<", 7: ">", 8: "<=", 9: ">=" },
+  2: { 6: "==", 7: "===", 8: "!=", 9: "!==" }
+};
+
 export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
@@ -59,8 +76,11 @@ export const Editor = types
     get projection() {
       return self.projectionMap[self.currentView];
     },
+    get selectedCell() {
+      return self[ContextUser.Key].selectedCell;
+    },
     get cells() {
-      return self.cellList.cells(0, 0);
+      return [...self.cellList.cells(0, 0), self.selectedCell];
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -155,13 +175,17 @@ export const Editor = types
       console.log(keyCode);
 
       const user = self[ContextUser.Key];
-      const { inputMode, selectedCell, changeCellMode } = user;
+      const { selectedCell } = user;
 
-      if (inputMode) {
+      if (user.inputMode) {
         if (e.keyCode == 13) {
           user.toggleInputMode();
         }
         return;
+      }
+
+      if (user.changeOpMode) {
+        user.toggleChangeOpMode();
       }
 
       const coords = keyLayout[keyCode];
@@ -180,7 +204,7 @@ export const Editor = types
         return;
       }
 
-      if (changeCellMode) {
+      if (user.changeCellMode) {
         if (x === 6 && y === 1) {
           forLink.setNode(nodeIndex, { val: 0 });
           return;
@@ -217,8 +241,8 @@ export const Editor = types
         }
       }
 
-      if (typeof nodeIndex === "number") {
-        if (x === 9 && y === 2) {
+      if (x === 9 && y === 2) {
+        if (typeof nodeIndex === "number") {
           const deleted = selectedCell.forLink.deleteNode(nodeIndex);
 
           if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
@@ -228,15 +252,15 @@ export const Editor = types
         }
       }
 
-      if (selectedCell.forLink) {
-        if (x === 6 && y === 1) {
+      if (x === 6 && y === 1) {
+        if (selectedCell.forLink) {
           selectedCell.forLink.addNode();
           return;
         }
       }
 
-      if (selectedCell.gotoCellKey) {
-        if (x === 7 && y === 2) {
+      if (x === 7 && y === 1) {
+        if (selectedCell.gotoCellKey) {
           const gotoCell = self.cells.find(
             cell => cell.key === selectedCell.gotoCellKey
           );

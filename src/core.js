@@ -9,11 +9,10 @@ const optionalMap = type => types.optional(types.map(type), {});
 const optionalString = types.optional(types.string, "");
 
 export const global = "g";
-
 export const access = ".";
-
 export const array = "[";
 export const object = "{";
+export const mutate = "@";
 
 export const add = "+";
 export const subtract = "-";
@@ -24,23 +23,23 @@ export const mod = "%";
 export const ifOp = "?";
 export const switchOp = "s";
 export const forOp = "f";
+
+export const lessThan = "<";
+export const greaterThan = ">";
+export const lessThanOrEqual = "<=";
+export const greaterThanOrEqual = ">=";
+
+export const equal = "==";
+export const strictEqual = "===";
+export const notEqual = "!=";
+export const notStrictEqual = "!==";
+
 export const importOp = "m";
 export const newOp = "n";
 export const typeofOp = "t";
 export const instanceOfOp = "i";
 export const classOp = "c";
 export const thisOp = "h";
-
-export const lessThan = "<";
-export const greaterThan = ">";
-export const lessThanOrEqual = "<=";
-export const greaterThanOrEqual = ">=";
-export const equal = "==";
-export const strictEqual = "===";
-export const notEqual = "!=";
-export const notStrictEqual = "!==";
-
-export const mutate = "@";
 
 const opFuncs = {
   [global](val) {
