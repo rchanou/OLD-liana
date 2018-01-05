@@ -64,18 +64,8 @@ export const Editor = types
     // root: types.maybe(LinkCell),
     cellList: types.optional(CellList, {})
     // currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
-    // keyMap: types.map(types.string)
   })
   .views(self => ({
-    // get projectionMap() {
-    //   return {
-    //     [TREE]: self.tree,
-    //     [LIST]: self.list
-    //   };
-    // },
-    // get projection() {
-    //   return self.projectionMap[self.currentView];
-    // },
     get user() {
       return self[ContextUser.Key];
     },
@@ -112,12 +102,6 @@ export const Editor = types
     }
   }))
   .actions(self => ({
-    // setView(view) {
-    //   self.currentView = view;
-    // },
-    // toggleForm() {
-    //   self.form = self.form ? null : { nodeForms };
-    // },
     moveUp() {
       const { cells, user, selectedCell } = self;
 
@@ -178,14 +162,7 @@ export const Editor = types
   .actions(self => ({
     handleInput(e) {
       self.selectedCell.value = e.target.value;
-      // console.log("dat input doe", e.target.value);
     }
-    // onInput(val) {
-    //   const { selectedCell } = self[ContextUser.Key];
-    //   if (selectedCell) {
-    //     selectedCell.val = val;
-    //   }
-    // }
   }))
   .actions(self => {
     const handleKeyPress = e => {
