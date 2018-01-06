@@ -35,7 +35,7 @@ const lineStyle = {
 };
 
 const cursorStyle = {
-  border: "3px double green",
+  border: "3px solid green",
   background: "none"
 };
 
@@ -43,7 +43,9 @@ const emptyObj = {};
 
 class Input extends React.Component {
   componentDidMount() {
-    findDOMNode(this).focus();
+    const me = findDOMNode(this);
+    me.focus();
+    me.select();
   }
 
   render() {
@@ -68,22 +70,7 @@ const ReactBox = observer(({ box, onInput }) => {
     return null;
   }
 
-  const {
-    x,
-    y,
-    width,
-    size,
-    fill,
-    cellId,
-    key,
-    form,
-    text,
-    value,
-    category,
-    onChange,
-    input,
-    cursor
-  } = box;
+  const { x, y, width, size, fill, cellId, key, form, text, value, category, onChange, input, cursor } = box;
 
   const style = {
     ...nodeStyle,
@@ -104,14 +91,7 @@ const ReactBox = observer(({ box, onInput }) => {
   let element;
   if (input) {
     style.background = "#eee";
-    element = (
-      <Input
-        key={cellId || key}
-        value={text || value}
-        style={style}
-        onChange={onInput}
-      />
-    );
+    element = <Input key={cellId || key} value={text || value} style={style} onChange={onInput} />;
   } else {
     element = (
       <div key={cellId || key} style={style}>
@@ -139,11 +119,7 @@ export const ReactTree = observer(({ cells, onInput }) => {
   let throwawayIdCounter = 0;
 
   const displayNodes = cells.map(cell => (
-    <ReactBox
-      key={cell ? cell.key : throwawayIdCounter++}
-      box={cell}
-      onInput={onInput}
-    />
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} />
   ));
 
   return <div style={containerStyle}>{displayNodes}</div>;

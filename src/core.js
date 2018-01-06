@@ -88,8 +88,11 @@ export const Val = types
     val: types.union(types.string, types.number, types.boolean, types.null)
   })
   .views(self => ({
-    with() {
+    get out() {
       return self.val;
+    },
+    with() {
+      return self.out;
     },
     get label() {
       const { val } = self;
@@ -157,11 +160,11 @@ export const Op = types
     op: OpEnum
   })
   .views(self => ({
-    get val() {
+    get out() {
       return opFuncs[self.op];
     },
     with(inputs) {
-      return self.val;
+      return self.out;
     },
     get label() {
       // TODO: look up?
@@ -193,7 +196,7 @@ export const Dependency = types
     const { system } = getEnv(self);
 
     return {
-      get val() {
+      get out() {
         if (self.resolved) {
           return system.get(self.path);
         }
@@ -201,7 +204,7 @@ export const Dependency = types
         return Dependency;
       },
       with() {
-        return self.val;
+        return self.out;
       },
       get label() {
         return self.path.replace("https://unpkg.com/", "").split("/")[0];
@@ -217,11 +220,11 @@ export const DepRef = types
     dep: types.reference(Dependency)
   })
   .views(self => ({
-    get val() {
-      return self.dep.val;
+    get out() {
+      return self.dep.out;
     },
     with() {
-      return self.val;
+      return self.out;
     },
     get label() {
       return self.dep.label;
@@ -236,12 +239,7 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [
-  stringType,
-  numType,
-  boolType,
-  anyType
-]);
+export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
 
 // is there a better way of doing this?
 class Hole {
@@ -263,7 +261,7 @@ export const Input = types
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .views(self => ({
-    get val() {
+    get out() {
       return Input;
     },
     with(inputs) {
@@ -271,7 +269,7 @@ export const Input = types
       if (inputs && inputs.has(input)) {
         const mapValue = inputs.get(input);
         if (isObservableMap(inputs)) {
-          return mapValue.val;
+          return mapValue.out;
         } else {
           return mapValue;
         }
@@ -293,7 +291,7 @@ export const InputRef = types
     input: types.reference(Input)
   })
   .views(self => ({
-    get val() {
+    get out() {
       return Input;
     },
     with(inputs) {
@@ -309,14 +307,7 @@ export const InputRef = types
 
 curry.placeholder = Input;
 
-export const Node = types.union(
-  Val,
-  Op,
-  InputRef,
-  types.late(() => LinkRef),
-  types.late(() => SubRef),
-  DepRef
-);
+export const Node = types.union(Val, Op, InputRef, types.late(() => LinkRef), types.late(() => SubRef), DepRef);
 
 export const Link = types
   .model("Link", {
@@ -344,8 +335,8 @@ export const Link = types
         return head;
       }
     },
-    get val() {
-      const nodeVals = self.nodes.map(node => node.val);
+    get out() {
+      const nodeVals = self.nodes.map(node => node.out);
       return self.derive(nodeVals);
     },
     with(inputs) {
@@ -399,9 +390,9 @@ export const LinkRef = types
     inputs: types.maybe(types.map(Node))
   })
   .views(self => ({
-    get val() {
+    get out() {
       if (!self.inputs) {
-        return self.ref.val;
+        return self.ref.out;
       }
 
       const linkVal = self.ref.with(self.inputs);
@@ -410,10 +401,7 @@ export const LinkRef = types
         const holeInputIds = Object.keys(linkVal.inputs);
 
         return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [
-            holeInputIds[i],
-            input
-          ]);
+          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
           return self.ref.with(allInputs);
@@ -423,7 +411,7 @@ export const LinkRef = types
       return linkVal;
     },
     with() {
-      return self.val;
+      return self.out;
     },
     get label() {
       return self.ref.label;
@@ -438,11 +426,11 @@ export const SubParam = types
     param: types.number
   })
   .views(self => ({
-    get val() {
+    get out() {
       return self.param;
     },
     with() {
-      return self.val;
+      return self.out;
     }
   }));
 
@@ -451,23 +439,15 @@ export const SubLink = types
     subLink: types.number
   })
   .views(self => ({
-    get val() {
+    get out() {
       return self.subLink;
     },
     with() {
-      return self.val;
+      return self.out;
     }
   }));
 
-export const SubNode = types.union(
-  Val,
-  Op,
-  InputRef,
-  LinkRef,
-  SubParam,
-  SubLink,
-  types.late(() => SubRef)
-);
+export const SubNode = types.union(Val, Op, InputRef, LinkRef, SubParam, SubLink, types.late(() => SubRef));
 
 export const Sub = types
   .model("Sub", {
@@ -475,11 +455,11 @@ export const Sub = types
     nodes: types.map(types.array(SubNode))
   })
   .views(self => ({
-    get val() {
+    get out() {
       return self;
     },
     with() {
-      return self.val;
+      return self.out;
     }
   }));
 
@@ -488,11 +468,11 @@ export const SubRef = types
     subRef: types.reference(Sub)
   })
   .views(self => ({
-    get val() {
+    get out() {
       return self.subRef;
     },
     with() {
-      return self.val;
+      return self.out;
     }
   }));
 
@@ -512,14 +492,10 @@ export const Repo = types
       return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
     },
     get inputList() {
-      return self.inputs
-        .values()
-        .map(input => ({ value: input.inputId, label: input.label }));
+      return self.inputs.values().map(input => ({ value: input.inputId, label: input.label }));
     },
     get depList() {
-      return self.dependencies
-        .values()
-        .map(dep => ({ value: dep.depId, label: dep.label }));
+      return self.dependencies.values().map(dep => ({ value: dep.depId, label: dep.label }));
     }
   }))
   .actions(self => ({

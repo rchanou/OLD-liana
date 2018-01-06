@@ -148,9 +148,7 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot
-  ? JSON.parse(storedSnapshot)
-  : defaultSnapshot;
+const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
 
 const simpleEditor = Editor.create(defaultSnapshot, {
   system: SystemJS
@@ -174,10 +172,10 @@ const params = new Map(
 );
 
 autorun(() => {
-  window.a = simpleEditor[ContextRepo.Key].links.get("13").val;
+  window.a = simpleEditor[ContextRepo.Key].links.get("13").out;
 });
 
-window.v = vId => simpleEditor[ContextRepo.Key].links.get(vId).val;
+window.v = vId => simpleEditor[ContextRepo.Key].links.get(vId).out;
 
 autorun(() => {
   0 &&
