@@ -6,7 +6,7 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
-import { ContextUser } from "../src/cell";
+import { ContextUser } from "../src/user";
 import { Editor, TREE, LIST } from "../src/editor";
 import { ReactEditor } from "../src/editor-react";
 

@@ -1,32 +1,8 @@
 import { types, getType, clone, destroy, detach } from "mobx-state-tree";
 
-import { setupContext } from "./context";
 import { Val, Op, OpEnum, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
 import * as Color from "./color";
 
-const optionalBoolean = types.optional(types.boolean, false);
-
-// placeholder prop for localizable labels
-const presetText = text => types.optional(types.string, text);
-
-const Cell = types
-  .model("Cell", {
-    // key: presetText("CURSOR"),
-    // forCellKey: types.maybe(types.string),
-    value: types.maybe(types.string),
-    x: types.number,
-    y: types.number,
-    width: types.optional(types.number, 2),
-    height: types.optional(types.number, 1),
-    gotoCellKey: types.maybe(types.string),
-    forLink: types.maybe(types.reference(Link)),
-    nodeIndex: types.maybe(types.number)
-  })
-  .actions(self => ({
-    setValue(value) {
-      self.value = value;
-    }
-  }));
 // .views(self => ({
 //   get cursor() {
 //     return true;
@@ -35,43 +11,6 @@ const Cell = types
 //     return "CURSOR";
 //   }
 // }));
-
-// const NodeRef = types.model("NodeRef", {
-//   link: types.reference(Link),
-//   index: types.maybe(types.number)
-// });
-
-const User = types
-  .model("User", {
-    selectedCell: types.maybe(Cell),
-    // settingNode: types.maybe(NodeRef),
-    inputMode: optionalBoolean,
-    changeCellMode: optionalBoolean,
-    changeOpMode: optionalBoolean
-  })
-  .actions(self => ({
-    setSelectedCell(cell) {
-      self.selectedCell = cell;
-    },
-    toggleInputMode() {
-      self.selectedCell.value = "";
-      self.inputMode = !self.inputMode;
-    },
-    // beginSettingNode(nodeRef) {
-    //   self.settingNode = nodeRef;
-    // },
-    // endSettingNode() {
-    //   self.settingNode = null;
-    // },
-    toggleChangeCellMode() {
-      self.changeCellMode = !self.changeCellMode;
-    },
-    toggleChangeOpMode() {
-      self.changeOpMode = !self.changeOpMode;
-    }
-  }));
-
-export const ContextUser = setupContext(types.optional(User, {}));
 
 export const CellList = types
   .model("CellList", {
@@ -84,9 +23,7 @@ export const CellList = types
       let currentX = x;
       let currentY = y - 1;
 
-      const { repo, user } = self;
-
-      repo.links.forEach(link => {
+      self.repo.links.forEach(link => {
         const { linkId, nodes, out, label } = link;
 
         currentX = x;
@@ -149,15 +86,15 @@ export const CellList = types
 
 export const LinkCell = types
   .model("LinkCell", {
-    user: ContextUser.Ref,
+    // user: ContextUser.Ref
     link: types.reference(Link),
     subCells: types.maybe(types.array(types.late(() => Cell))),
     opened: types.optional(types.boolean, true)
   })
   .views(self => ({
-    get selected() {
-      return self === self.user.selectedCell;
-    },
+    // get selected() {
+    //   return self === self.user.selectedCell;
+    // },
     get rootBoxes() {
       return self.display({ root: true });
     },

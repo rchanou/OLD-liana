@@ -1,7 +1,9 @@
 import { types } from "mobx-state-tree";
 
+import { setupContext } from "./context";
 import { Node, ContextRepo } from "./core";
-import { LinkCell, ContextUser, CellList } from "./cell";
+import { LinkCell, CellList } from "./cell";
+import { ContextUser } from "./user";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -106,10 +108,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
       if (gotoCell) {
@@ -120,10 +119,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
       if (gotoCell) {
@@ -134,10 +130,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
       );
 
       if (gotoCell) {
@@ -148,10 +141,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCell = cells.find(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
       );
 
       if (gotoCell) {
@@ -174,10 +164,7 @@ export const Editor = types
 
       if (user.inputMode) {
         if (e.keyCode == 13) {
-          selectedCell.forLink.setVal(
-            selectedCell.nodeIndex,
-            selectedCell.value
-          );
+          selectedCell.forLink.setVal(selectedCell.nodeIndex, selectedCell.value);
           user.toggleInputMode();
         }
         return;
@@ -260,9 +247,7 @@ export const Editor = types
 
       if (x === 7 && y === 1) {
         if (selectedCell.gotoCellKey) {
-          const gotoCell = self.cells.find(
-            cell => cell.key === selectedCell.gotoCellKey
-          );
+          const gotoCell = self.cells.find(cell => cell.key === selectedCell.gotoCellKey);
 
           if (gotoCell) {
             user.setSelectedCell(gotoCell);
