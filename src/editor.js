@@ -91,7 +91,7 @@ export const Editor = types
       return finalCell;
     },
     get cells() {
-      return [...self.cellList.cells(0, 0), self.cursorCell];
+      return self.cellList.cells(0, 0).concat(self.cursorCell);
 
       if (self.root) {
         return self.root.rootBoxes;
