@@ -21,6 +21,7 @@ export const LinkList = types
   })
   .views(self => ({
     postProcessSnapshot(snapshot) {
+      // TODO: move this logic to repo definition somehow
       const { repo, ...rest } = snapshot;
       return rest;
     },
@@ -84,11 +85,8 @@ export const LinkList = types
             case "function":
               text = "func";
               break;
-            case "object":
-              text = "{}";
-              break;
             default:
-              text = out;
+              text = JSON.stringify(out);
           }
         }
 

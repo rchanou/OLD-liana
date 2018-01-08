@@ -67,7 +67,13 @@ const opFuncs = {
   [array](...items) {
     return items;
   },
-  [object](...kvs) {},
+  [object](...kvs) {
+    const obj = {};
+    for (let i = 0; i < kvs.length; i = i + 2) {
+      obj[kvs[i]] = kvs[i + 1];
+    }
+    return obj;
+  },
   [ifOp](condition, trueVal, falseVal) {
     return condition ? trueVal : falseVal;
   },
