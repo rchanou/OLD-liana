@@ -73,6 +73,9 @@ const opFuncs = {
         return casePairs[i + 1];
       }
     }
+  },
+  [lessThan](a, b) {
+    return a < b;
   }
 };
 

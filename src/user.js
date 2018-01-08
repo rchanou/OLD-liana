@@ -15,7 +15,9 @@ const User = types
     selectedCellIndex: types.optional(types.number, 0),
     // settingNode: types.maybe(NodeRef),
     changeCellMode: optionalBoolean,
+    changeOpMode: optionalBoolean,
     addNodeMode: optionalBoolean,
+    addOpMode: optionalBoolean,
     input: types.maybe(types.string),
     changeOpMode: optionalBoolean
   })
@@ -43,12 +45,6 @@ const User = types
     },
     endSettingNode() {
       self.settingNode = null;
-    },
-    toggleChangeCellMode() {
-      self.changeCellMode = !self.changeCellMode;
-    },
-    toggleChangeOpMode() {
-      self.changeOpMode = !self.changeOpMode;
     }
   }));
 

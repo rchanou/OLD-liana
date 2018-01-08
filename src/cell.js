@@ -59,7 +59,7 @@ export const LinkList = types
 
         currentX += 2;
 
-        const valType = typeof out;
+        const outType = typeof out;
 
         cells.push({
           key: `${key}-V`,
@@ -67,7 +67,7 @@ export const LinkList = types
           y: currentY,
           width: 2,
           selectable: false,
-          text: valType === "function" ? "func" : valType === "object" ? "{}" : out
+          text: outType === "function" ? "func" : outType === "object" ? "{}" : JSON.stringify(out)
         });
       });
 

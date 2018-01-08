@@ -173,13 +173,8 @@ export const Editor = types
           selectedCell.forLink.setVal(selectedCell.nodeIndex, user.input);
           user.input = null;
           self.moveRight();
-          console.log("sharbs");
         }
         return;
-      }
-
-      if (user.changeOpMode) {
-        user.toggleChangeOpMode();
       }
 
       const coords = keyLayout[keyCode];
@@ -192,11 +187,6 @@ export const Editor = types
       const [x, y] = coords;
 
       const { forLink, nodeIndex } = selectedCell;
-
-      if (x === 6 && y === 3) {
-        user.toggleChangeCellMode();
-        return;
-      }
 
       if (user.changeCellMode) {
         if (x === 6 && y === 1) {
@@ -211,7 +201,7 @@ export const Editor = types
           forLink.setNode(nodeIndex, { val: false });
         }
         if (x === 6 && y === 2) {
-          forLink.setNode(nodeIndex, { op: "." });
+          user.changeOpMode = true;
         }
         if (x === 7 && y === 2) {
           forLink.setNode(nodeIndex, {
@@ -228,12 +218,26 @@ export const Editor = types
             dep: self.repo.depList[0]
           });
         }
-        user.toggleChangeCellMode();
+        user.changeCellMode = false;
+        return;
+      }
+
+      if (user.changeOpMode) {
+        const xs = opYXGrid[y];
+        console.log("xs", xs);
+        if (xs) {
+          const op = xs[x];
+          if (op) {
+            forLink.setNode(nodeIndex, { op });
+          }
+        }
+        user.changeOpMode = false;
         return;
       }
 
       if (user.addNodeMode) {
         let lastNodeIndex = 0;
+
         if (x === 6 && y === 1) {
           lastNodeIndex = forLink.addNode({ val: 0 });
           user.input = "0";
@@ -243,10 +247,11 @@ export const Editor = types
           user.input = "";
         }
         if (x === 8 && y === 1) {
-          forLink.addNode({ val: false });
+          lastNodeIndex = forLink.addNode({ val: false });
         }
         if (x === 6 && y === 2) {
-          forLink.addNode({ op: "." });
+          user.addOpMode = true;
+          // forLink.addNode({ op: "." });
         }
         if (x === 7 && y === 2) {
           forLink.addNode({ ref: self.repo.linkList[0] });
@@ -257,14 +262,33 @@ export const Editor = types
         if (x === 9 && y === 2) {
           forLink.addNode({ dep: self.repo.depList[0] });
         }
+
         const newSelectedCellIndex = self.linkCells.findIndex(
           cell => cell.key === `CL-${forLink.linkId}-${lastNodeIndex}`
         );
+
         if (newSelectedCellIndex !== -1) {
           self.user.selectedCellIndex = newSelectedCellIndex;
         }
-        console.log(newSelectedCellIndex, "dat new cell");
+
         user.toggleAddNodeMode();
+        return;
+      }
+
+      if (user.addOpMode) {
+        const xs = opYXGrid[y];
+        if (xs) {
+          const op = xs[x];
+          if (op) {
+            forLink.addNode({ op });
+          }
+        }
+        user.addOpMode = false;
+        return;
+      }
+
+      if (x === 6 && y === 3) {
+        user.changeCellMode = true;
         return;
       }
 
