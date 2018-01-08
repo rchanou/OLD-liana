@@ -3,13 +3,19 @@ import { observer } from "mobx-react";
 
 import { TREE, LIST } from "./editor";
 import { ReactTree } from "./tree-react";
+import { ReactKeyboard } from "./keyboard-react";
 
-const containerStyle = {};
+const containerStyle = {
+  height: 999 // TODO: test height, change to dynamic calculation
+};
 
 export const ReactEditor = observer(({ editor }) => (
-  <ReactTree
-    cells={editor.cells}
-    keys={editor.keyBoxes}
-    onInput={editor.handleInput}
-  />
+  <div style={containerStyle}>
+    <ReactTree
+      cells={editor.cells}
+      keys={editor.keyBoxes}
+      onInput={editor.handleInput}
+    />
+    <ReactKeyboard keyBoxMap={editor.keyBoxes} />
+  </div>
 ));

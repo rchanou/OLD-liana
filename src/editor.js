@@ -106,7 +106,9 @@ export const Editor = types
       return self.projection.boxes;
     },
     get keyBoxes() {
-      return [];
+      return {
+        1: { 2: "▲" }
+      };
     }
   }))
   .actions(self => ({
@@ -214,9 +216,10 @@ export const Editor = types
           user.changeOpMode = true;
         }
         if (x === 7 && y === 2) {
-          forLink.setNode(nodeIndex, {
-            ref: self.repo.linkList[0]
-          });
+          user.chooseLinkMode = true;
+          // forLink.setNode(nodeIndex, {
+          //   ref: self.repo.linkList[0]
+          // });
         }
         if (x === 8 && y === 2) {
           forLink.setNode(nodeIndex, {
