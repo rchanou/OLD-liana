@@ -42,7 +42,7 @@ const keyLayout = {
 };
 
 const opYXGrid = {
-  0: {
+  1: {
     0: "@",
     1: "[",
     2: "{",
@@ -54,8 +54,8 @@ const opYXGrid = {
     8: "/",
     9: "%"
   },
-  1: { 1: "f", 2: "s", 3: "?", 6: "<", 7: ">", 8: "<=", 9: ">=" },
-  2: { 6: "==", 7: "===", 8: "!=", 9: "!==" }
+  2: { 1: "f", 2: "s", 3: "?", 6: "<", 7: ">", 8: "<=", 9: ">=" },
+  3: { 6: "==", 7: "===", 8: "!=", 9: "!==" }
 };
 
 export const Editor = types
@@ -116,7 +116,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -127,7 +130,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -138,7 +144,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -149,7 +158,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -315,7 +327,9 @@ export const Editor = types
 
       if (x === 7 && y === 1) {
         if (selectedCell.gotoCellKey) {
-          const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+          const gotoCellIndex = self.cells.findIndex(
+            cell => cell.key === selectedCell.gotoCellKey
+          );
 
           if (gotoCellIndex !== -1) {
             user.selectedCellIndex = gotoCellIndex;

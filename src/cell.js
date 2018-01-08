@@ -1,6 +1,18 @@
 import { types, getType, clone, destroy, detach } from "mobx-state-tree";
 
-import { Val, Op, OpEnum, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
+import {
+  Val,
+  Op,
+  OpEnum,
+  ops,
+  LinkRef,
+  InputRef,
+  DepRef,
+  Link,
+  Input,
+  Dependency,
+  ContextRepo
+} from "./core";
 import * as Color from "./color";
 
 export const LinkList = types
@@ -59,7 +71,22 @@ export const LinkList = types
 
         currentX += 2;
 
-        const outType = typeof out;
+        let text;
+        if (out instanceof Error) {
+          text = out.message;
+        } else {
+          const outType = typeof out;
+          switch (outType) {
+            case "function":
+              text = "func";
+              break;
+            case "object":
+              text = "{}";
+              break;
+            default:
+              text = out;
+          }
+        }
 
         cells.push({
           key: `${key}-V`,
@@ -67,7 +94,7 @@ export const LinkList = types
           y: currentY,
           width: 2,
           selectable: false,
-          text: outType === "function" ? "func" : outType === "object" ? "{}" : JSON.stringify(out)
+          text
         });
       });
 
@@ -193,7 +220,8 @@ export const LinkCell = types
             break;
           case Val:
             const { val } = subCell;
-            const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+            const boxSize =
+              typeof val === "string" ? Math.ceil(val.length / 6) : 1;
             allBoxes.push({
               ...defaultBox,
               size: boxSize
@@ -218,7 +246,9 @@ export const LinkCell = types
       // TODO: we need some crazy logic to make this more adaptable
       // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
       const thisSize = nextIsRef
-        ? Math.max(...allBoxes.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
+        ? Math.max(...allBoxes.map(n => n.x)) -
+          x +
+          (immediateNextIsRef ? 2 : allBoxes[allBoxes.length - 1].size + 1)
         : Math.max(...allBoxes.map(n => n.x + n.size)) - x;
 
       const thisNode = {
@@ -243,7 +273,8 @@ export const LinkCell = types
       if (!self.subCells) {
         // TODO: rename all ref props to "link"?
         self.subCells = self.link.nodes.map(
-          node => (node.ref ? { opened: false, link: node.ref } : { node: clone(node) })
+          node =>
+            node.ref ? { opened: false, link: node.ref } : { node: clone(node) }
         );
       }
 

@@ -115,7 +115,8 @@ const simpleSnapshot = {
       linkId: "16",
       nodes: [{ op: "+" }, { val: "lol" }, { val: "no" }],
       labelSet: "test"
-    }
+    },
+    17: { linkId: "17", nodes: [{ op: "." }] }
   }
 };
 
@@ -136,11 +137,6 @@ const defaultSnapshot = {
   // tree: simpleTree,
   [ContextUser.Key]: {
     selectedCellIndex: 75
-    // selectedCell: {
-    //   key: "CL-16-0",
-    //   x: 2,
-    //   y: 15
-    // }
   },
   form: { editingLink: "16" },
   root: { cellId: testCellId, link: testRoot },
@@ -149,7 +145,9 @@ const defaultSnapshot = {
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot ? JSON.parse(storedSnapshot) : defaultSnapshot;
+const snapshotToLoad = storedSnapshot
+  ? JSON.parse(storedSnapshot)
+  : defaultSnapshot;
 
 const simpleEditor = Editor.create(defaultSnapshot, {
   system: SystemJS
