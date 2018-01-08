@@ -39,6 +39,8 @@ const cursorStyle = {
   background: "none"
 };
 
+const boxBorder = "1px solid hsla(0,0%,0%,0.3)";
+
 const emptyObj = {};
 
 class Input extends React.Component {
@@ -99,8 +101,8 @@ const ReactBox = observer(({ box, onInput }) => {
     ...(isCursor ? cursorStyle : emptyObj)
   };
   if (!isCursor && fill) {
-    style.borderRight = "1px solid hsla(0,0%,0%,0.3)";
-    style.borderBottom = "1px solid hsla(0,0%,0%,0.3)";
+    style.borderRight = boxBorder;
+    style.borderBottom = boxBorder;
   } else {
     style.fontWeight = "550";
     style.color = "#333";

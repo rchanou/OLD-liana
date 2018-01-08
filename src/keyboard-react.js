@@ -1,10 +1,16 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-const baseEl = {
+const border = "1px solid rgba(0,0,0,0.5)";
+
+const baseStyle = {
   position: "fixed",
   background: "hsl(60,88%,88%)",
-  border: "thin solid rgba(0,0,0,0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  borderRight: border,
+  borderBottom: border,
   width: "10vw",
   height: 33
 };
@@ -18,7 +24,7 @@ export const ReactKeyboard = observer(({ keyBoxMap }) => {
       const newEl = {
         key: x + "." + y,
         style: {
-          ...baseEl,
+          ...baseStyle,
           top: `calc(100vh - ${132 - y * 33}px)`,
           left: `${x * 10}vw`
         }
