@@ -34,15 +34,21 @@ const NodeRef = types.model("NodeRef", {
 
 const User = types
   .model("User", {
+    selectedCellIndex: types.optional(types.number, 0),
     selectedCell: types.maybe(Cell),
     // settingNode: types.maybe(NodeRef),
-    inputMode: optionalBoolean,
     changeCellMode: optionalBoolean,
+    addNodeMode: optionalBoolean,
+    inputMode: optionalBoolean,
     changeOpMode: optionalBoolean
   })
   .actions(self => ({
+    // setSelectedCellKey
     setSelectedCell(cell) {
       self.selectedCell = cell;
+    },
+    toggleAddNodeMode() {
+      self.addNodeMode = !self.addNodeMode;
     },
     toggleInputMode() {
       self.selectedCell.value = "";

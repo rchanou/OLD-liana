@@ -363,8 +363,9 @@ export const Link = types
     }
   }))
   .actions(self => ({
-    addNode() {
-      self.nodes.push({ val: "🍆" }); // TODO: extend functionality, remove test string
+    addNode(newNode = { val: "🍆" }) {
+      // TODO: extend functionality, remove test string
+      self.nodes.push(newNode);
     },
     setNode(index, newNode) {
       self.nodes[index] = newNode;

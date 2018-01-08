@@ -71,8 +71,14 @@ export const Editor = types
     get user() {
       return self[ContextUser.Key];
     },
+    get repo() {
+      return self[ContextRepo.Key];
+    },
+    get repoCells() {
+      return self.cellList.cells(0, 0);
+    },
     get selectedCell() {
-      return self.user.selectedCell;
+      return self.repoCells[self.user.selectedCellIndex];
     },
     get cursorCell() {
       const { inputMode } = self.user;
@@ -83,6 +89,7 @@ export const Editor = types
         input: inputMode,
         key: "CURSOR"
       };
+      delete finalCell.text;
 
       if (inputMode) {
         finalCell.value = selectedCell.value;
@@ -91,7 +98,7 @@ export const Editor = types
       return finalCell;
     },
     get cells() {
-      return [...self.cellList.cells(0, 0), self.cursorCell];
+      return self.repoCells.concat(self.cursorCell);
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -107,55 +114,53 @@ export const Editor = types
     moveUp() {
       const { cells, user, selectedCell } = self;
 
-      const gotoCell = cells.find(
+      const gotoCellIndex = cells.findIndex(
         cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
-      if (gotoCell) {
-        user.selectedCell = gotoCell;
+      if (gotoCellIndex !== -1) {
+        user.selectedCellIndex = gotoCellIndex;
       }
     },
     moveDown() {
       const { cells, user, selectedCell } = self;
 
-      const gotoCell = cells.find(
+      const gotoCellIndex = cells.findIndex(
         cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
-      if (gotoCell) {
-        user.selectedCell = gotoCell;
+      if (gotoCellIndex !== -1) {
+        user.selectedCellIndex = gotoCellIndex;
       }
     },
     moveLeft() {
       const { cells, user, selectedCell } = self;
 
-      const gotoCell = cells.find(
+      const gotoCellIndex = cells.findIndex(
         cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
       );
 
-      if (gotoCell) {
-        user.selectedCell = gotoCell;
+      if (gotoCellIndex !== -1) {
+        user.selectedCellIndex = gotoCellIndex;
       }
     },
     moveRight() {
       const { cells, user, selectedCell } = self;
 
-      const gotoCell = cells.find(
+      const gotoCellIndex = cells.findIndex(
         cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
       );
 
-      if (gotoCell) {
-        user.selectedCell = gotoCell;
+      if (gotoCellIndex !== -1) {
+        user.selectedCellIndex = gotoCellIndex;
       }
     }
   }))
   .actions(self => ({
     handleInput(e) {
       self.selectedCell.value = e.target.value;
-    }
-  }))
-  .actions(self => {
-    const handleKeyPress = e => {
+    },
+    handleKeyPress(e) {
       const { keyCode } = e;
 
       console.log(keyCode);
@@ -166,6 +171,7 @@ export const Editor = types
         if (e.keyCode == 13) {
           selectedCell.forLink.setVal(selectedCell.nodeIndex, selectedCell.value);
           user.toggleInputMode();
+          self.moveRight();
         }
         return;
       }
@@ -193,38 +199,61 @@ export const Editor = types
       if (user.changeCellMode) {
         if (x === 6 && y === 1) {
           forLink.setNode(nodeIndex, { val: 0 });
-          return;
+          user.toggleInputMode();
         }
         if (x === 7 && y === 1) {
           forLink.setNode(nodeIndex, { val: "" });
-          return;
+          user.toggleInputMode();
         }
         if (x === 8 && y === 1) {
           forLink.setNode(nodeIndex, { val: false });
-          return;
         }
         if (x === 6 && y === 2) {
           forLink.setNode(nodeIndex, { op: "." });
-          return;
         }
         if (x === 7 && y === 2) {
           forLink.setNode(nodeIndex, {
-            ref: self[ContextRepo.Key].linkList[0]
+            ref: self.repo.linkList[0]
           });
-          return;
         }
         if (x === 8 && y === 2) {
           forLink.setNode(nodeIndex, {
-            input: self[ContextRepo.Key].inputList[0]
+            input: self.repo.inputList[0]
           });
-          return;
         }
         if (x === 9 && y === 2) {
           forLink.setNode(nodeIndex, {
-            dep: self[ContextRepo.Key].depList[0]
+            dep: self.repo.depList[0]
           });
-          return;
         }
+        user.toggleChangeCellMode();
+        return;
+      }
+
+      if (user.addNodeMode) {
+        if (x === 6 && y === 1) {
+          forLink.addNode({ val: 0 });
+        }
+        if (x === 7 && y === 1) {
+          forLink.addNode({ val: "" });
+        }
+        if (x === 8 && y === 1) {
+          forLink.addNode({ val: false });
+        }
+        if (x === 6 && y === 2) {
+          forLink.addNode({ op: "." });
+        }
+        if (x === 7 && y === 2) {
+          forLink.addNode({ ref: self.repo.linkList[0] });
+        }
+        if (x === 8 && y === 2) {
+          forLink.addNode({ input: self.repo.inputList[0] });
+        }
+        if (x === 9 && y === 2) {
+          forLink.addNode({ dep: self.repo.depList[0] });
+        }
+        user.toggleAddNodeMode();
+        return;
       }
 
       if (x === 9 && y === 2) {
@@ -239,6 +268,9 @@ export const Editor = types
       }
 
       if (x === 6 && y === 1) {
+        user.toggleAddNodeMode();
+        return;
+
         if (selectedCell.forLink) {
           selectedCell.forLink.addNode();
           return;
@@ -247,12 +279,13 @@ export const Editor = types
 
       if (x === 7 && y === 1) {
         if (selectedCell.gotoCellKey) {
-          const gotoCell = self.cells.find(cell => cell.key === selectedCell.gotoCellKey);
+          const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
-          if (gotoCell) {
-            user.setSelectedCell(gotoCell);
-            return;
+          if (gotoCellIndex !== -1) {
+            user.selectedCellIndex = gotoCellIndex;
           }
+
+          return;
         }
       }
 
@@ -262,7 +295,7 @@ export const Editor = types
       }
 
       if (x === 5 && y === 1) {
-        self[ContextRepo.Key].addLink();
+        self.repo.addLink();
       }
 
       if (x === 2 && y === 1) {
@@ -277,16 +310,15 @@ export const Editor = types
       if (x === 3 && y === 2) {
         self.moveRight();
       }
-    };
-
-    return {
-      afterCreate() {
-        document.addEventListener("keydown", handleKeyPress);
-      },
-      beforeDestroy() {
-        document.removeEventListener("keydown", handleKeyPress);
-      }
-    };
-  });
+    }
+  }))
+  .actions(self => ({
+    afterCreate() {
+      document.addEventListener("keydown", self.handleKeyPress);
+    },
+    beforeDestroy() {
+      document.removeEventListener("keydown", self.handleKeyPress);
+    }
+  }));
 
 export default Editor;

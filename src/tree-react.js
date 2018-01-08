@@ -72,6 +72,8 @@ const ReactBox = observer(({ box, onInput }) => {
 
   const { x, y, width, size, fill, cellId, key, form, text, value, category, onChange, input, cursor } = box;
 
+  const isCursor = key === "CURSOR"; // TODO: remove hard-coded key check HACK
+
   const style = {
     ...nodeStyle,
     top: y * unit,
@@ -79,13 +81,14 @@ const ReactBox = observer(({ box, onInput }) => {
     width: (width || size) * unit /*+ 0.5 * spacer*/,
     background: fill,
     color: fill ? "#eee" : "#333",
-    ...(key === "CURSOR" ? cursorStyle : emptyObj) // TODO: remove hard-coded key check HACK
+    ...(isCursor ? cursorStyle : emptyObj)
   };
-  if (fill) {
+  if (!isCursor && fill) {
     style.borderRight = "1px solid hsla(0,0%,0%,0.3)";
     style.borderBottom = "1px solid hsla(0,0%,0%,0.3)";
   } else {
     style.fontWeight = "550";
+    style.color = "#333";
   }
 
   let element;
