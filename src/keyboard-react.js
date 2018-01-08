@@ -3,6 +3,9 @@ import { observer } from "mobx-react";
 
 const border = "1px solid rgba(0,0,0,0.5)";
 
+const wUnit = 10;
+const yUnit = 33;
+
 const baseStyle = {
   position: "fixed",
   background: "hsl(60,88%,88%)",
@@ -11,9 +14,11 @@ const baseStyle = {
   alignItems: "center",
   borderRight: border,
   borderBottom: border,
-  width: "10vw",
-  height: 33
+  width: `${wUnit}vw`,
+  height: yUnit
 };
+
+const totalHeight = yUnit * 4;
 
 export const ReactKeyboard = observer(({ keyBoxMap }) => {
   const els = [];
@@ -25,8 +30,8 @@ export const ReactKeyboard = observer(({ keyBoxMap }) => {
         key: x + "." + y,
         style: {
           ...baseStyle,
-          top: `calc(100vh - ${132 - y * 33}px)`,
-          left: `${x * 10}vw`
+          top: `calc(100vh - ${totalHeight - y * yUnit}px)`,
+          left: `${x * wUnit}vw`
         }
       };
 
