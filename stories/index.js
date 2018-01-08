@@ -135,11 +135,12 @@ const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
   // tree: simpleTree,
   [ContextUser.Key]: {
-    selectedCell: {
-      key: "CL-16-0",
-      x: 2,
-      y: 15
-    }
+    selectedCellIndex: 75
+    // selectedCell: {
+    //   key: "CL-16-0",
+    //   x: 2,
+    //   y: 15
+    // }
   },
   form: { editingLink: "16" },
   root: { cellId: testCellId, link: testRoot },

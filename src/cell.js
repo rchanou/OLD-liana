@@ -12,8 +12,8 @@ import * as Color from "./color";
 //   }
 // }));
 
-export const CellList = types
-  .model("CellList", {
+export const LinkList = types
+  .model("LinkList", {
     repo: ContextRepo.Ref
   })
   .views(self => ({

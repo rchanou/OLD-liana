@@ -8,24 +8,24 @@ const optionalBoolean = types.optional(types.boolean, false);
 // placeholder prop for localizable labels
 // const presetText = text => types.optional(types.string, text);
 
-const Cell = types
-  .model("Cell", {
-    // key: presetText("CURSOR"),
-    // forCellKey: types.maybe(types.string),
-    value: types.maybe(types.string),
-    x: types.number,
-    y: types.number,
-    width: types.optional(types.number, 2),
-    height: types.optional(types.number, 1),
-    gotoCellKey: types.maybe(types.string),
-    forLink: types.maybe(types.reference(Link)),
-    nodeIndex: types.maybe(types.number)
-  })
-  .actions(self => ({
-    setValue(value) {
-      self.value = value;
-    }
-  }));
+// const Cell = types
+//   .model("Cell", {
+//     // key: presetText("CURSOR"),
+//     // forCellKey: types.maybe(types.string),
+//     value: types.maybe(types.string),
+//     x: types.number,
+//     y: types.number,
+//     width: types.optional(types.number, 2),
+//     height: types.optional(types.number, 1),
+//     gotoCellKey: types.maybe(types.string),
+//     forLink: types.maybe(types.reference(Link)),
+//     nodeIndex: types.maybe(types.number)
+//   })
+//   .actions(self => ({
+//     setValue(value) {
+//       self.value = value;
+//     }
+//   }));
 
 const NodeRef = types.model("NodeRef", {
   link: types.reference(Link),
@@ -35,25 +35,30 @@ const NodeRef = types.model("NodeRef", {
 const User = types
   .model("User", {
     selectedCellIndex: types.optional(types.number, 0),
-    selectedCell: types.maybe(Cell),
+    // selectedCell: types.maybe(Cell),
     // settingNode: types.maybe(NodeRef),
     changeCellMode: optionalBoolean,
     addNodeMode: optionalBoolean,
-    inputMode: optionalBoolean,
+    input: types.maybe(types.string),
     changeOpMode: optionalBoolean
   })
+  .views(self => ({
+    get inputMode() {
+      return self.input !== null;
+    }
+  }))
   .actions(self => ({
     // setSelectedCellKey
-    setSelectedCell(cell) {
-      self.selectedCell = cell;
-    },
+    // setSelectedCell(cell) {
+    //   self.selectedCell = cell;
+    // },
     toggleAddNodeMode() {
       self.addNodeMode = !self.addNodeMode;
     },
-    toggleInputMode() {
-      self.selectedCell.value = "";
-      self.inputMode = !self.inputMode;
-    },
+    // toggleInputMode() {
+    //   self.selectedCell.value = "";
+    //   self.inputMode = !self.inputMode;
+    // },
     beginSettingNode(nodeRef) {
       self.settingNode = nodeRef;
     },

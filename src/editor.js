@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 
 import { setupContext } from "./context";
 import { Node, ContextRepo } from "./core";
-import { LinkCell, CellList } from "./cell";
+import { LinkCell, LinkList } from "./cell";
 import { ContextUser } from "./user";
 
 export const TREE = "TREE";
@@ -64,7 +64,7 @@ export const Editor = types
     ...ContextUser.Mixin,
     // tree: Tree,
     // root: types.maybe(LinkCell),
-    cellList: types.optional(CellList, {})
+    cellList: types.optional(LinkList, {})
     // currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
   })
   .views(self => ({
@@ -74,14 +74,15 @@ export const Editor = types
     get repo() {
       return self[ContextRepo.Key];
     },
-    get repoCells() {
+    get linkCells() {
       return self.cellList.cells(0, 0);
     },
     get selectedCell() {
-      return self.repoCells[self.user.selectedCellIndex];
+      return self.linkCells[self.user.selectedCellIndex];
     },
     get cursorCell() {
-      const { inputMode } = self.user;
+      const { user } = self;
+      const { inputMode } = user;
       const { selectedCell } = self;
 
       const finalCell = {
@@ -92,13 +93,13 @@ export const Editor = types
       delete finalCell.text;
 
       if (inputMode) {
-        finalCell.value = selectedCell.value;
+        finalCell.value = user.input;
       }
 
       return finalCell;
     },
     get cells() {
-      return self.repoCells.concat(self.cursorCell);
+      return self.linkCells.concat(self.cursorCell);
 
       if (self.root) {
         return self.root.rootBoxes;
@@ -158,7 +159,7 @@ export const Editor = types
   }))
   .actions(self => ({
     handleInput(e) {
-      self.selectedCell.value = e.target.value;
+      self.user.input = e.target.value;
     },
     handleKeyPress(e) {
       const { keyCode } = e;
@@ -169,9 +170,10 @@ export const Editor = types
 
       if (user.inputMode) {
         if (e.keyCode == 13) {
-          selectedCell.forLink.setVal(selectedCell.nodeIndex, selectedCell.value);
-          user.toggleInputMode();
+          selectedCell.forLink.setVal(selectedCell.nodeIndex, user.input);
+          user.input = null;
           self.moveRight();
+          console.log("sharbs");
         }
         return;
       }
@@ -199,11 +201,11 @@ export const Editor = types
       if (user.changeCellMode) {
         if (x === 6 && y === 1) {
           forLink.setNode(nodeIndex, { val: 0 });
-          user.toggleInputMode();
+          user.input = "0";
         }
         if (x === 7 && y === 1) {
           forLink.setNode(nodeIndex, { val: "" });
-          user.toggleInputMode();
+          user.input = "";
         }
         if (x === 8 && y === 1) {
           forLink.setNode(nodeIndex, { val: false });
@@ -231,11 +233,14 @@ export const Editor = types
       }
 
       if (user.addNodeMode) {
+        let lastNodeIndex = 0;
         if (x === 6 && y === 1) {
-          forLink.addNode({ val: 0 });
+          lastNodeIndex = forLink.addNode({ val: 0 });
+          user.input = "0";
         }
         if (x === 7 && y === 1) {
-          forLink.addNode({ val: "" });
+          lastNodeIndex = forLink.addNode({ val: "" });
+          user.input = "";
         }
         if (x === 8 && y === 1) {
           forLink.addNode({ val: false });
@@ -252,6 +257,13 @@ export const Editor = types
         if (x === 9 && y === 2) {
           forLink.addNode({ dep: self.repo.depList[0] });
         }
+        const newSelectedCellIndex = self.linkCells.findIndex(
+          cell => cell.key === `CL-${forLink.linkId}-${lastNodeIndex}`
+        );
+        if (newSelectedCellIndex !== -1) {
+          self.user.selectedCellIndex = newSelectedCellIndex;
+        }
+        console.log(newSelectedCellIndex, "dat new cell");
         user.toggleAddNodeMode();
         return;
       }
@@ -290,7 +302,11 @@ export const Editor = types
       }
 
       if (x === 8 && y === 2) {
-        user.toggleInputMode();
+        if (user.input === null) {
+          user.input = "";
+        } else {
+          user.input = null;
+        }
         return;
       }
 
