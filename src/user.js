@@ -19,7 +19,7 @@ const User = types
     addNodeMode: optionalBoolean,
     addOpMode: optionalBoolean,
     input: types.maybe(types.string),
-    changeOpMode: optionalBoolean
+    chooseLinkMode: optionalBoolean
   })
   .views(self => ({
     get inputMode() {

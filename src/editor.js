@@ -1,8 +1,8 @@
 import { types } from "mobx-state-tree";
 
 import { ContextRepo } from "./core";
-import { LinkCell, LinkList } from "./cell";
 import { ContextUser } from "./user";
+import { makeRepoCells } from "./repo-list";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
@@ -60,10 +60,9 @@ const opYXGrid = {
 export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
-    ...ContextUser.Mixin,
+    ...ContextUser.Mixin
     // tree: Tree,
     // root: types.maybe(LinkCell),
-    cellList: types.optional(LinkList, {})
     // currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
   })
   .views(self => ({
@@ -74,7 +73,7 @@ export const Editor = types
       return self[ContextRepo.Key];
     },
     get linkCells() {
-      return self.cellList.cells(0, 0);
+      return makeRepoCells(self.repo, 0, 0);
     },
     get selectedCell() {
       return self.linkCells[self.user.selectedCellIndex];
