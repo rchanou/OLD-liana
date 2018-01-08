@@ -138,7 +138,6 @@ const defaultSnapshot = {
   [ContextUser.Key]: {
     selectedCellIndex: 75
   },
-  form: { editingLink: "16" },
   root: { cellId: testCellId, link: testRoot },
   currentView: TREE
 };

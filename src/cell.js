@@ -20,6 +20,10 @@ export const LinkList = types
     repo: ContextRepo.Ref
   })
   .views(self => ({
+    postProcessSnapshot(snapshot) {
+      const { repo, ...rest } = snapshot;
+      return rest;
+    },
     cells(x = 0, y = 0) {
       const cells = [];
 
