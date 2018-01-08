@@ -3,15 +3,6 @@ import { types, getType, clone, destroy, detach } from "mobx-state-tree";
 import { Val, Op, OpEnum, ops, LinkRef, InputRef, DepRef, Link, Input, Dependency, ContextRepo } from "./core";
 import * as Color from "./color";
 
-// .views(self => ({
-//   get cursor() {
-//     return true;
-//   },
-//   get key() {
-//     return "CURSOR";
-//   }
-// }));
-
 export const LinkList = types
   .model("LinkList", {
     repo: ContextRepo.Ref
@@ -76,7 +67,7 @@ export const LinkList = types
           y: currentY,
           width: 2,
           selectable: false,
-          text: valType === "function" ? "func" : valType === "object" ? "obj" : out
+          text: valType === "function" ? "func" : valType === "object" ? "{}" : out
         });
       });
 
