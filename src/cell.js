@@ -1,18 +1,6 @@
-import { types, getType, clone, destroy, detach } from "mobx-state-tree";
+import { types, getType } from "mobx-state-tree";
 
-import {
-  Val,
-  Op,
-  OpEnum,
-  ops,
-  LinkRef,
-  InputRef,
-  DepRef,
-  Link,
-  Input,
-  Dependency,
-  ContextRepo
-} from "./core";
+import { Link, ContextRepo } from "./core";
 import * as Color from "./color";
 
 export const LinkList = types

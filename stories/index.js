@@ -116,7 +116,11 @@ const simpleSnapshot = {
       nodes: [{ op: "+" }, { val: "lol" }, { val: "no" }],
       labelSet: "test"
     },
-    17: { linkId: "17", nodes: [{ op: "." }] }
+    17: { linkId: "17", nodes: [{ op: "." }] },
+    18: {
+      linkId: "18",
+      nodes: [{ op: "{" }, { val: "a" }, { val: 1 }, { val: "c" }, { val: 2 }]
+    }
   }
 };
 

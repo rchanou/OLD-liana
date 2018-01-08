@@ -1,7 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { setupContext } from "./context";
-import { Node, ContextRepo } from "./core";
+import { ContextRepo } from "./core";
 import { LinkCell, LinkList } from "./cell";
 import { ContextUser } from "./user";
 
