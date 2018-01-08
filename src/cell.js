@@ -1,6 +1,6 @@
 import { types, getType } from "mobx-state-tree";
 
-import { Link, ContextRepo } from "./core";
+import { ContextRepo, Link, Dependency } from "./core";
 import * as Color from "./color";
 
 export const LinkList = types
@@ -67,15 +67,12 @@ export const LinkList = types
         let text;
         if (out instanceof Error) {
           text = out.message;
+        } else if (out === Dependency) {
+          text = "...";
+        } else if (typeof out === "function") {
+          text = "func";
         } else {
-          const outType = typeof out;
-          switch (outType) {
-            case "function":
-              text = "func";
-              break;
-            default:
-              text = JSON.stringify(out);
-          }
+          text = JSON.stringify(out);
         }
 
         cells.push({

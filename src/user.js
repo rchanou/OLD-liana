@@ -27,9 +27,6 @@ const User = types
     }
   }))
   .actions(self => ({
-    toggleAddNodeMode() {
-      self.addNodeMode = !self.addNodeMode;
-    },
     beginSettingNode(nodeRef) {
       self.settingNode = nodeRef;
     },

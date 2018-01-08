@@ -282,7 +282,7 @@ export const Editor = types
           self.user.selectedCellIndex = newSelectedCellIndex;
         }
 
-        user.toggleAddNodeMode();
+        user.addNodeMode = false;
         return;
       }
 
@@ -315,13 +315,8 @@ export const Editor = types
       }
 
       if (x === 6 && y === 1) {
-        user.toggleAddNodeMode();
+        user.addNodeMode = true;
         return;
-
-        if (selectedCell.forLink) {
-          selectedCell.forLink.addNode();
-          return;
-        }
       }
 
       if (x === 7 && y === 1) {
