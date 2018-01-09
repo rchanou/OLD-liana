@@ -27,7 +27,7 @@ const User = types
     addNodeMode: optionalBoolean,
     addOpMode: optionalBoolean,
     input: types.maybe(types.string),
-    chooseLinkMode: optionalBoolean
+    choosingLink: types.maybe(types.reference(Link))
   })
   .views(self => ({
     get inputMode() {
@@ -65,6 +65,10 @@ const User = types
     },
     endSettingNode() {
       self.settingNode = null;
+    },
+    setChoosingLink(link) {
+      self.selectedCellIndex = 0;
+      self.choosingLink = link;
     }
   }));
 

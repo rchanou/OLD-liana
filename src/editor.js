@@ -1,10 +1,9 @@
 import { types } from "mobx-state-tree";
-import deepAssign from "deep-assign";
 
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
-import { makeRepoCells } from "./repo-list";
-
+import { makeRepoCells } from "./make-repo-list";
+import { makeSearchCells } from "./make-search";
 export const TREE = "TREE";
 export const LIST = "LIST";
 
@@ -60,16 +59,23 @@ export const Editor = types
     get selectedCoords() {
       return self.user.heldKeyCoords;
     },
-    get linkCells() {
-      return makeRepoCells(self.repo, 0, 0);
+    get repoCells() {
+      return makeRepoCells(self.repo);
+    },
+    get searchCells() {
+      return makeSearchCells(self.repo.links, "linkId");
     },
     get selectedCell() {
-      return self.linkCells[self.user.selectedCellIndex];
+      if (self.user.choosingLink) {
+        return self.searchCells[self.user.selectedCellIndex];
+      }
+
+      return self.repoCells[self.user.selectedCellIndex];
     },
     get cursorCell() {
+      const { selectedCell } = self;
       const { user } = self;
       const { inputMode } = user;
-      const { selectedCell } = self;
 
       const finalCell = {
         ...selectedCell,
@@ -85,13 +91,17 @@ export const Editor = types
       return finalCell;
     },
     get cells() {
-      return self.linkCells.concat(self.cursorCell);
-
-      if (self.root) {
-        return self.root.rootBoxes;
+      if (self.user.choosingLink) {
+        return self.searchCells.concat(self.cursorCell);
       }
-      // TODO: switch on type here
-      return self.projection.boxes;
+
+      return self.repoCells.concat(self.cursorCell);
+
+      // if (self.root) {
+      //   return self.root.rootBoxes;
+      // }
+      // // TODO: switch on type here
+      // return self.projection.boxes;
     }
   }))
   .actions(self => ({
@@ -167,12 +177,33 @@ export const Editor = types
         setInput,
         toggleChangeCellMode,
         toggleChangeOpMode,
-        toggleAddNodeMode
+        toggleAddNodeMode,
+        toggleChooseLinkMode
       } = user;
 
       if (user.changeCellMode) {
-        return {
-          1: {
+        const keyMap = {
+          2: {
+            6: {
+              label: "Op",
+              action() {
+                toggleChangeCellMode();
+                toggleChangeOpMode();
+              }
+            },
+            7: {
+              label: "Link",
+              action() {
+                toggleChangeCellMode();
+                user.setChoosingLink(forLink);
+              }
+            }
+          },
+          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
+        };
+
+        if (nodeIndex) {
+          keyMap[1] = {
             6: {
               label: "Num",
               action() {
@@ -196,18 +227,10 @@ export const Editor = types
                 toggleChangeCellMode();
               }
             }
-          },
-          2: {
-            6: {
-              label: "Op",
-              action() {
-                toggleChangeCellMode();
-                toggleChangeOpMode();
-              }
-            }
-          },
-          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
-        };
+          };
+        }
+
+        return keyMap;
       }
 
       if (user.changeOpMode) {
@@ -253,13 +276,13 @@ export const Editor = types
 
       if (user.addNodeMode) {
         const selectNewCell = () => {
-          const newSelectedCellIndex = self.linkCells.findIndex(
+          const newSelectedCellIndex = self.repoCells.findIndex(
             cell =>
               cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
-            self.user.selectedCellIndex = newSelectedCellIndex;
+            user.selectedCellIndex = newSelectedCellIndex;
           }
           toggleAddNodeMode();
         };
@@ -316,22 +339,6 @@ export const Editor = types
           1: { label: "◀", action: self.moveLeft },
           2: { label: "▼", action: self.moveDown },
           3: { label: "▶", action: self.moveRight },
-          7: {
-            label: "Go To Def",
-            action() {
-              if (selectedCell.gotoCellKey) {
-                const gotoCellIndex = self.cells.findIndex(
-                  cell => cell.key === selectedCell.gotoCellKey
-                );
-
-                if (gotoCellIndex !== -1) {
-                  user.selectCellIndex(gotoCellIndex);
-                }
-
-                return;
-              }
-            }
-          },
           9: {
             label: "Delete",
             action() {
@@ -346,6 +353,23 @@ export const Editor = types
         },
         3: { 6: { label: "Change", action: toggleChangeCellMode } }
       };
+
+      if (selectedCell.gotoCellKey) {
+        keyMap[2][7] = {
+          label: "Go To Def",
+          action() {
+            const gotoCellIndex = self.cells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
+
+            if (gotoCellIndex !== -1) {
+              user.selectCellIndex(gotoCellIndex);
+            }
+
+            return;
+          }
+        };
+      }
 
       return keyMap;
     }

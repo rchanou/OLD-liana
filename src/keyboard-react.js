@@ -38,13 +38,12 @@ export const ReactKeyboard = observer(({ editor }) => {
         }
       };
 
-      if (selectedCoords && selectedCoords.x == x && selectedCoords.y == y) {
-        newEl.key = "SELECTED"; // HACK: borders get weird without forcing re-mount of selected/deselected box via key change
-        newEl.style.background = "hsl(60,77%,66%)";
-      }
-
       if (x === 4 || x === 5) {
         newEl.style.background = "hsl(60,88%,88%)";
+      }
+
+      if (selectedCoords && selectedCoords.x == x && selectedCoords.y == y) {
+        newEl.style.background = "hsl(60,77%,66%)";
       }
 
       if (keySetAtY) {
