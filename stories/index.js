@@ -152,9 +152,7 @@ const snapshotToLoad = storedSnapshot
   ? JSON.parse(storedSnapshot)
   : defaultSnapshot;
 
-const simpleEditor = Editor.create(defaultSnapshot, {
-  system: SystemJS
-});
+const simpleEditor = Editor.create(defaultSnapshot, { system: SystemJS });
 
 window.s = simpleEditor;
 

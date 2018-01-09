@@ -1,4 +1,5 @@
 import { types } from "mobx-state-tree";
+import deepAssign from "deep-assign";
 
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
@@ -104,11 +105,6 @@ export const Editor = types
       }
       // TODO: switch on type here
       return self.projection.boxes;
-    },
-    get keyBoxes() {
-      return {
-        1: { 2: "▲" }
-      };
     }
   }))
   .actions(self => ({
@@ -169,6 +165,62 @@ export const Editor = types
       }
     }
   }))
+  .views(self => ({
+    get keyMap() {
+      if (self.inputMode) {
+        return {
+          2: { 4: { label: "Input" }, 5: { label: "Mode" } }
+        };
+      }
+
+      const { selectedCell, user } = self;
+      const { forLink, nodeIndex } = selectedCell;
+      const { setInput, toggleChangeCellMode } = user;
+
+      const keyMap = {
+        1: { 2: { label: "▲", action: self.moveUp } },
+        2: {
+          1: { label: "◀", action: self.moveLeft },
+          2: { label: "▼", action: self.moveDown },
+          3: { label: "▶", action: self.moveRight }
+        },
+        3: { 6: { label: "Change", action: toggleChangeCellMode } }
+      };
+
+      // TODO: use named actions or find some other way to avoid having to unprotect?
+      if (user.changeCellMode) {
+        deepAssign(keyMap, {
+          1: {
+            6: {
+              label: "#",
+              action() {
+                forLink.setNode(nodeIndex, { val: 0 });
+                toggleChangeCellMode();
+                setInput("0");
+              }
+            },
+            7: {
+              label: "Text",
+              action() {
+                forLink.setNode(nodeIndex, { val: "" });
+                toggleChangeCellMode();
+                setInput("");
+              }
+            },
+            8: {
+              label: "Bool",
+              action() {
+                forLink.setNode(nodeIndex, { val: false });
+                toggleChangeCellMode();
+              }
+            }
+          }
+        });
+      }
+
+      return keyMap;
+    }
+  }))
   .actions(self => ({
     handleInput(e) {
       self.user.input = e.target.value;
@@ -197,6 +249,15 @@ export const Editor = types
       e.preventDefault();
 
       const [x, y] = coords;
+
+      const YKeyMap = self.keyMap[y];
+      if (YKeyMap) {
+        const thisKey = YKeyMap[x];
+        if (thisKey && thisKey.action) {
+          thisKey.action();
+          return;
+        }
+      }
 
       const { forLink, nodeIndex } = selectedCell;
 
@@ -346,19 +407,6 @@ export const Editor = types
 
       if (x === 5 && y === 1) {
         self.repo.addLink();
-      }
-
-      if (x === 2 && y === 1) {
-        self.moveUp();
-      }
-      if (x === 2 && y === 2) {
-        self.moveDown();
-      }
-      if (x === 1 && y === 2) {
-        self.moveLeft();
-      }
-      if (x === 3 && y === 2) {
-        self.moveRight();
       }
     }
   }))

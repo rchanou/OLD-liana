@@ -8,7 +8,7 @@ const yUnit = 33;
 
 const baseStyle = {
   position: "fixed",
-  background: "hsl(60,88%,88%)",
+  background: "hsl(60,88%,77%)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -34,11 +34,14 @@ export const ReactKeyboard = observer(({ keyBoxMap }) => {
           left: `${x * wUnit}vw`
         }
       };
+      if (x === 4 || x === 5) {
+        newEl.style.background = "hsl(60,88%,88%)";
+      }
 
       if (keySetAtY) {
         const thisKey = keySetAtY[x];
-        if (thisKey) {
-          newEl.children = thisKey;
+        if (thisKey && thisKey.label) {
+          newEl.children = thisKey.label;
         }
       }
 

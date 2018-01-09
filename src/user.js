@@ -27,6 +27,12 @@ const User = types
     }
   }))
   .actions(self => ({
+    setInput(value) {
+      self.input = value;
+    },
+    toggleChangeCellMode() {
+      self.changeCellMode = !self.changeCellMode;
+    },
     beginSettingNode(nodeRef) {
       self.settingNode = nodeRef;
     },
