@@ -82,7 +82,6 @@ const ReactBox = observer(({ box, onInput }) => {
     key,
     form,
     text,
-    value,
     category,
     onChange,
     input,
@@ -109,12 +108,12 @@ const ReactBox = observer(({ box, onInput }) => {
   }
 
   let element;
-  if (input) {
+  if (input != null) {
     style.background = "#eee";
     element = (
       <Input
         key={cellId || key}
-        value={text || value}
+        value={input}
         style={style}
         onChange={onInput}
       />

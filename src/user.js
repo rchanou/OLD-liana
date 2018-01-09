@@ -17,6 +17,13 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
+const LinkChooser = types.model("LinkChooser", {
+  forLink: types.reference(Link),
+  selectedCellIndex: types.optional(types.number, 0),
+  input: types.optional(types.string, ""),
+  inputMode: optionalBoolean
+});
+
 const User = types
   .model("User", {
     selectedCellIndex: types.optional(types.number, 0),
@@ -27,11 +34,15 @@ const User = types
     addNodeMode: optionalBoolean,
     addOpMode: optionalBoolean,
     input: types.maybe(types.string),
-    choosingLink: types.maybe(types.reference(Link))
+    // choosingLink: types.maybe(types.reference(Link))
+    linkChooser: types.maybe(LinkChooser)
   })
   .views(self => ({
     get inputMode() {
       return self.input !== null;
+    },
+    get choosingLink() {
+      return self.linkChooser;
     }
   }))
   .actions(self => ({
@@ -66,9 +77,8 @@ const User = types
     endSettingNode() {
       self.settingNode = null;
     },
-    setChoosingLink(link) {
-      self.selectedCellIndex = 0;
-      self.choosingLink = link;
+    setChoosingLink(forLink) {
+      self.linkChooser = { forLink };
     }
   }));
 

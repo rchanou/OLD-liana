@@ -63,35 +63,34 @@ export const Editor = types
       return makeRepoCells(self.repo);
     },
     get searchCells() {
-      return makeSearchCells(self.repo.links, "linkId");
+      return makeSearchCells(self.repo.links, self.user.input);
     },
     get selectedCell() {
-      if (self.user.choosingLink) {
-        return self.searchCells[self.user.selectedCellIndex];
+      if (self.user.linkChooser) {
+        return self.searchCells[self.user.linkChooser.selectedCellIndex];
       }
 
       return self.repoCells[self.user.selectedCellIndex];
     },
     get cursorCell() {
-      const { selectedCell } = self;
-      const { user } = self;
-      const { inputMode } = user;
+      const { selectedCell, user } = self;
 
+      const { x, y, width, forLink, nodeIndex, gotoCellKey } = selectedCell;
       const finalCell = {
-        ...selectedCell,
-        input: inputMode,
+        x,
+        y,
+        width,
+        forLink,
+        nodeIndex,
+        gotoCellKey,
+        input: user.input,
         key: "CURSOR"
       };
-      delete finalCell.text;
-
-      if (inputMode) {
-        finalCell.value = user.input;
-      }
 
       return finalCell;
     },
     get cells() {
-      if (self.user.choosingLink) {
+      if (self.user.linkChooser) {
         return self.searchCells.concat(self.cursorCell);
       }
 
@@ -177,8 +176,7 @@ export const Editor = types
         setInput,
         toggleChangeCellMode,
         toggleChangeOpMode,
-        toggleAddNodeMode,
-        toggleChooseLinkMode
+        toggleAddNodeMode
       } = user;
 
       if (user.changeCellMode) {
@@ -326,6 +324,27 @@ export const Editor = types
         };
       }
 
+      if (user.linkChooser) {
+        return {
+          1: {
+            2: { label: "▲", action: self.moveUp }
+          },
+          2: {
+            1: { label: "◀", action: self.moveLeft },
+            2: { label: "▼", action: self.moveDown },
+            3: { label: "▶", action: self.moveRight }
+          },
+          3: {
+            6: {
+              label: "Cancel",
+              action() {
+                user.setChoosingLink(null);
+              }
+            }
+          }
+        };
+      }
+
       const keyMap = {
         1: {
           2: { label: "▲", action: self.moveUp },
@@ -376,7 +395,15 @@ export const Editor = types
   }))
   .actions(self => ({
     handleInput(e) {
-      self.user.input = e.target.value;
+      const { value } = e.target;
+      const { user } = self;
+
+      if (user.linkChooser) {
+        user.linkChooser.input = value;
+        return;
+      }
+
+      user.input = value;
     },
     handleKeyPress(e) {
       const { keyCode } = e;

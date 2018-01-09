@@ -1,9 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { TREE, LIST } from "./editor";
-import { ReactTree } from "./box-react";
-import { ReactKeyboard } from "./keyboard-react";
+import { ReactTree } from "./react-box";
+import { ReactKeyboard } from "./react-keyboard";
 
 const containerStyle = {
   height: 999 // TODO: test height, change to dynamic calculation

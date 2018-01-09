@@ -7,8 +7,8 @@ import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
 import { ContextUser } from "../src/user";
-import { Editor, TREE, LIST } from "../src/editor";
-import { ReactEditor } from "../src/editor-react";
+import { Editor /*TREE, LIST*/ } from "../src/editor";
+import { ReactEditor } from "../src/react-editor";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -142,8 +142,8 @@ const defaultSnapshot = {
   [ContextUser.Key]: {
     selectedCellIndex: 75
   },
-  root: { cellId: testCellId, link: testRoot },
-  currentView: TREE
+  root: { cellId: testCellId, link: testRoot }
+  // currentView: TREE
 };
 
 const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);

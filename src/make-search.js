@@ -10,7 +10,8 @@ export const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
 
     if (rec.label.includes(filter)) {
       cells.push({
-        key: rec.linkId,
+        // HACK: key-finding logic seems hella dirty but simplest way for now
+        key: rec.linkId || rec.inputId || rec.depId,
         x,
         y: y++,
         width: 5,
