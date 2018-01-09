@@ -253,7 +253,7 @@ export const Editor = types
               action() {
                 const lastNodeIndex = forLink.addNode({ val: 0 });
                 selectNewCell(lastNodeIndex);
-                user.setInput("0");
+                setInput("0");
               }
             },
             7: {
@@ -261,7 +261,7 @@ export const Editor = types
               action() {
                 const lastNodeIndex = forLink.addNode({ val: "" });
                 selectNewCell(lastNodeIndex);
-                user.setInput("");
+                setInput("");
               }
             },
             8: {
@@ -278,7 +278,7 @@ export const Editor = types
               action() {
                 const lastNodeIndex = forLink.addNode({ op: "." });
                 selectNewCell(lastNodeIndex);
-                user.toggleChangeOpMode();
+                toggleChangeOpMode();
               }
             }
           }
@@ -292,7 +292,7 @@ export const Editor = types
             label: "Add Link",
             action: self.repo.addLink // TODO: auto-select added link
           },
-          6: { label: "Add", action: self.toggleAddNodeMode }
+          6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
           1: { label: "◀", action: self.moveLeft },
