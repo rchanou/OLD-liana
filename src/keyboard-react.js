@@ -20,11 +20,13 @@ const baseStyle = {
 
 const totalHeight = yUnit * 4;
 
-export const ReactKeyboard = observer(({ keyBoxMap }) => {
+export const ReactKeyboard = observer(({ editor }) => {
+  const { keyMap, selectedCoords } = editor;
+
   const els = [];
 
   for (let y = 1; y <= 3; y++) {
-    const keySetAtY = keyBoxMap[y];
+    const keySetAtY = keyMap[y];
     for (let x = 0; x <= 9; x++) {
       const newEl = {
         key: x + "." + y,
@@ -34,6 +36,12 @@ export const ReactKeyboard = observer(({ keyBoxMap }) => {
           left: `${x * wUnit}vw`
         }
       };
+
+      if (selectedCoords && selectedCoords.x == x && selectedCoords.y == y) {
+        newEl.key = "SELECTED"; // HACK: borders get weird without forcing re-mount of selected/deselected box via key change
+        newEl.style.background = "hsl(60,77%,66%)";
+      }
+
       if (x === 4 || x === 5) {
         newEl.style.background = "hsl(60,88%,88%)";
       }

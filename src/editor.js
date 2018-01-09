@@ -73,6 +73,9 @@ export const Editor = types
     get repo() {
       return self[ContextRepo.Key];
     },
+    get selectedCoords() {
+      return self.user.heldKeyCoords;
+    },
     get linkCells() {
       return makeRepoCells(self.repo, 0, 0);
     },
@@ -162,6 +165,7 @@ export const Editor = types
           2: { 4: { label: "Input" }, 5: { label: "Mode" } }
         };
       }
+
       const { forLink, nodeIndex } = selectedCell;
       const { setInput, toggleChangeCellMode } = user;
 
@@ -219,7 +223,7 @@ export const Editor = types
     handleKeyPress(e) {
       const { keyCode } = e;
 
-      console.log(keyCode);
+      // console.log(keyCode);
 
       const { user, selectedCell } = self;
 
@@ -232,7 +236,7 @@ export const Editor = types
         return;
       }
 
-      const coords = keyLayout[keyCode];
+      const coords = keyLayout[keyCode]; // TODO: make key layout editable
       if (!coords) {
         return;
       }
@@ -240,6 +244,8 @@ export const Editor = types
       e.preventDefault();
 
       const [x, y] = coords;
+
+      user.heldKeyCoords = { x, y };
 
       const YKeyMap = self.keyMap[y];
       if (YKeyMap) {
@@ -397,14 +403,20 @@ export const Editor = types
       if (x === 5 && y === 1) {
         self.repo.addLink();
       }
+    },
+    handleKeyUp() {
+      console.log("up", self.user.heldKeyCoords);
+      self.user.heldKeyCoords = null;
     }
   }))
   .actions(self => ({
     afterCreate() {
       document.addEventListener("keydown", self.handleKeyPress);
+      document.addEventListener("keyup", self.handleKeyUp);
     },
     beforeDestroy() {
       document.removeEventListener("keydown", self.handleKeyPress);
+      document.removeEventListener("keyup", self.handleKeyUp);
     }
   }));
 

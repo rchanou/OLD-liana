@@ -10,9 +10,15 @@ const NodeRef = types.model("NodeRef", {
   index: types.maybe(types.number)
 });
 
+const HeldKeyCoords = types.model("HeldKeyCoords", {
+  x: types.number,
+  y: types.number
+});
+
 const User = types
   .model("User", {
     selectedCellIndex: types.optional(types.number, 0),
+    heldKeyCoords: types.maybe(HeldKeyCoords),
     // settingNode: types.maybe(NodeRef),
     changeCellMode: optionalBoolean,
     changeOpMode: optionalBoolean,
