@@ -112,10 +112,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -126,10 +123,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -140,10 +134,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -154,10 +145,7 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -167,32 +155,21 @@ export const Editor = types
   }))
   .views(self => ({
     get keyMap() {
-      if (self.inputMode) {
+      const { selectedCell, user } = self;
+
+      if (user.inputMode) {
         return {
           2: { 4: { label: "Input" }, 5: { label: "Mode" } }
         };
       }
-
-      const { selectedCell, user } = self;
       const { forLink, nodeIndex } = selectedCell;
       const { setInput, toggleChangeCellMode } = user;
 
-      const keyMap = {
-        1: { 2: { label: "▲", action: self.moveUp } },
-        2: {
-          1: { label: "◀", action: self.moveLeft },
-          2: { label: "▼", action: self.moveDown },
-          3: { label: "▶", action: self.moveRight }
-        },
-        3: { 6: { label: "Change", action: toggleChangeCellMode } }
-      };
-
-      // TODO: use named actions or find some other way to avoid having to unprotect?
       if (user.changeCellMode) {
-        deepAssign(keyMap, {
+        return {
           1: {
             6: {
-              label: "#",
+              label: "Num",
               action() {
                 forLink.setNode(nodeIndex, { val: 0 });
                 toggleChangeCellMode();
@@ -214,9 +191,23 @@ export const Editor = types
                 toggleChangeCellMode();
               }
             }
-          }
-        });
+          },
+          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
+        };
       }
+
+      if (user.changeOpMode) {
+      }
+
+      const keyMap = {
+        1: { 2: { label: "▲", action: self.moveUp } },
+        2: {
+          1: { label: "◀", action: self.moveLeft },
+          2: { label: "▼", action: self.moveDown },
+          3: { label: "▶", action: self.moveRight }
+        },
+        3: { 6: { label: "Change", action: toggleChangeCellMode } }
+      };
 
       return keyMap;
     }
@@ -261,40 +252,40 @@ export const Editor = types
 
       const { forLink, nodeIndex } = selectedCell;
 
-      if (user.changeCellMode) {
-        if (x === 6 && y === 1) {
-          forLink.setNode(nodeIndex, { val: 0 });
-          user.input = "0";
-        }
-        if (x === 7 && y === 1) {
-          forLink.setNode(nodeIndex, { val: "" });
-          user.input = "";
-        }
-        if (x === 8 && y === 1) {
-          forLink.setNode(nodeIndex, { val: false });
-        }
-        if (x === 6 && y === 2) {
-          user.changeOpMode = true;
-        }
-        if (x === 7 && y === 2) {
-          user.chooseLinkMode = true;
-          // forLink.setNode(nodeIndex, {
-          //   ref: self.repo.linkList[0]
-          // });
-        }
-        if (x === 8 && y === 2) {
-          forLink.setNode(nodeIndex, {
-            input: self.repo.inputList[0]
-          });
-        }
-        if (x === 9 && y === 2) {
-          forLink.setNode(nodeIndex, {
-            dep: self.repo.depList[0]
-          });
-        }
-        user.changeCellMode = false;
-        return;
-      }
+      // if (user.changeCellMode) {
+      //   if (x === 6 && y === 1) {
+      //     forLink.setNode(nodeIndex, { val: 0 });
+      //     user.input = "0";
+      //   }
+      //   if (x === 7 && y === 1) {
+      //     forLink.setNode(nodeIndex, { val: "" });
+      //     user.input = "";
+      //   }
+      //   if (x === 8 && y === 1) {
+      //     forLink.setNode(nodeIndex, { val: false });
+      //   }
+      //   if (x === 6 && y === 2) {
+      //     user.changeOpMode = true;
+      //   }
+      //   if (x === 7 && y === 2) {
+      //     user.chooseLinkMode = true;
+      //     // forLink.setNode(nodeIndex, {
+      //     //   ref: self.repo.linkList[0]
+      //     // });
+      //   }
+      //   if (x === 8 && y === 2) {
+      //     forLink.setNode(nodeIndex, {
+      //       input: self.repo.inputList[0]
+      //     });
+      //   }
+      //   if (x === 9 && y === 2) {
+      //     forLink.setNode(nodeIndex, {
+      //       dep: self.repo.depList[0]
+      //     });
+      //   }
+      //   user.changeCellMode = false;
+      //   return;
+      // }
 
       if (user.changeOpMode) {
         const xs = opYXGrid[y];
@@ -384,9 +375,7 @@ export const Editor = types
 
       if (x === 7 && y === 1) {
         if (selectedCell.gotoCellKey) {
-          const gotoCellIndex = self.cells.findIndex(
-            cell => cell.key === selectedCell.gotoCellKey
-          );
+          const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
           if (gotoCellIndex !== -1) {
             user.selectedCellIndex = gotoCellIndex;
