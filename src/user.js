@@ -1,3 +1,5 @@
+// TODO: just merge this whole model into the editor model?
+
 import { types } from "mobx-state-tree";
 
 import { setupContext } from "./context";

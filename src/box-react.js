@@ -39,7 +39,7 @@ const cursorStyle = {
   background: "none"
 };
 
-const boxBorder = "1px solid hsla(0,0%,0%,0.3)";
+const boxBorder = "1px solid rgba(0,0,0,0.3)";
 
 const emptyObj = {};
 

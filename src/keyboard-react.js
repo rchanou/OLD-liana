@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-const border = "1px solid rgba(0,0,0,0.5)";
+const border = "1px solid rgba(0,0,0,0.3)";
 
 const wUnit = 10;
 const yUnit = 33;
@@ -15,7 +15,8 @@ const baseStyle = {
   borderRight: border,
   borderBottom: border,
   width: `${wUnit}vw`,
-  height: yUnit
+  height: yUnit,
+  color: "#333"
 };
 
 const totalHeight = yUnit * 4;

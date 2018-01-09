@@ -99,7 +99,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -110,7 +113,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -121,7 +127,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -132,7 +141,10 @@ export const Editor = types
       const { cells, user, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -151,7 +163,12 @@ export const Editor = types
       }
 
       const { forLink, nodeIndex } = selectedCell;
-      const { setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = user;
+      const {
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = user;
 
       if (user.changeCellMode) {
         return {
@@ -237,7 +254,8 @@ export const Editor = types
       if (user.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.linkCells.findIndex(
-            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+            cell =>
+              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -302,7 +320,9 @@ export const Editor = types
             label: "Go To Def",
             action() {
               if (selectedCell.gotoCellKey) {
-                const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+                const gotoCellIndex = self.cells.findIndex(
+                  cell => cell.key === selectedCell.gotoCellKey
+                );
 
                 if (gotoCellIndex !== -1) {
                   user.selectCellIndex(gotoCellIndex);
@@ -368,154 +388,6 @@ export const Editor = types
           thisKey.action();
         }
       }
-
-      // const { forLink, nodeIndex } = selectedCell;
-
-      // if (user.changeCellMode) {
-      //   if (x === 6 && y === 1) {
-      //     forLink.setNode(nodeIndex, { val: 0 });
-      //     user.input = "0";
-      //   }
-      //   if (x === 7 && y === 1) {
-      //     forLink.setNode(nodeIndex, { val: "" });
-      //     user.input = "";
-      //   }
-      //   if (x === 8 && y === 1) {
-      //     forLink.setNode(nodeIndex, { val: false });
-      //   }
-      //   if (x === 6 && y === 2) {
-      //     user.changeOpMode = true;
-      //   }
-      //   if (x === 7 && y === 2) {
-      //     user.chooseLinkMode = true;
-      //     // forLink.setNode(nodeIndex, {
-      //     //   ref: self.repo.linkList[0]
-      //     // });
-      //   }
-      //   if (x === 8 && y === 2) {
-      //     forLink.setNode(nodeIndex, {
-      //       input: self.repo.inputList[0]
-      //     });
-      //   }
-      //   if (x === 9 && y === 2) {
-      //     forLink.setNode(nodeIndex, {
-      //       dep: self.repo.depList[0]
-      //     });
-      //   }
-      //   user.changeCellMode = false;
-      //   return;
-      // }
-
-      // if (user.changeOpMode) {
-      //   const xs = opYXGrid[y];
-      //   console.log("xs", xs);
-      //   if (xs) {
-      //     const op = xs[x];
-      //     if (op) {
-      //       forLink.setNode(nodeIndex, { op });
-      //     }
-      //   }
-      //   user.changeOpMode = false;
-      //   return;
-      // }
-
-      // if (user.addNodeMode) {
-      //   let lastNodeIndex = 0;
-
-      //   if (x === 6 && y === 1) {
-      //     lastNodeIndex = forLink.addNode({ val: 0 });
-      //     user.input = "0";
-      //   }
-      //   if (x === 7 && y === 1) {
-      //     lastNodeIndex = forLink.addNode({ val: "" });
-      //     user.input = "";
-      //   }
-      //   if (x === 8 && y === 1) {
-      //     lastNodeIndex = forLink.addNode({ val: false });
-      //   }
-      //   if (x === 6 && y === 2) {
-      //     user.addOpMode = true;
-      //     // forLink.addNode({ op: "." });
-      //   }
-      //   if (x === 7 && y === 2) {
-      //     forLink.addNode({ ref: self.repo.linkList[0] });
-      //   }
-      //   if (x === 8 && y === 2) {
-      //     forLink.addNode({ input: self.repo.inputList[0] });
-      //   }
-      //   if (x === 9 && y === 2) {
-      //     forLink.addNode({ dep: self.repo.depList[0] });
-      //   }
-
-      //   const newSelectedCellIndex = self.linkCells.findIndex(
-      //     cell => cell.key === `CL-${forLink.linkId}-${lastNodeIndex}`
-      //   );
-
-      //   if (newSelectedCellIndex !== -1) {
-      //     self.user.selectedCellIndex = newSelectedCellIndex;
-      //   }
-
-      //   user.addNodeMode = false;
-      //   return;
-      // }
-
-      // if (user.addOpMode) {
-      //   const xs = opYXGrid[y];
-      //   if (xs) {
-      //     const op = xs[x];
-      //     if (op) {
-      //       forLink.addNode({ op });
-      //     }
-      //   }
-      //   user.addOpMode = false;
-      //   return;
-      // }
-
-      // if (x === 6 && y === 3) {
-      //   user.changeCellMode = true;
-      //   return;
-      // }
-
-      // if (x === 9 && y === 2) {
-      //   if (typeof nodeIndex === "number") {
-      //     const deleted = selectedCell.forLink.deleteNode(nodeIndex);
-
-      //     if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
-      //       self.moveLeft();
-      //     }
-      //     return;
-      //   }
-      // }
-
-      // if (x === 6 && y === 1) {
-      //   user.addNodeMode = true;
-      //   return;
-      // }
-
-      // if (x === 7 && y === 1) {
-      //   if (selectedCell.gotoCellKey) {
-      //     const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
-
-      //     if (gotoCellIndex !== -1) {
-      //       user.selectedCellIndex = gotoCellIndex;
-      //     }
-
-      //     return;
-      //   }
-      // }
-
-      // if (x === 8 && y === 2) {
-      //   if (user.input === null) {
-      //     user.input = "";
-      //   } else {
-      //     user.input = null;
-      //   }
-      //   return;
-      // }
-
-      // if (x === 5 && y === 1) {
-      //   self.repo.addLink();
-      // }
     },
     handleKeyUp() {
       self.user.heldKeyCoords = null;

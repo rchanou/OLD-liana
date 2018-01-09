@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { TREE, LIST } from "./editor";
-import { ReactTree } from "./tree-react";
+import { ReactTree } from "./box-react";
 import { ReactKeyboard } from "./keyboard-react";
 
 const containerStyle = {
