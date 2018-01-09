@@ -9,6 +9,7 @@ export const TREE = "TREE";
 export const LIST = "LIST";
 
 const keyLayout = {
+  // TODO: make customizable
   "65": [0, 2],
   "66": [4, 3],
   "67": [2, 3],
@@ -39,23 +40,6 @@ const keyLayout = {
   "188": [7, 3],
   "190": [8, 3],
   "191": [9, 3]
-};
-
-const opYXGrid = {
-  1: {
-    0: "@",
-    1: "[",
-    2: "{",
-    3: ".",
-    4: "g",
-    5: "+",
-    6: "-",
-    7: "*",
-    8: "/",
-    9: "%"
-  },
-  2: { 1: "f", 2: "s", 3: "?", 6: "<", 7: ">", 8: "<=", 9: ">=" },
-  3: { 6: "==", 7: "===", 8: "!=", 9: "!==" }
 };
 
 export const Editor = types
@@ -167,7 +151,7 @@ export const Editor = types
       }
 
       const { forLink, nodeIndex } = selectedCell;
-      const { setInput, toggleChangeCellMode } = user;
+      const { setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = user;
 
       if (user.changeCellMode) {
         return {
@@ -196,19 +180,149 @@ export const Editor = types
               }
             }
           },
+          2: {
+            6: {
+              label: "Op",
+              action() {
+                toggleChangeCellMode();
+                toggleChangeOpMode();
+              }
+            }
+          },
           3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
         };
       }
 
       if (user.changeOpMode) {
+        const o = op => ({
+          label: op,
+          action() {
+            forLink.setNode(nodeIndex, { op });
+            toggleChangeOpMode();
+          }
+        });
+
+        return {
+          1: {
+            0: o("@"),
+            1: o("["),
+            2: o("{"),
+            3: o("."),
+            4: o("g"),
+            5: o("+"),
+            6: o("-"),
+            7: o("*"),
+            8: o("/"),
+            9: o("%")
+          },
+          2: {
+            1: o("f"),
+            2: o("s"),
+            3: o("?"),
+            6: o("<"),
+            7: o(">"),
+            8: o("<="),
+            9: o(">=")
+          },
+          3: {
+            0: { label: "Cancel", action: toggleChangeOpMode },
+            6: o("=="),
+            7: o("==="),
+            8: o("!="),
+            9: o("!==")
+          }
+        };
+      }
+
+      if (user.addNodeMode) {
+        const selectNewCell = () => {
+          const newSelectedCellIndex = self.linkCells.findIndex(
+            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+          );
+
+          if (newSelectedCellIndex !== -1) {
+            self.user.selectedCellIndex = newSelectedCellIndex;
+          }
+          toggleAddNodeMode();
+        };
+
+        return {
+          1: {
+            6: {
+              label: "Num",
+              action() {
+                const lastNodeIndex = forLink.addNode({ val: 0 });
+                selectNewCell(lastNodeIndex);
+                user.setInput("0");
+              }
+            },
+            7: {
+              label: "Text",
+              action() {
+                const lastNodeIndex = forLink.addNode({ val: "" });
+                selectNewCell(lastNodeIndex);
+                user.setInput("");
+              }
+            },
+            8: {
+              label: "Bool",
+              action() {
+                const lastNodeIndex = forLink.addNode({ val: false });
+                selectNewCell(lastNodeIndex);
+              }
+            }
+          },
+          2: {
+            6: {
+              label: "Op",
+              action() {
+                const lastNodeIndex = forLink.addNode({ op: "." });
+                selectNewCell(lastNodeIndex);
+                user.toggleChangeOpMode();
+              }
+            }
+          }
+        };
       }
 
       const keyMap = {
-        1: { 2: { label: "▲", action: self.moveUp } },
+        1: {
+          2: { label: "▲", action: self.moveUp },
+          5: {
+            label: "Add Link",
+            action: self.repo.addLink // TODO: auto-select added link
+          },
+          6: { label: "Add", action: self.toggleAddNodeMode }
+        },
         2: {
           1: { label: "◀", action: self.moveLeft },
           2: { label: "▼", action: self.moveDown },
-          3: { label: "▶", action: self.moveRight }
+          3: { label: "▶", action: self.moveRight },
+          7: {
+            label: "Go To Def",
+            action() {
+              if (selectedCell.gotoCellKey) {
+                const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+
+                if (gotoCellIndex !== -1) {
+                  user.selectCellIndex(gotoCellIndex);
+                }
+
+                return;
+              }
+            }
+          },
+          9: {
+            label: "Delete",
+            action() {
+              if (typeof nodeIndex === "number") {
+                const deleted = selectedCell.forLink.deleteNode(nodeIndex);
+                if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
+                  self.moveLeft();
+                }
+              }
+            }
+          }
         },
         3: { 6: { label: "Change", action: toggleChangeCellMode } }
       };
@@ -252,11 +366,10 @@ export const Editor = types
         const thisKey = YKeyMap[x];
         if (thisKey && thisKey.action) {
           thisKey.action();
-          return;
         }
       }
 
-      const { forLink, nodeIndex } = selectedCell;
+      // const { forLink, nodeIndex } = selectedCell;
 
       // if (user.changeCellMode) {
       //   if (x === 6 && y === 1) {
@@ -293,119 +406,118 @@ export const Editor = types
       //   return;
       // }
 
-      if (user.changeOpMode) {
-        const xs = opYXGrid[y];
-        console.log("xs", xs);
-        if (xs) {
-          const op = xs[x];
-          if (op) {
-            forLink.setNode(nodeIndex, { op });
-          }
-        }
-        user.changeOpMode = false;
-        return;
-      }
+      // if (user.changeOpMode) {
+      //   const xs = opYXGrid[y];
+      //   console.log("xs", xs);
+      //   if (xs) {
+      //     const op = xs[x];
+      //     if (op) {
+      //       forLink.setNode(nodeIndex, { op });
+      //     }
+      //   }
+      //   user.changeOpMode = false;
+      //   return;
+      // }
 
-      if (user.addNodeMode) {
-        let lastNodeIndex = 0;
+      // if (user.addNodeMode) {
+      //   let lastNodeIndex = 0;
 
-        if (x === 6 && y === 1) {
-          lastNodeIndex = forLink.addNode({ val: 0 });
-          user.input = "0";
-        }
-        if (x === 7 && y === 1) {
-          lastNodeIndex = forLink.addNode({ val: "" });
-          user.input = "";
-        }
-        if (x === 8 && y === 1) {
-          lastNodeIndex = forLink.addNode({ val: false });
-        }
-        if (x === 6 && y === 2) {
-          user.addOpMode = true;
-          // forLink.addNode({ op: "." });
-        }
-        if (x === 7 && y === 2) {
-          forLink.addNode({ ref: self.repo.linkList[0] });
-        }
-        if (x === 8 && y === 2) {
-          forLink.addNode({ input: self.repo.inputList[0] });
-        }
-        if (x === 9 && y === 2) {
-          forLink.addNode({ dep: self.repo.depList[0] });
-        }
+      //   if (x === 6 && y === 1) {
+      //     lastNodeIndex = forLink.addNode({ val: 0 });
+      //     user.input = "0";
+      //   }
+      //   if (x === 7 && y === 1) {
+      //     lastNodeIndex = forLink.addNode({ val: "" });
+      //     user.input = "";
+      //   }
+      //   if (x === 8 && y === 1) {
+      //     lastNodeIndex = forLink.addNode({ val: false });
+      //   }
+      //   if (x === 6 && y === 2) {
+      //     user.addOpMode = true;
+      //     // forLink.addNode({ op: "." });
+      //   }
+      //   if (x === 7 && y === 2) {
+      //     forLink.addNode({ ref: self.repo.linkList[0] });
+      //   }
+      //   if (x === 8 && y === 2) {
+      //     forLink.addNode({ input: self.repo.inputList[0] });
+      //   }
+      //   if (x === 9 && y === 2) {
+      //     forLink.addNode({ dep: self.repo.depList[0] });
+      //   }
 
-        const newSelectedCellIndex = self.linkCells.findIndex(
-          cell => cell.key === `CL-${forLink.linkId}-${lastNodeIndex}`
-        );
+      //   const newSelectedCellIndex = self.linkCells.findIndex(
+      //     cell => cell.key === `CL-${forLink.linkId}-${lastNodeIndex}`
+      //   );
 
-        if (newSelectedCellIndex !== -1) {
-          self.user.selectedCellIndex = newSelectedCellIndex;
-        }
+      //   if (newSelectedCellIndex !== -1) {
+      //     self.user.selectedCellIndex = newSelectedCellIndex;
+      //   }
 
-        user.addNodeMode = false;
-        return;
-      }
+      //   user.addNodeMode = false;
+      //   return;
+      // }
 
-      if (user.addOpMode) {
-        const xs = opYXGrid[y];
-        if (xs) {
-          const op = xs[x];
-          if (op) {
-            forLink.addNode({ op });
-          }
-        }
-        user.addOpMode = false;
-        return;
-      }
+      // if (user.addOpMode) {
+      //   const xs = opYXGrid[y];
+      //   if (xs) {
+      //     const op = xs[x];
+      //     if (op) {
+      //       forLink.addNode({ op });
+      //     }
+      //   }
+      //   user.addOpMode = false;
+      //   return;
+      // }
 
-      if (x === 6 && y === 3) {
-        user.changeCellMode = true;
-        return;
-      }
+      // if (x === 6 && y === 3) {
+      //   user.changeCellMode = true;
+      //   return;
+      // }
 
-      if (x === 9 && y === 2) {
-        if (typeof nodeIndex === "number") {
-          const deleted = selectedCell.forLink.deleteNode(nodeIndex);
+      // if (x === 9 && y === 2) {
+      //   if (typeof nodeIndex === "number") {
+      //     const deleted = selectedCell.forLink.deleteNode(nodeIndex);
 
-          if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
-            self.moveLeft();
-          }
-          return;
-        }
-      }
+      //     if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
+      //       self.moveLeft();
+      //     }
+      //     return;
+      //   }
+      // }
 
-      if (x === 6 && y === 1) {
-        user.addNodeMode = true;
-        return;
-      }
+      // if (x === 6 && y === 1) {
+      //   user.addNodeMode = true;
+      //   return;
+      // }
 
-      if (x === 7 && y === 1) {
-        if (selectedCell.gotoCellKey) {
-          const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+      // if (x === 7 && y === 1) {
+      //   if (selectedCell.gotoCellKey) {
+      //     const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
-          if (gotoCellIndex !== -1) {
-            user.selectedCellIndex = gotoCellIndex;
-          }
+      //     if (gotoCellIndex !== -1) {
+      //       user.selectedCellIndex = gotoCellIndex;
+      //     }
 
-          return;
-        }
-      }
+      //     return;
+      //   }
+      // }
 
-      if (x === 8 && y === 2) {
-        if (user.input === null) {
-          user.input = "";
-        } else {
-          user.input = null;
-        }
-        return;
-      }
+      // if (x === 8 && y === 2) {
+      //   if (user.input === null) {
+      //     user.input = "";
+      //   } else {
+      //     user.input = null;
+      //   }
+      //   return;
+      // }
 
-      if (x === 5 && y === 1) {
-        self.repo.addLink();
-      }
+      // if (x === 5 && y === 1) {
+      //   self.repo.addLink();
+      // }
     },
     handleKeyUp() {
-      console.log("up", self.user.heldKeyCoords);
       self.user.heldKeyCoords = null;
     }
   }))

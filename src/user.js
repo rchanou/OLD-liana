@@ -33,11 +33,20 @@ const User = types
     }
   }))
   .actions(self => ({
+    selectCellIndex(index) {
+      self.selectedCellIndex = index;
+    },
     setInput(value) {
       self.input = value;
     },
     toggleChangeCellMode() {
       self.changeCellMode = !self.changeCellMode;
+    },
+    toggleChangeOpMode() {
+      self.changeOpMode = !self.changeOpMode;
+    },
+    toggleAddNodeMode() {
+      self.addNodeMode = !self.addNodeMode;
     },
     beginSettingNode(nodeRef) {
       self.settingNode = nodeRef;
