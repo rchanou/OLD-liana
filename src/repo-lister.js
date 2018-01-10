@@ -115,6 +115,9 @@ export const RepoLister = types
     }
   }))
   .actions(self => ({
+    handleInput(e) {
+      self.input = e.target.value;
+    },
     moveUp() {
       const { cells, selectedCell } = self;
 

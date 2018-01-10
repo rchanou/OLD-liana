@@ -90,16 +90,20 @@ export const Editor = types
   }))
   .actions(self => ({
     handleInput(e) {
-      const { value } = e.target;
+      if (self.chooser) {
+        self.chooser.handleInput(e);
+      }
 
-      self.repoList.input = value;
-    },
+      self.repoList.handleInput(e);
+    }
+  }))
+  .actions(self => ({
     handleKeyDown(e) {
       const { keyCode } = e;
 
       // console.log(keyCode, e.target.value);
 
-      const { user, selectedCell } = self;
+      const { selectedCell } = self;
 
       if (self.keyMap.onInput) {
         self.keyMap.onInput(keyCode);
@@ -127,9 +131,7 @@ export const Editor = types
     },
     handleKeyUp() {
       self.heldKeyCoords = null;
-    }
-  }))
-  .actions(self => ({
+    },
     afterCreate() {
       document.addEventListener("keydown", self.handleKeyDown);
       document.addEventListener("keyup", self.handleKeyUp);

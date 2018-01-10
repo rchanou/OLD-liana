@@ -71,6 +71,11 @@ export const Chooser = types
       return self.searchCells.concat(self.cursorCell);
     }
   }))
+  .actions(self => ({
+    handleInput(e) {
+      self.filter = e.target.value;
+    }
+  }))
   .views(self => ({
     get keyMap() {
       return {

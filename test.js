@@ -1,62 +1,35 @@
 const assert = require("assert");
 const { types } = require("mobx-state-tree");
-
-let idCounter = 0;
-const optionalId = types.optional(types.identifier(types.number), () => idCounter++);
+const { autorun } = require("mobx");
 
 const A = types.model({
-  id: optionalId
+  test: types.optional(types.number, 0)
 });
 
-const E = types.model("E", { id: optionalId, txt: types.string, stuff: types.frozen });
+const makeActions = self => ({
+  doIt() {
+    self.a.test = self.num;
+  }
+});
 
-const B = types.compose(
-  A,
-  types
-    .model({
-      num: types.number,
-      e: types.maybe(E),
-      ref: types.maybe(types.reference(E))
-    })
-    .actions(self => ({
-      setE() {
-        self.ref = self.e;
-      },
-      createE() {
-        self.e = { txt: "fufufufufu" };
-        console.log("le wut e", self.e.id);
-      }
-    }))
-);
-
-const C = types.compose(
-  A,
-  types.model({
-    string: types.string,
-    sub: types.optional(types.array(types.late(() => BC)), [])
+const B = types
+  .model({
+    num: types.optional(types.number, 1),
+    a: types.optional(A, {})
   })
-);
+  .actions(self => ({
+    setNum(num) {
+      self.num = num;
+    }
+  }))
+  .actions(makeActions);
 
-const BC = types.union(B, C);
+const b = B.create();
 
-const D = types.model({
-  selected: types.reference(BC),
-  list: types.array(BC)
+autorun(() => {
+  console.log(b.a.test);
 });
 
-const d = D.create({
-  selected: 4,
-  list: [
-    { num: 2, e: { txt: "fart", stuff: { a: 1, b: 2 } } },
-    { string: "tsra", sub: [{ num: 11 }, { num: 22 }] },
-    { num: 444 },
-    { string: "arstvxc" }
-  ]
-});
-
-d.list[0].setE();
-d.list[0].e.stuff.a = "what";
-d.list[0].createE();
-console.log(d.list[0].e.txt);
-console.log(d.list[0].e.stuff);
-console.log(d.selected.num);
+b.doIt();
+b.setNum(3);
+b.doIt();
