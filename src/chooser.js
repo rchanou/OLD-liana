@@ -2,6 +2,7 @@ import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency, ContextRepo } from "./core";
 import { cursorify } from "./cells";
+import { keyboardableModel } from "./keyboardable";
 
 const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   const cells = [];
@@ -37,15 +38,14 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
-export const Chooser = types
-  .model(`Chooser`, {
-    ...ContextRepo.Mixin,
-    forLink: types.reference(Link),
-    nodeIndex: types.maybe(types.number),
-    selectedCellIndex: types.optional(types.number, 0),
-    filter: types.optional(types.string, ""),
-    inputMode: types.optional(types.boolean, false)
-  })
+export const Chooser = keyboardableModel(`Chooser`, {
+  ...ContextRepo.Mixin,
+  forLink: types.reference(Link),
+  nodeIndex: types.maybe(types.number),
+  selectedCellIndex: types.optional(types.number, 0),
+  filter: types.optional(types.string, ""),
+  inputMode: types.optional(types.boolean, false)
+})
   .views(self => ({
     get repo() {
       return self[ContextRepo.RefKey];
@@ -74,6 +74,65 @@ export const Chooser = types
   .actions(self => ({
     handleInput(e) {
       self.filter = e.target.value;
+    },
+    selectCellIndex(index) {
+      self.selectedCellIndex = index;
+    },
+    moveUp() {
+      const { cells, selectedCell } = self;
+
+      const gotoCellIndex = cells.findIndex(
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
+      );
+
+      if (gotoCellIndex !== -1) {
+        self.selectCellIndex(gotoCellIndex);
+      }
+    },
+    moveDown() {
+      const { cells, selectedCell } = self;
+
+      const gotoCellIndex = cells.findIndex(
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
+      );
+
+      if (gotoCellIndex !== -1) {
+        self.selectCellIndex(gotoCellIndex);
+      }
+    },
+    moveLeft() {
+      const { cells, selectedCell } = self;
+
+      const gotoCellIndex = cells.findIndex(
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
+      );
+
+      if (gotoCellIndex !== -1) {
+        self.selectCellIndex(gotoCellIndex);
+      }
+    },
+    moveRight() {
+      const { cells, selectedCell } = self;
+
+      const gotoCellIndex = cells.findIndex(
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
+      );
+
+      if (gotoCellIndex !== -1) {
+        self.selectCellIndex(gotoCellIndex);
+      }
     }
   }))
   .views(self => ({

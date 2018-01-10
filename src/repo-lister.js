@@ -87,7 +87,6 @@ const NodeRef = types.model("NodeRef", {
 });
 
 export const RepoLister = keyboardableModel("RepoLister", {
-  // repo: ContextRepo.Ref,
   ...ContextRepo.Mixin,
   selectedCellIndex: types.optional(types.number, 0),
   // settingNode: types.maybe(NodeRef),
@@ -335,7 +334,7 @@ export const RepoLister = keyboardableModel("RepoLister", {
           );
 
           if (newSelectedCellIndex !== -1) {
-            self.selectedCellIndex = newSelectedCellIndex;
+            self.selectCellIndex(newSelectedCellIndex);
           }
           toggleAddNodeMode();
         };

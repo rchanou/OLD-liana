@@ -2,6 +2,8 @@
 
 import { types } from "mobx-state-tree";
 
+import { setupContext } from "./context";
+
 const keyLayout = {
   // TODO: make customizable
   "65": [0, 2],
@@ -42,51 +44,94 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
 });
 
 const Keyboard = types
-  .model({
+  .model("Keyboard", {
     heldKeyCoords: types.maybe(HeldKeyCoords)
   })
-  .actions(self => ({
-    handleKeyDown(e) {
-      const { keyCode } = e;
-      const { keyMap } = self;
+  .actions(self => {
+    // let editorStates = [];
+    let editor;
 
-      if (keyMap.onInput) {
-        keyMap.onInput(keyCode);
-        return;
-      }
+    return {
+      pushEditor(newEditor) {
+        editor = newEditor;
+        console.log("eee", editor);
+        // editorStates.push(editor);
+        // console.log("es", editorStates);
+      },
+      popEditor() {
+        console.log("eee", editor);
+        // editorStates.pop();
+        // console.log("es", editorStates);
+      },
+      handleKeyDown(e) {
+        const { keyCode } = e;
+        const { keyMap } = editor;
+        // const { keyMap } = editorStates[editorStates.length - 1];
 
-      const coords = keyLayout[keyCode]; // TODO: make key layout editable
-      if (!coords) {
-        return;
-      }
-
-      e.preventDefault();
-
-      const [x, y] = coords;
-
-      self.heldKeyCoords = { x, y };
-
-      const YKeyMap = keyMap[y];
-      if (YKeyMap) {
-        const thisKey = YKeyMap[x];
-        if (thisKey && thisKey.action) {
-          thisKey.action();
+        if (keyMap.onInput) {
+          keyMap.onInput(keyCode);
+          return;
         }
+
+        const coords = keyLayout[keyCode]; // TODO: make key layout editable
+        if (!coords) {
+          return;
+        }
+
+        e.preventDefault();
+
+        const [x, y] = coords;
+
+        self.heldKeyCoords = { x, y };
+
+        const YKeyMap = keyMap[y];
+        if (YKeyMap) {
+          const thisKey = YKeyMap[x];
+          if (thisKey && thisKey.action) {
+            thisKey.action();
+          }
+        }
+      },
+      handleKeyUp() {
+        self.heldKeyCoords = null;
+      },
+      afterCreate() {
+        console.log("da boot");
+        document.addEventListener("keydown", self.handleKeyDown);
+        document.addEventListener("keyup", self.handleKeyUp);
+      },
+      beforeDestroy() {
+        document.removeEventListener("keydown", self.handleKeyDown);
+        document.removeEventListener("keyup", self.handleKeyUp);
       }
+    };
+  });
+
+export const ContextKeyboard = setupContext(Keyboard);
+
+const Keyboarder = types
+  .model("Keyboarder", {
+    ...ContextKeyboard.Mixin
+  })
+  .views(self => ({
+    get keyboard() {
+      return self[ContextKeyboard.RefKey];
     },
-    handleKeyUp() {
-      self.heldKeyCoords = null;
-    },
+    get heldKeyCoords() {
+      return self.keyboard.heldKeyCoords;
+    }
+  }))
+  .actions(self => ({
     afterCreate() {
-      document.addEventListener("keydown", self.handleKeyDown);
-      document.addEventListener("keyup", self.handleKeyUp);
+      self.keyboard.pushEditor(self);
     },
     beforeDestroy() {
-      console.log("dat unmount");
-      document.removeEventListener("keydown", self.handleKeyDown);
-      document.removeEventListener("keyup", self.handleKeyUp);
+      self.keyboard.popEditor();
     }
   }));
 
-export const keyboardableModel = (...args) =>
-  types.compose(types.model(...args), Keyboard);
+export const keyboardableModel = (...args) => {
+  const firstModel = types.compose(types.model(...args), Keyboarder);
+
+  return firstModel;
+};

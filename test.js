@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { types } = require("mobx-state-tree");
+const { types, destroy } = require("mobx-state-tree");
 const { autorun } = require("mobx");
 
 const A = types.model({
@@ -20,6 +20,9 @@ const B = types
   .actions(self => ({
     setNum(num) {
       self.num = num;
+    },
+    beforeDestroy() {
+      console.log("what up son");
     }
   }))
   .actions(makeActions);
@@ -33,3 +36,4 @@ autorun(() => {
 b.doIt();
 b.setNum(3);
 b.doIt();
+destroy(b);

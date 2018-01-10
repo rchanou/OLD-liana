@@ -67,7 +67,7 @@ class Input extends React.Component {
 //   };
 // };
 
-const ReactBox = observer(({ box, onInput }) => {
+const ReactBox = observer(({ box, onInput, editor }) => {
   if (!box) {
     return null;
   }
@@ -115,7 +115,7 @@ const ReactBox = observer(({ box, onInput }) => {
         key={cellId || key}
         value={input}
         style={style}
-        onChange={onInput}
+        onChange={editor.onInput}
       />
     );
   } else {
@@ -141,7 +141,8 @@ const ReactBox = observer(({ box, onInput }) => {
   return [connector, element];
 });
 
-export const ReactTree = observer(({ cells, onInput }) => {
+export const ReactTree = observer(({ editor }) => {
+  const { cells, onInput } = editor;
   let throwawayIdCounter = 0;
 
   const cellBoxes = cells.map(cell => (
@@ -149,6 +150,7 @@ export const ReactTree = observer(({ cells, onInput }) => {
       key={cell ? cell.key : throwawayIdCounter++}
       box={cell}
       onInput={onInput}
+      editor={editor}
     />
   ));
 

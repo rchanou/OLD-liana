@@ -10,7 +10,7 @@ const containerStyle = {
 
 export const ReactEditor = observer(({ editor }) => (
   <div style={containerStyle}>
-    <ReactTree cells={editor.cells} onInput={editor.handleInput} />
+    <ReactTree editor={editor} />
     <ReactKeyboard editor={editor} />
     {/* <ReactKeyboard keyBoxMap={editor.keyMap} selectedCoords={editor.selectedCoords} /> */}
   </div>

@@ -1,13 +1,15 @@
 import React from "react";
 import { autorun } from "mobx";
-import { getSnapshot } from "mobx-state-tree";
+import { getSnapshot, destroy } from "mobx-state-tree";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
+import { ContextKeyboard } from "../src/keyboardable";
 import { Editor /*TREE, LIST*/ } from "../src/editor";
 import { Chooser } from "../src/chooser";
+
 import { ReactEditor } from "../src/react-editor";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -136,11 +138,18 @@ const testCellId = -1;
 //   selectedIndex: 0
 // };
 
-const editor = {
+const context = {
   [ContextRepo.Key]: repo,
+  [ContextKeyboard.Key]: {}
+};
+
+const editor = {
+  ...context,
+  [ContextKeyboard.Key]: {},
+  repoList: { selectedCellIndex: 75 }
+  // chooser: { forLink: "0" },
   // tree: simpleTree,
-  repoList: { selectedCellIndex: 75 },
-  root: { cellId: testCellId, link: testRoot }
+  // root: { cellId: testCellId, link: testRoot },
   // currentView: TREE
 };
 
@@ -175,7 +184,8 @@ storiesOf("Liana", module)
   .add("chooser", () => {
     window.c = Chooser.create(
       {
-        [ContextRepo.Key]: repo,
+        ...context,
+        [ContextKeyboard.Key]: {},
         forLink: "0"
       },
       env

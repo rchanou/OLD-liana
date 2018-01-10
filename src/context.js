@@ -8,6 +8,8 @@ export const setupContext = (Model, key) => {
   const Key = key || `context${Model.name}`;
   const RefKey = `${Key}Ref`;
 
+  let defaultContext;
+
   const getContext = node => {
     const context = node[Key];
 
@@ -16,7 +18,13 @@ export const setupContext = (Model, key) => {
     }
 
     if (isRoot(node)) {
-      throw new Error(`Could not find required Context ${Model.name}.`);
+      if (defaultContext) {
+        return defaultContext;
+      }
+
+      defaultContext = Model.create();
+      return defaultContext;
+      // throw new Error(`Could not find required Context ${Model.name}.`);
     }
 
     const parent = getParent(node);
