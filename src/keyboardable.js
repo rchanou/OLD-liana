@@ -36,6 +36,11 @@ const keyLayout = {
   "191": [9, 3]
 };
 
+const HeldKeyCoords = types.model("HeldKeyCoords", {
+  x: types.number,
+  y: types.number
+});
+
 const Keyboard = types
   .model({
     heldKeyCoords: types.maybe(HeldKeyCoords)

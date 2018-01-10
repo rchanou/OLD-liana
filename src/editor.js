@@ -52,7 +52,7 @@ export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
     // ...ContextUser.Mixin,
-    heldKeyCoords: types.maybe(HeldKeyCoords),
+    // heldKeyCoords: types.maybe(HeldKeyCoords),
     repoList: types.optional(RepoLister, {}),
     // chooser: types.maybe(Chooser)
     chooser: types.maybe(Chooser)
@@ -86,6 +86,9 @@ export const Editor = types
       }
 
       return self.repoList.keyMap;
+    },
+    get heldKeyCoords() {
+      return self.repoList.heldKeyCoords;
     }
   }))
   .actions(self => ({
@@ -96,51 +99,51 @@ export const Editor = types
 
       self.repoList.handleInput(e);
     }
-  }))
-  .actions(self => ({
-    handleKeyDown(e) {
-      const { keyCode } = e;
-
-      // console.log(keyCode, e.target.value);
-
-      const { selectedCell } = self;
-
-      if (self.keyMap.onInput) {
-        self.keyMap.onInput(keyCode);
-        return;
-      }
-
-      const coords = keyLayout[keyCode]; // TODO: make key layout editable
-      if (!coords) {
-        return;
-      }
-
-      e.preventDefault();
-
-      const [x, y] = coords;
-
-      self.heldKeyCoords = { x, y };
-
-      const YKeyMap = self.keyMap[y];
-      if (YKeyMap) {
-        const thisKey = YKeyMap[x];
-        if (thisKey && thisKey.action) {
-          thisKey.action();
-        }
-      }
-    },
-    handleKeyUp() {
-      self.heldKeyCoords = null;
-    },
-    afterCreate() {
-      document.addEventListener("keydown", self.handleKeyDown);
-      document.addEventListener("keyup", self.handleKeyUp);
-    },
-    beforeDestroy() {
-      console.log("dat unmount");
-      document.removeEventListener("keydown", self.handleKeyDown);
-      document.removeEventListener("keyup", self.handleKeyUp);
-    }
   }));
+// .actions(self => ({
+//   handleKeyDown(e) {
+//     const { keyCode } = e;
+
+//     // console.log(keyCode, e.target.value);
+
+//     const { selectedCell } = self;
+
+//     if (self.keyMap.onInput) {
+//       self.keyMap.onInput(keyCode);
+//       return;
+//     }
+
+//     const coords = keyLayout[keyCode]; // TODO: make key layout editable
+//     if (!coords) {
+//       return;
+//     }
+
+//     e.preventDefault();
+
+//     const [x, y] = coords;
+
+//     self.heldKeyCoords = { x, y };
+
+//     const YKeyMap = self.keyMap[y];
+//     if (YKeyMap) {
+//       const thisKey = YKeyMap[x];
+//       if (thisKey && thisKey.action) {
+//         thisKey.action();
+//       }
+//     }
+//   },
+//   handleKeyUp() {
+//     self.heldKeyCoords = null;
+//   },
+//   afterCreate() {
+//     document.addEventListener("keydown", self.handleKeyDown);
+//     document.addEventListener("keyup", self.handleKeyUp);
+//   },
+//   beforeDestroy() {
+//     console.log("dat unmount");
+//     document.removeEventListener("keydown", self.handleKeyDown);
+//     document.removeEventListener("keyup", self.handleKeyUp);
+//   }
+// }));
 
 export default Editor;
