@@ -31,6 +31,9 @@ const Chooser = types
         self.inputMode ? self.filter : undefined
       );
     },
+    get cells() {
+      return self.searchCells.concat(self.cursorCell);
+    },
     get keyMap() {
       return {
         1: {
@@ -46,6 +49,28 @@ const Chooser = types
             label: "Cancel",
             action() {
               user.setChoosingLink(null);
+            }
+          }
+        }
+      };
+    }
+  }))
+  .views(self => ({
+    get keyMap() {
+      return {
+        1: {
+          2: { label: "▲", action: self.moveUp }
+        },
+        2: {
+          1: { label: "◀", action: self.moveLeft },
+          2: { label: "▼", action: self.moveDown },
+          3: { label: "▶", action: self.moveRight }
+        },
+        3: {
+          6: {
+            label: "Cancel",
+            action() {
+              self.setChoosingLink(null);
             }
           }
         }

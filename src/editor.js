@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
-import { makeRepoCells } from "./make-repo-list";
+import { makeRepoCells, RepoLister } from "./make-repo-list";
 import { makeSearchCells } from "./make-search";
 import { cursorify } from "./cells";
 
@@ -156,7 +156,7 @@ export const Editor = types
     get keyMap() {
       const { selectedCell, user } = self;
 
-      if (user.inputMode) {
+      if (user.input != null) {
         return {
           2: { 4: { label: "Input" }, 5: { label: "Mode" } }
         };
@@ -403,7 +403,7 @@ export const Editor = types
 
       const { user, selectedCell } = self;
 
-      if (user.inputMode) {
+      if (user.input != null) {
         if (e.keyCode == 13) {
           selectedCell.forLink.setVal(selectedCell.nodeIndex, user.input);
           user.input = null;
