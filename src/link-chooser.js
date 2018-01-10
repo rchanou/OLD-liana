@@ -3,6 +3,7 @@ import { types } from "mobx-state-tree";
 import { Link, Input, Dependency, ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { makeSearchCells } from "./make-search";
+import { cursorify } from "./cells";
 
 const Chooser = types
   .model(`Chooser`, {
@@ -11,7 +12,7 @@ const Chooser = types
     forLink: types.reference(Link),
     nodeIndex: types.maybe(types.number),
     selectedCellIndex: types.optional(types.number, 0),
-    input: types.optional(types.string, ""),
+    filter: types.optional(types.string, ""),
     inputMode: optionalBoolean
   })
   .views(self => ({
@@ -25,6 +26,12 @@ const Chooser = types
     },
     get selectedCell() {
       return self.searchCells[self.selectedCellIndex];
+    },
+    get cursorCell() {
+      return cursorify(
+        self.selectedCell,
+        self.inputMode ? self.filter : undefined
+      );
     },
     get keyMap() {
       return {

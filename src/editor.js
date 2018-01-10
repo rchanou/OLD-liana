@@ -4,6 +4,8 @@ import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { makeRepoCells } from "./make-repo-list";
 import { makeSearchCells } from "./make-search";
+import { cursorify } from "./cells";
+
 export const TREE = "TREE";
 export const LIST = "LIST";
 
@@ -73,21 +75,7 @@ export const Editor = types
       return self.repoCells[self.user.selectedCellIndex];
     },
     get cursorCell() {
-      const { selectedCell, user } = self;
-
-      const { x, y, width, forLink, nodeIndex, gotoCellKey } = selectedCell;
-      const finalCell = {
-        x,
-        y,
-        width,
-        forLink,
-        nodeIndex,
-        gotoCellKey,
-        input: user.input,
-        key: "CURSOR"
-      };
-
-      return finalCell;
+      return cursorify(self.selectedCell, self.user.input);
     },
     get cells() {
       if (self.user.linkChooser) {
