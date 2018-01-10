@@ -1,8 +1,32 @@
 import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency, ContextRepo } from "./core";
-import { makeSearchCells } from "./make-search";
 import { cursorify } from "./cells";
+
+const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
+  const cells = [];
+
+  records.forEach(rec => {
+    if (!rec.label) {
+      return;
+    }
+
+    if (rec.label.includes(filter)) {
+      cells.push({
+        // HACK: key-finding logic seems hella dirty but simplest way for now
+        key: rec.linkId || rec.inputId || rec.depId,
+        x,
+        y: y++,
+        width: 5,
+        selectable: true,
+        fill: rec.color,
+        text: rec.label
+      });
+    }
+  });
+
+  return cells;
+};
 
 const Chooser = types
   .model(`Chooser`, {

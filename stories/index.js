@@ -6,7 +6,6 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
-import { ContextUser } from "../src/user";
 import { Editor /*TREE, LIST*/ } from "../src/editor";
 import { ReactEditor } from "../src/react-editor";
 
@@ -139,7 +138,6 @@ const testCellId = -1;
 const defaultSnapshot = {
   [ContextRepo.Key]: simpleSnapshot,
   // tree: simpleTree,
-  [ContextUser.Key]: { selectedCellIndex: 75 },
   repoList: { selectedCellIndex: 75 },
   root: { cellId: testCellId, link: testRoot }
   // currentView: TREE
