@@ -3,6 +3,7 @@ import { types } from "mobx-state-tree";
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { RepoLister } from "./repo-lister";
+import { Chooser } from "./chooser";
 import { cursorify } from "./cells";
 
 export const TREE = "TREE";
@@ -52,17 +53,25 @@ export const Editor = types
     ...ContextRepo.Mixin,
     ...ContextUser.Mixin,
     heldKeyCoords: types.maybe(HeldKeyCoords),
-    repoList: types.optional(RepoLister, {})
+    repoList: types.optional(RepoLister, {}),
+    chooser: types.maybe(Chooser)
   })
+  .actions(self => ({
+    toggleChooser(forLink, nodeIndex) {
+      if (self.chooser) {
+        self.chooser = null;
+      } else {
+        self.chooser = { forLink, nodeIndex };
+      }
+    }
+  }))
   .views(self => ({
     get cells() {
-      return self.repoList.cells;
-
-      if (self.user.linkChooser) {
+      if (self.chooser) {
         return self.searchCells.concat(self.cursorCell);
       }
 
-      return self.repoCells.concat(self.cursorCell);
+      return self.repoList.cells;
 
       // if (self.root) {
       //   return self.root.rootBoxes;
@@ -71,6 +80,10 @@ export const Editor = types
       // return self.projection.boxes;
     },
     get keyMap() {
+      if (self.chooser) {
+        return self.chooser.keyMap({ onExit: self.toggleChooser });
+      }
+
       return self.repoList.keyMap;
     }
   }))
@@ -80,10 +93,10 @@ export const Editor = types
 
       self.repoList.input = value;
     },
-    handleKeyPress(e) {
+    handleKeyDown(e) {
       const { keyCode } = e;
 
-      // console.log(keyCode);
+      console.log(keyCode, e.target.value);
 
       const { user, selectedCell } = self;
 
@@ -117,11 +130,11 @@ export const Editor = types
   }))
   .actions(self => ({
     afterCreate() {
-      document.addEventListener("keydown", self.handleKeyPress);
+      document.addEventListener("keydown", self.handleKeyDown);
       document.addEventListener("keyup", self.handleKeyUp);
     },
     beforeDestroy() {
-      document.removeEventListener("keydown", self.handleKeyPress);
+      document.removeEventListener("keydown", self.handleKeyDown);
       document.removeEventListener("keyup", self.handleKeyUp);
     }
   }));

@@ -115,10 +115,7 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -129,10 +126,7 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -143,10 +137,7 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -157,10 +148,7 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -204,13 +192,7 @@ export const RepoLister = types
   }))
   .views(self => ({
     get keyMap() {
-      const {
-        selectedCell,
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
 
       const { forLink, nodeIndex } = selectedCell;
 
@@ -323,8 +305,7 @@ export const RepoLister = types
       if (self.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.repoCells.findIndex(
-            cell =>
-              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -368,7 +349,8 @@ export const RepoLister = types
                 toggleChangeOpMode();
               }
             }
-          }
+          },
+          3: { 6: { label: "Cancel", action: toggleAddNodeMode } }
         };
       }
 
@@ -404,9 +386,7 @@ export const RepoLister = types
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.cells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

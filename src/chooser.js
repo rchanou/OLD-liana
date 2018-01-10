@@ -28,14 +28,14 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
-const Chooser = types
+export const Chooser = types
   .model(`Chooser`, {
     repo: ContextRepo.Key,
     forLink: types.reference(Link),
     nodeIndex: types.maybe(types.number),
     selectedCellIndex: types.optional(types.number, 0),
     filter: types.optional(types.string, ""),
-    inputMode: optionalBoolean
+    inputMode: types.optional(types.boolean, false)
   })
   .views(self => ({
     get searchCells() {
@@ -50,10 +50,7 @@ const Chooser = types
       return self.searchCells[self.selectedCellIndex];
     },
     get cursorCell() {
-      return cursorify(
-        self.selectedCell,
-        self.inputMode ? self.filter : undefined
-      );
+      return cursorify(self.selectedCell, self.inputMode ? self.filter : undefined);
     },
     get cells() {
       return self.searchCells.concat(self.cursorCell);
