@@ -43,10 +43,16 @@ const keyLayout = {
   "191": [9, 3]
 };
 
+const HeldKeyCoords = types.model("HeldKeyCoords", {
+  x: types.number,
+  y: types.number
+});
+
 export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
-    ...ContextUser.Mixin
+    ...ContextUser.Mixin,
+    heldKeyCoords: types.maybe(HeldKeyCoords)
     // tree: Tree,
     // root: types.maybe(LinkCell),
     // currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
@@ -57,9 +63,6 @@ export const Editor = types
     },
     get repo() {
       return self[ContextRepo.Key];
-    },
-    get selectedCoords() {
-      return self.user.heldKeyCoords;
     },
     get repoCells() {
       return makeRepoCells(self.repo);
@@ -418,7 +421,7 @@ export const Editor = types
 
       const [x, y] = coords;
 
-      user.heldKeyCoords = { x, y };
+      self.heldKeyCoords = { x, y };
 
       const YKeyMap = self.keyMap[y];
       if (YKeyMap) {
@@ -429,7 +432,7 @@ export const Editor = types
       }
     },
     handleKeyUp() {
-      self.user.heldKeyCoords = null;
+      self.heldKeyCoords = null;
     }
   }))
   .actions(self => ({

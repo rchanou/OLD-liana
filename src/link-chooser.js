@@ -1,14 +1,12 @@
 import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency, ContextRepo } from "./core";
-import { ContextUser } from "./user";
 import { makeSearchCells } from "./make-search";
 import { cursorify } from "./cells";
 
 const Chooser = types
   .model(`Chooser`, {
     repo: ContextRepo.Key,
-    user: ContextUser.Key,
     forLink: types.reference(Link),
     nodeIndex: types.maybe(types.number),
     selectedCellIndex: types.optional(types.number, 0),
@@ -17,7 +15,7 @@ const Chooser = types
   })
   .views(self => ({
     get searchCells() {
-      const { repo, user, input } = self;
+      const { repo, input } = self;
       const { links, inputs, dependencies } = repo;
 
       return makeSearchCells(links, input)

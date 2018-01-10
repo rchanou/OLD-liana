@@ -22,7 +22,7 @@ const baseStyle = {
 const totalHeight = yUnit * 4;
 
 export const ReactKeyboard = observer(({ editor }) => {
-  const { keyMap, selectedCoords } = editor;
+  const { keyMap, heldKeyCoords } = editor;
 
   const els = [];
 
@@ -42,7 +42,7 @@ export const ReactKeyboard = observer(({ editor }) => {
         newEl.style.background = "hsl(60,88%,88%)";
       }
 
-      if (selectedCoords && selectedCoords.x == x && selectedCoords.y == y) {
+      if (heldKeyCoords && heldKeyCoords.x == x && heldKeyCoords.y == y) {
         newEl.style.background = "hsl(60,77%,66%)";
       }
 
