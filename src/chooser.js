@@ -11,10 +11,19 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
       return;
     }
 
+    // HACK: key-finding logic seems hella dirty but simplest way for now
+    let key;
+    if (rec.linkId !== undefined) {
+      key = `SCL-${rec.linkId}`;
+    } else if (rec.inputId !== undefined) {
+      key = `SCI-${rec.inputId}`;
+    } else if (rec.depId !== undefined) {
+      key = `SCD-${rec.depId}`;
+    }
+
     if (rec.label.includes(filter)) {
       cells.push({
-        // HACK: key-finding logic seems hella dirty but simplest way for now
-        key: rec.linkId || rec.inputId || rec.depId,
+        key,
         x,
         y: y++,
         width: 5,
@@ -30,7 +39,7 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
 
 export const Chooser = types
   .model(`Chooser`, {
-    repo: ContextRepo.Key,
+    repo: ContextRepo.Ref,
     forLink: types.reference(Link),
     nodeIndex: types.maybe(types.number),
     selectedCellIndex: types.optional(types.number, 0),
@@ -54,30 +63,10 @@ export const Chooser = types
     },
     get cells() {
       return self.searchCells.concat(self.cursorCell);
-    },
-    get keyMap() {
-      return {
-        1: {
-          2: { label: "▲", action: self.moveUp }
-        },
-        2: {
-          1: { label: "◀", action: self.moveLeft },
-          2: { label: "▼", action: self.moveDown },
-          3: { label: "▶", action: self.moveRight }
-        },
-        3: {
-          6: {
-            label: "Cancel",
-            action() {
-              user.setChoosingLink(null);
-            }
-          }
-        }
-      };
     }
   }))
   .views(self => ({
-    get keyMap() {
+    keyMap() {
       return {
         1: {
           2: { label: "▲", action: self.moveUp }

@@ -54,7 +54,8 @@ export const Editor = types
     ...ContextUser.Mixin,
     heldKeyCoords: types.maybe(HeldKeyCoords),
     repoList: types.optional(RepoLister, {}),
-    chooser: types.maybe(Chooser)
+    // chooser: types.maybe(Chooser)
+    chooser: types.optional(Chooser, { forLink: "0" })
   })
   .actions(self => ({
     toggleChooser(forLink, nodeIndex) {
@@ -67,8 +68,8 @@ export const Editor = types
   }))
   .views(self => ({
     get cells() {
-      if (self.chooser) {
-        return self.searchCells.concat(self.cursorCell);
+      if (1 || self.chooser) {
+        return self.chooser.searchCells.concat(self.cursorCell);
       }
 
       return self.repoList.cells;
