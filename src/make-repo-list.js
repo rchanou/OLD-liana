@@ -122,7 +122,7 @@ export const RepoLister = types
       );
 
       if (gotoCellIndex !== -1) {
-        selectedCellIndex(gotoCellIndex);
+        self.selectCellIndex(gotoCellIndex);
       }
     },
     moveDown() {
@@ -136,7 +136,7 @@ export const RepoLister = types
       );
 
       if (gotoCellIndex !== -1) {
-        selectedCellIndex(gotoCellIndex);
+        self.selectCellIndex(gotoCellIndex);
       }
     },
     moveLeft() {
@@ -150,7 +150,7 @@ export const RepoLister = types
       );
 
       if (gotoCellIndex !== -1) {
-        selectedCellIndex(gotoCellIndex);
+        self.selectCellIndex(gotoCellIndex);
       }
     },
     moveRight() {
@@ -164,7 +164,7 @@ export const RepoLister = types
       );
 
       if (gotoCellIndex !== -1) {
-        selectedCellIndex(gotoCellIndex);
+        self.selectCellIndex(gotoCellIndex);
       }
     },
     selectCellIndex(index) {
@@ -212,13 +212,20 @@ export const RepoLister = types
         toggleAddNodeMode
       } = self;
 
+      const { forLink, nodeIndex } = selectedCell;
+
       if (self.input != null) {
         return {
+          onInput(keyCode) {
+            if (keyCode == 13) {
+              forLink.setVal(nodeIndex, self.input);
+              setInput(null);
+              self.moveRight();
+            }
+          },
           2: { 4: { label: "Input" }, 5: { label: "Mode" } }
         };
       }
-
-      const { forLink, nodeIndex } = selectedCell;
 
       if (self.changeCellMode) {
         const keyMap = {

@@ -52,35 +52,38 @@ export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
     ...ContextUser.Mixin,
-    heldKeyCoords: types.maybe(HeldKeyCoords)
+    heldKeyCoords: types.maybe(HeldKeyCoords),
+    repoList: types.optional(RepoLister, {})
     // tree: Tree,
     // root: types.maybe(LinkCell),
     // currentView: types.optional(types.enumeration([TREE, LIST]), LIST)
   })
   .views(self => ({
-    get user() {
-      return self[ContextUser.Key];
-    },
-    get repo() {
-      return self[ContextRepo.Key];
-    },
-    get repoCells() {
-      return makeRepoCells(self.repo);
-    },
-    get searchCells() {
-      return makeSearchCells(self.repo.links, self.user.input);
-    },
-    get selectedCell() {
-      if (self.user.linkChooser) {
-        return self.searchCells[self.user.linkChooser.selectedCellIndex];
-      }
+    // get user() {
+    //   return self[ContextUser.Key];
+    // },
+    // get repo() {
+    //   return self[ContextRepo.Key];
+    // },
+    // get repoCells() {
+    //   return makeRepoCells(self.repo);
+    // },
+    // get searchCells() {
+    //   return makeSearchCells(self.repo.links, self.user.input);
+    // },
+    // get selectedCell() {
+    //   if (self.user.linkChooser) {
+    //     return self.searchCells[self.user.linkChooser.selectedCellIndex];
+    //   }
 
-      return self.repoCells[self.user.selectedCellIndex];
-    },
-    get cursorCell() {
-      return cursorify(self.selectedCell, self.user.input);
-    },
+    //   return self.repoCells[self.user.selectedCellIndex];
+    // },
+    // get cursorCell() {
+    //   return cursorify(self.selectedCell, self.user.input);
+    // },
     get cells() {
+      return self.repoList.cells;
+
       if (self.user.linkChooser) {
         return self.searchCells.concat(self.cursorCell);
       }
@@ -92,309 +95,314 @@ export const Editor = types
       // }
       // // TODO: switch on type here
       // return self.projection.boxes;
-    }
-  }))
-  .actions(self => ({
-    moveUp() {
-      const { cells, user, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
-      );
-
-      if (gotoCellIndex !== -1) {
-        user.selectedCellIndex = gotoCellIndex;
-      }
     },
-    moveDown() {
-      const { cells, user, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
-      );
-
-      if (gotoCellIndex !== -1) {
-        user.selectedCellIndex = gotoCellIndex;
-      }
-    },
-    moveLeft() {
-      const { cells, user, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
-          cell.y === selectedCell.y
-      );
-
-      if (gotoCellIndex !== -1) {
-        user.selectedCellIndex = gotoCellIndex;
-      }
-    },
-    moveRight() {
-      const { cells, user, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
-          cell.y === selectedCell.y
-      );
-
-      if (gotoCellIndex !== -1) {
-        user.selectedCellIndex = gotoCellIndex;
-      }
-    }
-  }))
-  .views(self => ({
     get keyMap() {
-      const { selectedCell, user } = self;
-
-      if (user.input != null) {
-        return {
-          2: { 4: { label: "Input" }, 5: { label: "Mode" } }
-        };
-      }
-
-      const { forLink, nodeIndex } = selectedCell;
-      const {
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = user;
-
-      if (user.changeCellMode) {
-        const keyMap = {
-          2: {
-            6: {
-              label: "Op",
-              action() {
-                toggleChangeCellMode();
-                toggleChangeOpMode();
-              }
-            },
-            7: {
-              label: "Link",
-              action() {
-                toggleChangeCellMode();
-                user.setChoosingLink(forLink);
-              }
-            }
-          },
-          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
-        };
-
-        if (nodeIndex) {
-          keyMap[1] = {
-            6: {
-              label: "Num",
-              action() {
-                forLink.setNode(nodeIndex, { val: 0 });
-                toggleChangeCellMode();
-                setInput("0");
-              }
-            },
-            7: {
-              label: "Text",
-              action() {
-                forLink.setNode(nodeIndex, { val: "" });
-                toggleChangeCellMode();
-                setInput("");
-              }
-            },
-            8: {
-              label: "Bool",
-              action() {
-                forLink.setNode(nodeIndex, { val: false });
-                toggleChangeCellMode();
-              }
-            }
-          };
-        }
-
-        return keyMap;
-      }
-
-      if (user.changeOpMode) {
-        const o = op => ({
-          label: op,
-          action() {
-            forLink.setNode(nodeIndex, { op });
-            toggleChangeOpMode();
-          }
-        });
-
-        return {
-          1: {
-            0: o("@"),
-            1: o("["),
-            2: o("{"),
-            3: o("."),
-            4: o("g"),
-            5: o("+"),
-            6: o("-"),
-            7: o("*"),
-            8: o("/"),
-            9: o("%")
-          },
-          2: {
-            1: o("f"),
-            2: o("s"),
-            3: o("?"),
-            6: o("<"),
-            7: o(">"),
-            8: o("<="),
-            9: o(">=")
-          },
-          3: {
-            0: { label: "Cancel", action: toggleChangeOpMode },
-            6: o("=="),
-            7: o("==="),
-            8: o("!="),
-            9: o("!==")
-          }
-        };
-      }
-
-      if (user.addNodeMode) {
-        const selectNewCell = () => {
-          const newSelectedCellIndex = self.repoCells.findIndex(
-            cell =>
-              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
-          );
-
-          if (newSelectedCellIndex !== -1) {
-            user.selectedCellIndex = newSelectedCellIndex;
-          }
-          toggleAddNodeMode();
-        };
-
-        return {
-          1: {
-            6: {
-              label: "Num",
-              action() {
-                const lastNodeIndex = forLink.addNode({ val: 0 });
-                selectNewCell(lastNodeIndex);
-                setInput("0");
-              }
-            },
-            7: {
-              label: "Text",
-              action() {
-                const lastNodeIndex = forLink.addNode({ val: "" });
-                selectNewCell(lastNodeIndex);
-                setInput("");
-              }
-            },
-            8: {
-              label: "Bool",
-              action() {
-                const lastNodeIndex = forLink.addNode({ val: false });
-                selectNewCell(lastNodeIndex);
-              }
-            }
-          },
-          2: {
-            6: {
-              label: "Op",
-              action() {
-                const lastNodeIndex = forLink.addNode({ op: "." });
-                selectNewCell(lastNodeIndex);
-                toggleChangeOpMode();
-              }
-            }
-          }
-        };
-      }
-
-      if (user.linkChooser) {
-        return {
-          1: {
-            2: { label: "▲", action: self.moveUp }
-          },
-          2: {
-            1: { label: "◀", action: self.moveLeft },
-            2: { label: "▼", action: self.moveDown },
-            3: { label: "▶", action: self.moveRight }
-          },
-          3: {
-            6: {
-              label: "Cancel",
-              action() {
-                user.setChoosingLink(null);
-              }
-            }
-          }
-        };
-      }
-
-      const keyMap = {
-        1: {
-          2: { label: "▲", action: self.moveUp },
-          5: {
-            label: "Add Link",
-            action: self.repo.addLink // TODO: auto-select added link
-          },
-          6: { label: "Add", action: toggleAddNodeMode }
-        },
-        2: {
-          1: { label: "◀", action: self.moveLeft },
-          2: { label: "▼", action: self.moveDown },
-          3: { label: "▶", action: self.moveRight },
-          9: {
-            label: "Delete",
-            action() {
-              if (typeof nodeIndex === "number") {
-                const deleted = selectedCell.forLink.deleteNode(nodeIndex);
-                if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
-                  self.moveLeft();
-                }
-              }
-            }
-          }
-        },
-        3: { 6: { label: "Change", action: toggleChangeCellMode } }
-      };
-
-      if (selectedCell.gotoCellKey) {
-        keyMap[2][7] = {
-          label: "Go To Def",
-          action() {
-            const gotoCellIndex = self.cells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
-
-            if (gotoCellIndex !== -1) {
-              user.selectCellIndex(gotoCellIndex);
-            }
-
-            return;
-          }
-        };
-      }
-
-      return keyMap;
+      return self.repoList.keyMap;
     }
   }))
+  // .actions(self => ({
+  //   moveUp() {
+  //     const { cells, user, selectedCell } = self;
+
+  //     const gotoCellIndex = cells.findIndex(
+  //       cell =>
+  //         cell.selectable &&
+  //         cell.x === selectedCell.x &&
+  //         cell.y === selectedCell.y - 1
+  //     );
+
+  //     if (gotoCellIndex !== -1) {
+  //       user.selectedCellIndex = gotoCellIndex;
+  //     }
+  //   },
+  //   moveDown() {
+  //     const { cells, user, selectedCell } = self;
+
+  //     const gotoCellIndex = cells.findIndex(
+  //       cell =>
+  //         cell.selectable &&
+  //         cell.x === selectedCell.x &&
+  //         cell.y === selectedCell.y + 1
+  //     );
+
+  //     if (gotoCellIndex !== -1) {
+  //       user.selectedCellIndex = gotoCellIndex;
+  //     }
+  //   },
+  //   moveLeft() {
+  //     const { cells, user, selectedCell } = self;
+
+  //     const gotoCellIndex = cells.findIndex(
+  //       cell =>
+  //         cell.selectable &&
+  //         cell.x === selectedCell.x - 2 &&
+  //         cell.y === selectedCell.y
+  //     );
+
+  //     if (gotoCellIndex !== -1) {
+  //       user.selectedCellIndex = gotoCellIndex;
+  //     }
+  //   },
+  //   moveRight() {
+  //     const { cells, user, selectedCell } = self;
+
+  //     const gotoCellIndex = cells.findIndex(
+  //       cell =>
+  //         cell.selectable &&
+  //         cell.x === selectedCell.x + 2 &&
+  //         cell.y === selectedCell.y
+  //     );
+
+  //     if (gotoCellIndex !== -1) {
+  //       user.selectedCellIndex = gotoCellIndex;
+  //     }
+  //   }
+  // }))
+  // .views(self => ({
+  //   get keyMap() {
+  //     const { selectedCell, user } = self;
+
+  //     if (user.input != null) {
+  //       return {
+  //         2: { 4: { label: "Input" }, 5: { label: "Mode" } }
+  //       };
+  //     }
+
+  //     const { forLink, nodeIndex } = selectedCell;
+  //     const {
+  //       setInput,
+  //       toggleChangeCellMode,
+  //       toggleChangeOpMode,
+  //       toggleAddNodeMode
+  //     } = user;
+
+  //     if (user.changeCellMode) {
+  //       const keyMap = {
+  //         2: {
+  //           6: {
+  //             label: "Op",
+  //             action() {
+  //               toggleChangeCellMode();
+  //               toggleChangeOpMode();
+  //             }
+  //           },
+  //           7: {
+  //             label: "Link",
+  //             action() {
+  //               toggleChangeCellMode();
+  //               user.setChoosingLink(forLink);
+  //             }
+  //           }
+  //         },
+  //         3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
+  //       };
+
+  //       if (nodeIndex) {
+  //         keyMap[1] = {
+  //           6: {
+  //             label: "Num",
+  //             action() {
+  //               forLink.setNode(nodeIndex, { val: 0 });
+  //               toggleChangeCellMode();
+  //               setInput("0");
+  //             }
+  //           },
+  //           7: {
+  //             label: "Text",
+  //             action() {
+  //               forLink.setNode(nodeIndex, { val: "" });
+  //               toggleChangeCellMode();
+  //               setInput("");
+  //             }
+  //           },
+  //           8: {
+  //             label: "Bool",
+  //             action() {
+  //               forLink.setNode(nodeIndex, { val: false });
+  //               toggleChangeCellMode();
+  //             }
+  //           }
+  //         };
+  //       }
+
+  //       return keyMap;
+  //     }
+
+  //     if (user.changeOpMode) {
+  //       const o = op => ({
+  //         label: op,
+  //         action() {
+  //           forLink.setNode(nodeIndex, { op });
+  //           toggleChangeOpMode();
+  //         }
+  //       });
+
+  //       return {
+  //         1: {
+  //           0: o("@"),
+  //           1: o("["),
+  //           2: o("{"),
+  //           3: o("."),
+  //           4: o("g"),
+  //           5: o("+"),
+  //           6: o("-"),
+  //           7: o("*"),
+  //           8: o("/"),
+  //           9: o("%")
+  //         },
+  //         2: {
+  //           1: o("f"),
+  //           2: o("s"),
+  //           3: o("?"),
+  //           6: o("<"),
+  //           7: o(">"),
+  //           8: o("<="),
+  //           9: o(">=")
+  //         },
+  //         3: {
+  //           0: { label: "Cancel", action: toggleChangeOpMode },
+  //           6: o("=="),
+  //           7: o("==="),
+  //           8: o("!="),
+  //           9: o("!==")
+  //         }
+  //       };
+  //     }
+
+  //     if (user.addNodeMode) {
+  //       const selectNewCell = () => {
+  //         const newSelectedCellIndex = self.repoCells.findIndex(
+  //           cell =>
+  //             cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+  //         );
+
+  //         if (newSelectedCellIndex !== -1) {
+  //           user.selectedCellIndex = newSelectedCellIndex;
+  //         }
+  //         toggleAddNodeMode();
+  //       };
+
+  //       return {
+  //         1: {
+  //           6: {
+  //             label: "Num",
+  //             action() {
+  //               const lastNodeIndex = forLink.addNode({ val: 0 });
+  //               selectNewCell(lastNodeIndex);
+  //               setInput("0");
+  //             }
+  //           },
+  //           7: {
+  //             label: "Text",
+  //             action() {
+  //               const lastNodeIndex = forLink.addNode({ val: "" });
+  //               selectNewCell(lastNodeIndex);
+  //               setInput("");
+  //             }
+  //           },
+  //           8: {
+  //             label: "Bool",
+  //             action() {
+  //               const lastNodeIndex = forLink.addNode({ val: false });
+  //               selectNewCell(lastNodeIndex);
+  //             }
+  //           }
+  //         },
+  //         2: {
+  //           6: {
+  //             label: "Op",
+  //             action() {
+  //               const lastNodeIndex = forLink.addNode({ op: "." });
+  //               selectNewCell(lastNodeIndex);
+  //               toggleChangeOpMode();
+  //             }
+  //           }
+  //         }
+  //       };
+  //     }
+
+  //     if (user.linkChooser) {
+  //       return {
+  //         1: {
+  //           2: { label: "▲", action: self.moveUp }
+  //         },
+  //         2: {
+  //           1: { label: "◀", action: self.moveLeft },
+  //           2: { label: "▼", action: self.moveDown },
+  //           3: { label: "▶", action: self.moveRight }
+  //         },
+  //         3: {
+  //           6: {
+  //             label: "Cancel",
+  //             action() {
+  //               user.setChoosingLink(null);
+  //             }
+  //           }
+  //         }
+  //       };
+  //     }
+
+  //     const keyMap = {
+  //       1: {
+  //         2: { label: "▲", action: self.moveUp },
+  //         5: {
+  //           label: "Add Link",
+  //           action: self.repo.addLink // TODO: auto-select added link
+  //         },
+  //         6: { label: "Add", action: toggleAddNodeMode }
+  //       },
+  //       2: {
+  //         1: { label: "◀", action: self.moveLeft },
+  //         2: { label: "▼", action: self.moveDown },
+  //         3: { label: "▶", action: self.moveRight },
+  //         9: {
+  //           label: "Delete",
+  //           action() {
+  //             if (typeof nodeIndex === "number") {
+  //               const deleted = selectedCell.forLink.deleteNode(nodeIndex);
+  //               if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
+  //                 self.moveLeft();
+  //               }
+  //             }
+  //           }
+  //         }
+  //       },
+  //       3: { 6: { label: "Change", action: toggleChangeCellMode } }
+  //     };
+
+  //     if (selectedCell.gotoCellKey) {
+  //       keyMap[2][7] = {
+  //         label: "Go To Def",
+  //         action() {
+  //           const gotoCellIndex = self.cells.findIndex(
+  //             cell => cell.key === selectedCell.gotoCellKey
+  //           );
+
+  //           if (gotoCellIndex !== -1) {
+  //             user.selectCellIndex(gotoCellIndex);
+  //           }
+
+  //           return;
+  //         }
+  //       };
+  //     }
+
+  //     return keyMap;
+  //   }
+  // }))
   .actions(self => ({
     handleInput(e) {
       const { value } = e.target;
-      const { user } = self;
 
-      if (user.linkChooser) {
-        user.linkChooser.input = value;
-        return;
-      }
+      self.repoList.input = value;
+      // const { user } = self;
 
-      user.input = value;
+      // if (user.linkChooser) {
+      //   user.linkChooser.input = value;
+      //   return;
+      // }
+
+      // user.input = value;
     },
     handleKeyPress(e) {
       const { keyCode } = e;
@@ -403,14 +411,19 @@ export const Editor = types
 
       const { user, selectedCell } = self;
 
-      if (user.input != null) {
-        if (e.keyCode == 13) {
-          selectedCell.forLink.setVal(selectedCell.nodeIndex, user.input);
-          user.input = null;
-          self.moveRight();
-        }
+      if (self.keyMap.onInput) {
+        self.keyMap.onInput(keyCode);
         return;
       }
+
+      // if (user.input != null) {
+      //   if (e.keyCode == 13) {
+      //     selectedCell.forLink.setVal(selectedCell.nodeIndex, user.input);
+      //     user.input = null;
+      //     self.moveRight();
+      //   }
+      //   return;
+      // }
 
       const coords = keyLayout[keyCode]; // TODO: make key layout editable
       if (!coords) {
