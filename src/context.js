@@ -1,4 +1,4 @@
-import { types, getParent } from "mobx-state-tree";
+import { types, isRoot, getParent } from "mobx-state-tree";
 
 export const setupContext = (Model, key) => {
   if (typeof Model.name !== "string") {
@@ -6,12 +6,17 @@ export const setupContext = (Model, key) => {
   }
 
   const Key = key || `context${Model.name}`;
+  const RefKey = `${Key}Ref`;
 
   const getContext = node => {
     const context = node[Key];
 
     if (context) {
       return context;
+    }
+
+    if (isRoot(node)) {
+      throw new Error(`Could not find required Context ${Model.name}.`);
     }
 
     const parent = getParent(node);
@@ -38,8 +43,13 @@ export const setupContext = (Model, key) => {
   );
 
   const Mixin = {
-    [Key]: Model
+    [Key]: types.maybe(Model),
+    [RefKey]: Ref
   };
 
-  return { Key, Model, Ref, Mixin };
+  const RefMixin = {
+    [RefKey]: Ref
+  };
+
+  return { Key, Model, Ref, Mixin, RefKey, RefMixin };
 };

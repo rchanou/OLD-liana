@@ -87,7 +87,8 @@ const NodeRef = types.model("NodeRef", {
 
 export const RepoLister = types
   .model("RepoLister", {
-    repo: ContextRepo.Ref,
+    // repo: ContextRepo.Ref,
+    ...ContextRepo.Mixin,
     selectedCellIndex: types.optional(types.number, 0),
     // settingNode: types.maybe(NodeRef),
     changeCellMode: optionalBoolean,
@@ -97,6 +98,9 @@ export const RepoLister = types
     input: types.maybe(types.string)
   })
   .views(self => ({
+    get repo() {
+      return self[ContextRepo.RefKey];
+    },
     get repoCells() {
       return makeRepoCells(self.repo);
     },
@@ -115,7 +119,10 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -126,7 +133,10 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -137,7 +147,10 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -148,7 +161,10 @@ export const RepoLister = types
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -192,7 +208,13 @@ export const RepoLister = types
   }))
   .views(self => ({
     get keyMap() {
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
 
       const { forLink, nodeIndex } = selectedCell;
 
@@ -305,7 +327,8 @@ export const RepoLister = types
       if (self.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.repoCells.findIndex(
-            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+            cell =>
+              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -386,7 +409,9 @@ export const RepoLister = types
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.cells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

@@ -7,13 +7,14 @@ import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
 import { Editor /*TREE, LIST*/ } from "../src/editor";
+import { Chooser } from "../src/chooser";
 import { ReactEditor } from "../src/react-editor";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
-const simpleSnapshot = {
+const repo = {
   dependencies: {
     0: {
       depId: "0",
@@ -135,31 +136,25 @@ const testCellId = -1;
 //   selectedIndex: 0
 // };
 
-const defaultSnapshot = {
-  [ContextRepo.Key]: simpleSnapshot,
+const editor = {
+  [ContextRepo.Key]: repo,
   // tree: simpleTree,
   repoList: { selectedCellIndex: 75 },
   root: { cellId: testCellId, link: testRoot }
   // currentView: TREE
 };
 
-const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
+// TODO: finish implementing save
+// const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-const snapshotToLoad = storedSnapshot
-  ? JSON.parse(storedSnapshot)
-  : defaultSnapshot;
-
-const simpleEditor = Editor.create(defaultSnapshot, { system: SystemJS });
-
-window.s = simpleEditor;
-
-const saveSnapshot = () => {
-  const snapshotToSave = getSnapshot(simpleEditor);
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshotToSave));
-};
-window.g = () => getSnapshot(simpleEditor);
-
-addEventListener("beforeunload", saveSnapshot);
+// const snapshotToLoad = storedSnapshot
+//   ? JSON.parse(storedSnapshot)
+//   : editor;
+// const saveRepo = () => {
+//   const snapshotToSave = getSnapshot(simpleEditor);
+//   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshotToSave));
+// };
+// addEventListener("beforeunload", saveRepo);
 
 const params = new Map(
   Object.entries({
@@ -168,32 +163,22 @@ const params = new Map(
   })
 );
 
-autorun(() => {
-  window.a = simpleEditor[ContextRepo.Key].links.get("13").out;
-});
+window.g = store => getSnapshot(store);
 
-window.v = vId => simpleEditor[ContextRepo.Key].links.get(vId).out;
+const env = { system: SystemJS };
 
-autorun(() => {
-  0 &&
-    console.table(
-      simpleEditor.cells.map(n => ({
-        key: n.key,
-        size: n.size,
-        text: n.text
-      }))
+storiesOf("Liana", module)
+  .add("editor", () => {
+    window.s = Editor.create(editor, env);
+    return <ReactEditor editor={window.s} />;
+  })
+  .add("chooser", () => {
+    window.c = Chooser.create(
+      {
+        [ContextRepo.Key]: repo,
+        forLink: "0"
+      },
+      env
     );
-});
-
-class Test extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return <ReactEditor editor={simpleEditor} />;
-    3;
-  }
-}
-
-storiesOf("Liana", module).add("default", () => <Test />);
+    return <ReactEditor editor={window.c} />;
+  });

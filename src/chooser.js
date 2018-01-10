@@ -39,7 +39,7 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
 
 export const Chooser = types
   .model(`Chooser`, {
-    repo: ContextRepo.Ref,
+    ...ContextRepo.Mixin,
     forLink: types.reference(Link),
     nodeIndex: types.maybe(types.number),
     selectedCellIndex: types.optional(types.number, 0),
@@ -47,6 +47,9 @@ export const Chooser = types
     inputMode: types.optional(types.boolean, false)
   })
   .views(self => ({
+    get repo() {
+      return self[ContextRepo.RefKey];
+    },
     get searchCells() {
       const { repo, input } = self;
       const { links, inputs, dependencies } = repo;
@@ -59,14 +62,17 @@ export const Chooser = types
       return self.searchCells[self.selectedCellIndex];
     },
     get cursorCell() {
-      return cursorify(self.selectedCell, self.inputMode ? self.filter : undefined);
+      return cursorify(
+        self.selectedCell,
+        self.inputMode ? self.filter : undefined
+      );
     },
     get cells() {
       return self.searchCells.concat(self.cursorCell);
     }
   }))
   .views(self => ({
-    keyMap() {
+    get keyMap() {
       return {
         1: {
           2: { label: "▲", action: self.moveUp }

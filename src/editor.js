@@ -51,11 +51,11 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
 export const Editor = types
   .model("Editor", {
     ...ContextRepo.Mixin,
-    ...ContextUser.Mixin,
+    // ...ContextUser.Mixin,
     heldKeyCoords: types.maybe(HeldKeyCoords),
     repoList: types.optional(RepoLister, {}),
     // chooser: types.maybe(Chooser)
-    chooser: types.optional(Chooser, { forLink: "0" })
+    chooser: types.maybe(Chooser)
   })
   .actions(self => ({
     toggleChooser(forLink, nodeIndex) {
@@ -68,7 +68,7 @@ export const Editor = types
   }))
   .views(self => ({
     get cells() {
-      if (1 || self.chooser) {
+      if (self.chooser) {
         return self.chooser.searchCells.concat(self.cursorCell);
       }
 
@@ -97,7 +97,7 @@ export const Editor = types
     handleKeyDown(e) {
       const { keyCode } = e;
 
-      console.log(keyCode, e.target.value);
+      // console.log(keyCode, e.target.value);
 
       const { user, selectedCell } = self;
 
@@ -135,6 +135,7 @@ export const Editor = types
       document.addEventListener("keyup", self.handleKeyUp);
     },
     beforeDestroy() {
+      console.log("dat unmount");
       document.removeEventListener("keydown", self.handleKeyDown);
       document.removeEventListener("keyup", self.handleKeyUp);
     }
