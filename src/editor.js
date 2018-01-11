@@ -1,9 +1,10 @@
 import { types } from "mobx-state-tree";
+import EventEmitter from "eventemitter3";
 
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { RepoLister } from "./repo-lister";
-import { Chooser } from "./chooser";
+import { Chooser, EXIT } from "./chooser";
 import { cursorify } from "./cells";
 import { keyboardableModel } from "./keyboardable";
 
@@ -27,6 +28,10 @@ export const Editor = keyboardableModel("Editor", {
   }))
   .views(self => {
     // TODO: try event emitter shiz
+    const events = new EventEmitter();
+
+    events.on(EXIT, self.toggleChooser);
+
     return {
       get current() {
         return self.chooser || self.repoList;
@@ -35,17 +40,15 @@ export const Editor = keyboardableModel("Editor", {
         return self.current.cells;
       },
       get keyMap() {
-        if (self.chooser) {
-          return self.chooser.makeKeyMap(self.toggleChooser);
+        if (self.current.makeKeyMap) {
+          return self.current.makeKeyMap(events);
         }
-        return self.repoList.keyMap;
+        return self.current.keyMap;
+      },
+      get handleInput() {
+        return self.current.handleInput;
       }
     };
-  })
-  .actions(self => ({
-    handleInput(e) {
-      return self.current.handleInput;
-    }
-  }));
+  });
 
 export default Editor;

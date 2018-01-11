@@ -38,6 +38,8 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
+export const EXIT = "EXIT";
+
 export const Chooser = keyboardableModel(`Chooser`, {
   ...ContextRepo.Mixin,
   forLink: types.reference(Link),
@@ -121,7 +123,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
     }
   }))
   .views(self => ({
-    makeKeyMap(exit) {
+    makeKeyMap(events) {
       return {
         1: {
           2: { label: "▲", action: self.moveUp }
@@ -134,7 +136,9 @@ export const Chooser = keyboardableModel(`Chooser`, {
         3: {
           6: {
             label: "Cancel",
-            action: exit
+            action() {
+              events.emit(EXIT);
+            }
           }
         }
       };
