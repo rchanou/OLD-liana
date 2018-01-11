@@ -79,48 +79,6 @@ export const Chooser = keyboardableModel(`Chooser`, {
     },
     selectCellIndex(index) {
       self.selectedCellIndex = index;
-    },
-    moveUp() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
-    },
-    moveDown() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
-    },
-    moveLeft() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 5 &&
-          cell.y === selectedCell.y
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
     }
   }))
   .views(self => ({

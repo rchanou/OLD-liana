@@ -115,64 +115,8 @@ export const RepoLister = keyboardableModel("RepoLister", {
   }))
   .actions(self => ({
     handleInput(e) {
-      console.log("fun", e.target.value);
+      // console.log("fun", e.target.value);
       self.input = e.target.value;
-    },
-    moveUp() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
-    },
-    moveDown() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
-    },
-    moveLeft() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
-          cell.y === selectedCell.y
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
-    },
-    moveRight() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
-          cell.y === selectedCell.y
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
     },
     selectCellIndex(index) {
       self.selectedCellIndex = index;

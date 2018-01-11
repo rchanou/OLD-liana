@@ -117,57 +117,98 @@ const Keyboarder = types
       return self.keyboard.heldKeyCoords;
     },
     get cellMap() {
-      const yxMap = { maxX: 0, maxY: 0 };
+      const base = {
+        y: { crossMin: 0, crossMax: 0 },
+        x: { crossMin: 0, crossMax: 0 }
+      };
+      const yx = base.y;
+      const xy = base.x;
 
       const { baseCells } = self;
       const { length } = baseCells;
 
       for (let i = 0; i < length; i++) {
-        const { x, y } = baseCells[i];
-
-        if (!yxMap[y]) {
-          yxMap[y] = {};
+        const cell = baseCells[i];
+        if (!cell.selectable) {
+          continue;
         }
 
-        yxMap[y][x] = i;
+        const { x, y } = cell;
 
-        if (y > yxMap.maxY) {
-          yxMap.maxY = y;
+        if (!yx[y]) {
+          yx[y] = {};
         }
-        if (x > yxMap.maxX) {
-          yxMap.maxX = x;
+
+        yx[y][x] = i;
+
+        if (x > yx.crossMax) {
+          yx.crossMax = x;
+        }
+        if (x < yx.crossMin) {
+          yx.crossMin = x;
+        }
+
+        if (!xy[x]) {
+          xy[x] = {};
+        }
+
+        xy[x][y] = i;
+
+        if (y > xy.crossMax) {
+          xy.crossMax = y;
+        }
+        if (y < xy.crossMin) {
+          xy.crossMin = y;
         }
       }
 
-      return yxMap;
+      return base;
     }
   }))
   .actions(self => ({
-    moveRight(currentCell) {
-      currentCell = currentCell || self.selectedCell;
+    moveBy(step = +1, axis = "x") {
+      const crossAxis = axis === "x" ? "y" : "x";
+
+      const currentCell = self.selectedCell;
+      // currentCell = currentCell || self.selectedCell;
       if (!currentCell) {
         return;
       }
 
-      let { x, y } = currentCell;
+      // let { x, y } = currentCell;
+      let axisPos = currentCell[axis];
+      const crossAxisPos = currentCell[crossAxis];
 
-      const { cellMap } = self;
+      const crossAxisMap = self.cellMap[crossAxis];
 
-      const ySet = cellMap[y];
-      if (!ySet) {
+      const crossAxisSet = crossAxisMap[crossAxisPos];
+      if (!crossAxisSet) {
         return;
       }
 
-      const { maxX } = cellMap;
+      const min = crossAxisMap.crossMin;
+      const max = crossAxisMap.crossMax;
 
-      while (x <= maxX) {
-        x++;
-        const foundIndex = ySet[x];
+      while (min <= axisPos && axisPos <= max) {
+        axisPos += step;
+        const foundIndex = crossAxisSet[axisPos];
         if (foundIndex !== undefined) {
           self.selectCellIndex(foundIndex);
           return;
         }
       }
+    },
+    moveRight() {
+      self.moveBy();
+    },
+    moveLeft() {
+      self.moveBy(-1);
+    },
+    moveDown() {
+      self.moveBy(+1, "y");
+    },
+    moveUp() {
+      self.moveBy(-1, "y");
     },
     afterCreate() {
       // TODO: only push if isRoot?
