@@ -5,17 +5,17 @@ import { ContextUser } from "./user";
 import { RepoLister } from "./repo-lister";
 import { Chooser } from "./chooser";
 import { cursorify } from "./cells";
+import { keyboardableModel } from "./keyboardable";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
 
-export const Editor = types
-  .model("Editor", {
-    ...ContextRepo.Mixin,
-    // ...ContextUser.Mixin,
-    repoList: types.optional(RepoLister, {}),
-    chooser: types.maybe(Chooser)
-  })
+export const Editor = keyboardableModel("Editor", {
+  ...ContextRepo.Mixin,
+  // ...ContextUser.Mixin,
+  chooser: types.maybe(Chooser),
+  repoList: types.optional(RepoLister, {})
+})
   .actions(self => ({
     toggleChooser(forLink, nodeIndex) {
       if (self.chooser) {
@@ -35,13 +35,10 @@ export const Editor = types
     },
     get keyMap() {
       if (self.chooser) {
-        return self.chooser.keyMap;
+        return self.chooser.makeKeyMap(self.toggleChooser);
       }
 
       return self.repoList.keyMap;
-    },
-    get heldKeyCoords() {
-      return self.repoList.heldKeyCoords;
     }
   }))
   .actions(self => ({

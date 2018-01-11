@@ -138,20 +138,15 @@ const testCellId = -1;
 //   selectedIndex: 0
 // };
 
-const context = {
-  [ContextRepo.Key]: repo,
-  [ContextKeyboard.Key]: {}
-};
-
-const editor = {
-  ...context,
-  [ContextKeyboard.Key]: {},
-  repoList: { selectedCellIndex: 75 }
-  // chooser: { forLink: "0" },
-  // tree: simpleTree,
-  // root: { cellId: testCellId, link: testRoot },
-  // currentView: TREE
-};
+// const editor = {
+//   ...context,
+//   [ContextKeyboard.Key]: {},
+//   repoList: { selectedCellIndex: 75 }
+//   // chooser: { forLink: "0" },
+//   // tree: simpleTree,
+//   // root: { cellId: testCellId, link: testRoot },
+//   // currentView: TREE
+// };
 
 // TODO: finish implementing save
 // const storedSnapshot = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -164,6 +159,10 @@ const editor = {
 //   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshotToSave));
 // };
 // addEventListener("beforeunload", saveRepo);
+
+const context = {
+  [ContextRepo.Key]: repo
+};
 
 const params = new Map(
   Object.entries({
@@ -178,14 +177,20 @@ const env = { system: SystemJS };
 
 storiesOf("Liana", module)
   .add("editor", () => {
-    window.s = Editor.create(editor, env);
+    window.s = Editor.create(
+      {
+        ...context,
+        repoList: { selectedCellIndex: 75 },
+        chooser: { forLink: "0" }
+      },
+      env
+    );
     return <ReactEditor editor={window.s} />;
   })
   .add("chooser", () => {
     window.c = Chooser.create(
       {
         ...context,
-        [ContextKeyboard.Key]: {},
         forLink: "0"
       },
       env

@@ -115,7 +115,7 @@ const ReactBox = observer(({ box, onInput, editor }) => {
         key={cellId || key}
         value={input}
         style={style}
-        onChange={editor.onInput}
+        onChange={editor.handleInput}
       />
     );
   } else {

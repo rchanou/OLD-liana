@@ -115,6 +115,7 @@ export const RepoLister = keyboardableModel("RepoLister", {
   }))
   .actions(self => ({
     handleInput(e) {
+      console.log("fun", e.target.value);
       self.input = e.target.value;
     },
     moveUp() {

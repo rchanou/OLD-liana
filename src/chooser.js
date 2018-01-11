@@ -112,7 +112,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const gotoCellIndex = cells.findIndex(
         cell =>
           cell.selectable &&
-          cell.x === selectedCell.x - 2 &&
+          cell.x === selectedCell.x - 5 &&
           cell.y === selectedCell.y
       );
 
@@ -126,7 +126,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const gotoCellIndex = cells.findIndex(
         cell =>
           cell.selectable &&
-          cell.x === selectedCell.x + 2 &&
+          cell.x === selectedCell.x + 5 &&
           cell.y === selectedCell.y
       );
 
@@ -136,7 +136,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
     }
   }))
   .views(self => ({
-    get keyMap() {
+    makeKeyMap(exiter) {
       return {
         1: {
           2: { label: "▲", action: self.moveUp }
@@ -149,11 +149,15 @@ export const Chooser = keyboardableModel(`Chooser`, {
         3: {
           6: {
             label: "Cancel",
-            action() {
-              self.setChoosingLink(null);
-            }
+            action: exiter
+            // action() {
+            //   self.setChoosingLink(null);
+            // }
           }
         }
       };
+    },
+    get keyMap() {
+      return self.makeKeyMap();
     }
   }));

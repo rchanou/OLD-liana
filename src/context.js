@@ -21,7 +21,7 @@ export const setupContext = (Model, key) => {
       if (defaultContext) {
         return defaultContext;
       }
-
+      console.warn("say what", Key, RefKey);
       defaultContext = Model.create();
       return defaultContext;
       // throw new Error(`Could not find required Context ${Model.name}.`);

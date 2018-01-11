@@ -66,6 +66,7 @@ const Keyboard = types
       handleKeyDown(e) {
         const { keyCode } = e;
         const { keyMap } = editor;
+        console.log("shamon");
         // const { keyMap } = editorStates[editorStates.length - 1];
 
         if (keyMap.onInput) {
@@ -101,6 +102,7 @@ const Keyboard = types
         document.addEventListener("keyup", self.handleKeyUp);
       },
       beforeDestroy() {
+        console.log("naw man");
         document.removeEventListener("keydown", self.handleKeyDown);
         document.removeEventListener("keyup", self.handleKeyUp);
       }
