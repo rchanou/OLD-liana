@@ -6,7 +6,6 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
-import { ContextKeyboard } from "../src/keyboardable";
 import { Editor /*TREE, LIST*/ } from "../src/editor";
 import { Chooser } from "../src/chooser";
 

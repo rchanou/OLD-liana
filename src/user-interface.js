@@ -105,9 +105,10 @@ const Keyboard = types
 
 export const ContextKeyboard = setupContext(Keyboard);
 
-const Keyboarder = types
+const UI = types
   .model("Keyboarder", {
-    ...ContextKeyboard.Mixin
+    ...ContextKeyboard.Mixin,
+    selectedCellIndex: types.optional(types.number, 0)
   })
   .views(self => ({
     get keyboard() {
@@ -170,22 +171,19 @@ const Keyboarder = types
       const crossAxis = axis === "x" ? "y" : "x";
 
       const currentCell = self.selectedCell;
-      // currentCell = currentCell || self.selectedCell;
       if (!currentCell) {
         return;
       }
 
-      // let { x, y } = currentCell;
-      let axisPos = currentCell[axis];
-      const crossAxisPos = currentCell[crossAxis];
-
       const crossAxisMap = self.cellMap[crossAxis];
+      const crossAxisPos = currentCell[crossAxis];
 
       const crossAxisSet = crossAxisMap[crossAxisPos];
       if (!crossAxisSet) {
         return;
       }
 
+      let axisPos = currentCell[axis];
       const min = crossAxisMap.crossMin;
       const max = crossAxisMap.crossMax;
 
@@ -220,5 +218,4 @@ const Keyboarder = types
     // }
   }));
 
-export const keyboardableModel = (...args) =>
-  types.compose(types.model(...args), Keyboarder);
+export const uiModel = (...args) => types.compose(types.model(...args), UI);

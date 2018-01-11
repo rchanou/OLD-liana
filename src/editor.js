@@ -6,12 +6,12 @@ import { ContextUser } from "./user";
 import { RepoLister } from "./repo-lister";
 import { Chooser, EXIT } from "./chooser";
 import { cursorify } from "./cells";
-import { keyboardableModel } from "./keyboardable";
+import { uiModel } from "./user-interface";
 
 export const TREE = "TREE";
 export const LIST = "LIST";
 
-export const Editor = keyboardableModel("Editor", {
+export const Editor = uiModel("Editor", {
   ...ContextRepo.Mixin,
   // ...ContextUser.Mixin,
   chooser: types.maybe(Chooser),

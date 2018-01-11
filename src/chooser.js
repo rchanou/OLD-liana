@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency, ContextRepo } from "./core";
 import { cursorify } from "./cells";
-import { keyboardableModel } from "./keyboardable";
+import { uiModel } from "./user-interface";
 
 const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   const cells = [];
@@ -40,11 +40,11 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
 
 export const EXIT = "EXIT";
 
-export const Chooser = keyboardableModel(`Chooser`, {
+export const Chooser = uiModel(`Chooser`, {
   ...ContextRepo.Mixin,
   forLink: types.reference(Link),
   nodeIndex: types.maybe(types.number),
-  selectedCellIndex: types.optional(types.number, 0),
+  // selectedCellIndex: types.optional(types.number, 0),
   filter: types.optional(types.string, ""),
   inputMode: types.optional(types.boolean, false)
 })

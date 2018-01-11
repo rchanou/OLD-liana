@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 
 import { Link, Dependency, ContextRepo } from "./core";
 import { cursorify } from "./cells";
-import { keyboardableModel } from "./keyboardable";
+import { uiModel } from "./user-interface";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
   const cells = [];
@@ -86,9 +86,8 @@ const NodeRef = types.model("NodeRef", {
   index: types.maybe(types.number)
 });
 
-export const RepoLister = keyboardableModel("RepoLister", {
+export const RepoLister = uiModel("RepoLister", {
   ...ContextRepo.Mixin,
-  selectedCellIndex: types.optional(types.number, 0),
   // settingNode: types.maybe(NodeRef),
   changeCellMode: optionalBoolean,
   changeOpMode: optionalBoolean,
