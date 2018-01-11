@@ -27,7 +27,6 @@ export const Editor = keyboardableModel("Editor", {
     }
   }))
   .views(self => {
-    // TODO: try event emitter shiz
     const events = new EventEmitter();
 
     events.on(EXIT, self.toggleChooser);

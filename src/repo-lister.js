@@ -100,17 +100,17 @@ export const RepoLister = keyboardableModel("RepoLister", {
     get repo() {
       return self[ContextRepo.RefKey];
     },
-    get repoCells() {
+    get baseCells() {
       return makeRepoCells(self.repo);
     },
     get selectedCell() {
-      return self.repoCells[self.selectedCellIndex];
+      return self.baseCells[self.selectedCellIndex];
     },
     get cursorCell() {
       return cursorify(self.selectedCell, self.input);
     },
     get cells() {
-      return self.repoCells.concat(self.cursorCell);
+      return self.baseCells.concat(self.cursorCell);
     }
   }))
   .actions(self => ({
@@ -122,7 +122,10 @@ export const RepoLister = keyboardableModel("RepoLister", {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -133,7 +136,10 @@ export const RepoLister = keyboardableModel("RepoLister", {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -144,7 +150,10 @@ export const RepoLister = keyboardableModel("RepoLister", {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x - 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -155,7 +164,10 @@ export const RepoLister = keyboardableModel("RepoLister", {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x + 2 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x + 2 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -199,7 +211,13 @@ export const RepoLister = keyboardableModel("RepoLister", {
   }))
   .views(self => ({
     get keyMap() {
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
 
       const { forLink, nodeIndex } = selectedCell;
 
@@ -311,8 +329,9 @@ export const RepoLister = keyboardableModel("RepoLister", {
 
       if (self.addNodeMode) {
         const selectNewCell = () => {
-          const newSelectedCellIndex = self.repoCells.findIndex(
-            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+          const newSelectedCellIndex = self.baseCells.findIndex(
+            cell =>
+              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -393,7 +412,9 @@ export const RepoLister = keyboardableModel("RepoLister", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.cells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

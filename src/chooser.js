@@ -52,7 +52,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
     get repo() {
       return self[ContextRepo.RefKey];
     },
-    get searchCells() {
+    get baseCells() {
       const { repo, input } = self;
       const { links, inputs, dependencies } = repo;
 
@@ -61,13 +61,16 @@ export const Chooser = keyboardableModel(`Chooser`, {
         .concat(makeSearchCells(dependencies, input, 10));
     },
     get selectedCell() {
-      return self.searchCells[self.selectedCellIndex];
+      return self.baseCells[self.selectedCellIndex];
     },
     get cursorCell() {
-      return cursorify(self.selectedCell, self.inputMode ? self.filter : undefined);
+      return cursorify(
+        self.selectedCell,
+        self.inputMode ? self.filter : undefined
+      );
     },
     get cells() {
-      return self.searchCells.concat(self.cursorCell);
+      return self.baseCells.concat(self.cursorCell);
     }
   }))
   .actions(self => ({
@@ -81,7 +84,10 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -92,7 +98,10 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x &&
+          cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -103,18 +112,10 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x - 5 && cell.y === selectedCell.y
-      );
-
-      if (gotoCellIndex !== -1) {
-        self.selectCellIndex(gotoCellIndex);
-      }
-    },
-    moveRight() {
-      const { cells, selectedCell } = self;
-
-      const gotoCellIndex = cells.findIndex(
-        cell => cell.selectable && cell.x === selectedCell.x + 5 && cell.y === selectedCell.y
+        cell =>
+          cell.selectable &&
+          cell.x === selectedCell.x - 5 &&
+          cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {

@@ -48,26 +48,22 @@ const Keyboard = types
     heldKeyCoords: types.maybe(HeldKeyCoords)
   })
   .actions(self => {
-    // let editorStates = [];
+    // HACK: this whole system seems hella dirty and prone to mem leaks
+    // TODO: try to improve it
+
     let editor;
 
     return {
       pushEditor(newEditor) {
         editor = newEditor;
-        console.log("eee", editor);
-        // editorStates.push(editor);
-        // console.log("es", editorStates);
+        // console.log("eee", editor);
       },
-      popEditor() {
-        console.log("eee", editor);
-        // editorStates.pop();
-        // console.log("es", editorStates);
-      },
+      // popEditor() {
+      //   console.log("fff", editor);
+      // },
       handleKeyDown(e) {
         const { keyCode } = e;
         const { keyMap } = editor;
-        console.log("shamon");
-        // const { keyMap } = editorStates[editorStates.length - 1];
 
         if (keyMap.onInput) {
           keyMap.onInput(keyCode);
@@ -97,12 +93,10 @@ const Keyboard = types
         self.heldKeyCoords = null;
       },
       afterCreate() {
-        console.log("da boot");
         document.addEventListener("keydown", self.handleKeyDown);
         document.addEventListener("keyup", self.handleKeyUp);
       },
       beforeDestroy() {
-        console.log("naw man");
         document.removeEventListener("keydown", self.handleKeyDown);
         document.removeEventListener("keyup", self.handleKeyUp);
       }
@@ -121,19 +115,69 @@ const Keyboarder = types
     },
     get heldKeyCoords() {
       return self.keyboard.heldKeyCoords;
+    },
+    get cellMap() {
+      const yxMap = { maxX: 0, maxY: 0 };
+
+      const { baseCells } = self;
+      const { length } = baseCells;
+
+      for (let i = 0; i < length; i++) {
+        const { x, y } = baseCells[i];
+
+        if (!yxMap[y]) {
+          yxMap[y] = {};
+        }
+
+        yxMap[y][x] = i;
+
+        if (y > yxMap.maxY) {
+          yxMap.maxY = y;
+        }
+        if (x > yxMap.maxX) {
+          yxMap.maxX = x;
+        }
+      }
+
+      return yxMap;
     }
   }))
   .actions(self => ({
-    afterCreate() {
-      self.keyboard.pushEditor(self);
+    moveRight(currentCell) {
+      currentCell = currentCell || self.selectedCell;
+      if (!currentCell) {
+        return;
+      }
+
+      let { x, y } = currentCell;
+
+      const { cellMap } = self;
+
+      const ySet = cellMap[y];
+      if (!ySet) {
+        return;
+      }
+
+      const { maxX } = cellMap;
+
+      while (x <= maxX) {
+        x++;
+        const foundIndex = ySet[x];
+        if (foundIndex !== undefined) {
+          self.selectCellIndex(foundIndex);
+          return;
+        }
+      }
     },
-    beforeDestroy() {
-      self.keyboard.popEditor();
+    afterCreate() {
+      // TODO: only push if isRoot?
+      self.keyboard.pushEditor(self);
     }
+    // TODO: destroy to prevent mem leaks if necessary
+    // beforeDestroy() {
+    //   self.keyboard.popEditor();
+    // }
   }));
 
-export const keyboardableModel = (...args) => {
-  const firstModel = types.compose(types.model(...args), Keyboarder);
-
-  return firstModel;
-};
+export const keyboardableModel = (...args) =>
+  types.compose(types.model(...args), Keyboarder);
