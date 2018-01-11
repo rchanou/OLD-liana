@@ -67,26 +67,24 @@ class Input extends React.Component {
 //   };
 // };
 
+class Cursor extends React.Component {
+  componentDidMount() {
+    this.me = findDOMNode(this);
+  }
+  componentDidUpdate() {
+    this.me.scrollIntoView();
+  }
+  render() {
+    return <div {...this.props} />;
+  }
+}
+
 const ReactBox = observer(({ box, onInput, editor }) => {
   if (!box) {
     return null;
   }
 
-  const {
-    x,
-    y,
-    width,
-    size,
-    fill,
-    cellId,
-    key,
-    form,
-    text,
-    category,
-    onChange,
-    input,
-    cursor
-  } = box;
+  const { x, y, width, size, fill, cellId, key, form, text, category, onChange, input, cursor } = box;
 
   const isCursor = key === "CURSOR"; // TODO: remove hard-coded key check HACK
 
@@ -110,15 +108,10 @@ const ReactBox = observer(({ box, onInput, editor }) => {
   let element;
   if (input != null) {
     style.background = "#eee";
-    element = (
-      <Input
-        key={cellId || key}
-        value={input}
-        style={style}
-        onChange={editor.handleInput}
-      />
-    );
+    element = <Input key={cellId || key} value={input} style={style} onChange={editor.handleInput} />;
   } else {
+    const Tag = isCursor ? Cursor : "div";
+
     element = (
       <div key={cellId || key} style={style}>
         {text}
@@ -146,12 +139,7 @@ export const ReactTree = observer(({ editor }) => {
   let throwawayIdCounter = 0;
 
   const cellBoxes = cells.map(cell => (
-    <ReactBox
-      key={cell ? cell.key : throwawayIdCounter++}
-      box={cell}
-      onInput={onInput}
-      editor={editor}
-    />
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} editor={editor} />
   ));
 
   return <div style={containerStyle}>{cellBoxes}</div>;

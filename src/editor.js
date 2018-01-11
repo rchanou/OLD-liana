@@ -25,29 +25,26 @@ export const Editor = keyboardableModel("Editor", {
       }
     }
   }))
-  .views(self => ({
-    get cells() {
-      if (self.chooser) {
-        return self.chooser.cells;
+  .views(self => {
+    // TODO: try event emitter shiz
+    return {
+      get current() {
+        return self.chooser || self.repoList;
+      },
+      get cells() {
+        return self.current.cells;
+      },
+      get keyMap() {
+        if (self.chooser) {
+          return self.chooser.makeKeyMap(self.toggleChooser);
+        }
+        return self.repoList.keyMap;
       }
-
-      return self.repoList.cells;
-    },
-    get keyMap() {
-      if (self.chooser) {
-        return self.chooser.makeKeyMap(self.toggleChooser);
-      }
-
-      return self.repoList.keyMap;
-    }
-  }))
+    };
+  })
   .actions(self => ({
     handleInput(e) {
-      if (self.chooser) {
-        self.chooser.handleInput(e);
-      }
-
-      self.repoList.handleInput(e);
+      return self.current.handleInput;
     }
   }));
 

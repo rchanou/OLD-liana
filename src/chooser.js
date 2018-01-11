@@ -62,10 +62,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       return self.searchCells[self.selectedCellIndex];
     },
     get cursorCell() {
-      return cursorify(
-        self.selectedCell,
-        self.inputMode ? self.filter : undefined
-      );
+      return cursorify(self.selectedCell, self.inputMode ? self.filter : undefined);
     },
     get cells() {
       return self.searchCells.concat(self.cursorCell);
@@ -82,10 +79,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y - 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y - 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -96,10 +90,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x &&
-          cell.y === selectedCell.y + 1
+        cell => cell.selectable && cell.x === selectedCell.x && cell.y === selectedCell.y + 1
       );
 
       if (gotoCellIndex !== -1) {
@@ -110,10 +101,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x - 5 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x - 5 && cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -124,10 +112,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
       const { cells, selectedCell } = self;
 
       const gotoCellIndex = cells.findIndex(
-        cell =>
-          cell.selectable &&
-          cell.x === selectedCell.x + 5 &&
-          cell.y === selectedCell.y
+        cell => cell.selectable && cell.x === selectedCell.x + 5 && cell.y === selectedCell.y
       );
 
       if (gotoCellIndex !== -1) {
@@ -136,7 +121,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
     }
   }))
   .views(self => ({
-    makeKeyMap(exiter) {
+    makeKeyMap(exit) {
       return {
         1: {
           2: { label: "▲", action: self.moveUp }
@@ -149,10 +134,7 @@ export const Chooser = keyboardableModel(`Chooser`, {
         3: {
           6: {
             label: "Cancel",
-            action: exiter
-            // action() {
-            //   self.setChoosingLink(null);
-            // }
+            action: exit
           }
         }
       };

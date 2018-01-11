@@ -126,8 +126,8 @@ const repo = {
   }
 };
 
-const testRoot = "7";
-const testCellId = -1;
+// const testRoot = "7";
+// const testCellId = -1;
 
 // const simpleTree = {
 //   rootLink: testRoot,
@@ -176,7 +176,18 @@ window.g = store => getSnapshot(store);
 const env = { system: SystemJS };
 
 storiesOf("Liana", module)
-  .add("editor", () => {
+  .add("editor", () => (
+    <ReactEditor
+      editor={Editor.create(
+        {
+          ...context,
+          repoList: { selectedCellIndex: 75 }
+        },
+        env
+      )}
+    />
+  ))
+  .add("editor in chooser", () => {
     window.s = Editor.create(
       {
         ...context,
