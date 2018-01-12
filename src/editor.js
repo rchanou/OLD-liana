@@ -118,6 +118,7 @@ export const Editor = types
     },
     get cells() {
       return self.current.cells;
+      // return self.repoList.cells.concat(self.chooser ? self.chooser.cells : []);
     },
     get keyMap() {
       if (self.chooser) {

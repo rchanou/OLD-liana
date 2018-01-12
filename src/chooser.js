@@ -38,7 +38,7 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
-export const Chooser = uiModel(`Chooser`, {
+export const Chooser = uiModel("Chooser", {
   ...ContextRepo.Mixin,
   forLink: types.reference(Link),
   nodeIndex: types.maybe(types.number),
@@ -61,10 +61,7 @@ export const Chooser = uiModel(`Chooser`, {
       return self.baseCells[self.selectedCellIndex];
     },
     get cursorCell() {
-      return cursorify(
-        self.selectedCell,
-        self.inputMode ? self.filter : undefined
-      );
+      return cursorify(self.selectedCell, "CHOOSER", self.inputMode ? self.filter : undefined);
     },
     get cells() {
       return self.baseCells.concat(self.cursorCell);

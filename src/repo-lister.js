@@ -106,7 +106,7 @@ export const RepoLister = uiModel("RepoLister", {
       return self.baseCells[self.selectedCellIndex];
     },
     get cursorCell() {
-      return cursorify(self.selectedCell, self.input);
+      return cursorify(self.selectedCell, "RL", self.input);
     },
     get cells() {
       return self.baseCells.concat(self.cursorCell);
@@ -154,13 +154,7 @@ export const RepoLister = uiModel("RepoLister", {
   }))
   .views(self => ({
     makeKeyMap(openChooser) {
-      const {
-        selectedCell,
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
 
       const { forLink, nodeIndex } = selectedCell;
 
@@ -273,8 +267,7 @@ export const RepoLister = uiModel("RepoLister", {
       if (self.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.baseCells.findIndex(
-            cell =>
-              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -359,9 +352,7 @@ export const RepoLister = uiModel("RepoLister", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.cells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

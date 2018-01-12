@@ -1,9 +1,9 @@
 import { createTransformer } from "mobx";
 
-export const cursorify = (baseCell, input) => {
+export const cursorify = (baseCell, key, input) => {
   const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;
 
-  const finalCell = {
+  return {
     x,
     y,
     width,
@@ -11,10 +11,9 @@ export const cursorify = (baseCell, input) => {
     nodeIndex,
     gotoCellKey,
     input,
-    key: "CURSOR"
+    cursor: true,
+    key: `CURSOR-${key}`
   };
-
-  return finalCell;
 };
 
 export const createCellMap = createTransformer(cells => {

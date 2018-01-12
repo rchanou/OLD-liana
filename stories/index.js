@@ -180,8 +180,13 @@ class Story extends React.Component {
 
   componentDidMount() {
     const dom = findDOMNode(this);
-    console.log("dat dome doe", dom);
+
     const store = Editor.create(this.props.editor, { ...env, dom });
+
+    if (!window.s) {
+      window.s = store;
+    }
+
     this.setState({ store });
   }
 
@@ -208,11 +213,12 @@ storiesOf("Liana", module)
       }}
     />
   ))
-  .add("editor in chooser", () => {
-    window.s = {
-      ...context,
-      repoList: { selectedCellIndex: 75 },
-      chooser: { forLink: "0" }
-    };
-    return <Story editor={window.s} />;
-  });
+  .add("editor in chooser", () => (
+    <Story
+      editor={{
+        ...context,
+        repoList: { selectedCellIndex: 75 },
+        chooser: { forLink: "0" }
+      }}
+    />
+  ));
