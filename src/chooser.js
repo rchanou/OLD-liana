@@ -1,4 +1,5 @@
 import { types } from "mobx-state-tree";
+import EventEmitter from "eventemitter3";
 
 import { Link, Input, Dependency } from "./core";
 import { uiModel, cursorify } from "./user-interface";
@@ -37,6 +38,8 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
+export const CLOSE = "CLOSE";
+
 export const Chooser = uiModel("Chooser", {
   forLink: types.reference(Link),
   nodeIndex: types.maybe(types.number),
@@ -61,26 +64,31 @@ export const Chooser = uiModel("Chooser", {
       self.filter = e.target.value;
     }
   }))
-  .views(self => ({
-    makeKeyMap(exit) {
-      return {
-        1: {
-          2: { label: "▲", action: self.moveUp }
-        },
-        2: {
-          1: { label: "◀", action: self.moveLeft },
-          2: { label: "▼", action: self.moveDown },
-          3: { label: "▶", action: self.moveRight }
-        },
-        3: {
-          6: {
-            label: "Cancel",
-            action: exit
+  .views(self => {
+    // TODO: check if this and any subscriptions cause memory leaks and try to handle those
+    const events = new EventEmitter();
+
+    return {
+      get keyMap() {
+        return {
+          events,
+          1: {
+            2: { label: "▲", action: self.moveUp }
+          },
+          2: {
+            1: { label: "◀", action: self.moveLeft },
+            2: { label: "▼", action: self.moveDown },
+            3: { label: "▶", action: self.moveRight }
+          },
+          3: {
+            6: {
+              label: "Cancel",
+              action() {
+                events.emit(CLOSE);
+              }
+            }
           }
-        }
-      };
-    },
-    get keyMap() {
-      return self.makeKeyMap();
-    }
-  }));
+        };
+      }
+    };
+  });

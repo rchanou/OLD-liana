@@ -1,7 +1,7 @@
 import { types, destroy } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
-import { Chooser } from "./chooser";
+import { Chooser, CLOSE } from "./chooser";
 import { uiModel, cursorify } from "./user-interface";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
@@ -157,18 +157,16 @@ export const RepoLister = uiModel("RepoLister", {
     }
   }))
   .views(self => ({
+    get chooserMap() {
+      const { keyMap } = self.chooser;
+      keyMap.events.on(CLOSE, self.toggleChooser);
+      return keyMap;
+    },
     get keyMap() {
-      const {
-        selectedCell,
-        setInput,
-        toggleChooser,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
 
       if (self.chooser) {
-        return self.chooser.makeKeyMap(toggleChooser);
+        return self.chooserMap;
       }
 
       const { forLink, nodeIndex } = selectedCell;
@@ -346,7 +344,7 @@ export const RepoLister = uiModel("RepoLister", {
           3: { label: "▶", action: self.moveRight },
           5: {
             label: "Chooser",
-            action: toggleChooser
+            action: self.toggleChooser
           },
           9: {
             label: "Delete",
