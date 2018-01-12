@@ -59,44 +59,46 @@ export const Chooser = uiModel("Chooser", {
     },
     get cursorCell() {
       return cursorify(self.selectedCell, "CHOOSER", self.inputMode ? self.filter : undefined);
+    },
+    get events() {
+      return new EventEmitter();
+    },
+    get keyMap() {
+      const { events } = self;
+
+      return {
+        events,
+        1: {
+          2: { label: "▲", action: self.moveUp }
+        },
+        2: {
+          1: { label: "◀", action: self.moveLeft },
+          2: { label: "▼", action: self.moveDown },
+          3: { label: "▶", action: self.moveRight },
+          6: {
+            label: "Choose",
+            action() {
+              events.emit(CHOOSE, self.selectedCell.record);
+            }
+          }
+        },
+        3: {
+          6: {
+            label: "Cancel",
+            action() {
+              events.emit(CLOSE);
+            }
+          }
+        }
+      };
     }
   }))
   .actions(self => ({
     handleInput(e) {
       self.filter = e.target.value;
+    },
+    beforeDestroy() {
+      self.events.removeAllListeners();
     }
-  }))
-  .views(self => {
-    // TODO: check if this and any subscriptions cause memory leaks and try to handle those
-    const events = new EventEmitter();
-
-    return {
-      get keyMap() {
-        return {
-          events,
-          1: {
-            2: { label: "▲", action: self.moveUp }
-          },
-          2: {
-            1: { label: "◀", action: self.moveLeft },
-            2: { label: "▼", action: self.moveDown },
-            3: { label: "▶", action: self.moveRight },
-            6: {
-              label: "Choose",
-              action() {
-                events.emit(CHOOSE, self.selectedCell.record);
-              }
-            }
-          },
-          3: {
-            6: {
-              label: "Cancel",
-              action() {
-                events.emit(CLOSE);
-              }
-            }
-          }
-        };
-      }
-    };
-  });
+  }));
+// TODO: check if this and any subscriptions cause memory leaks and try to handle those

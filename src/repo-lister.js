@@ -166,8 +166,7 @@ export const RepoLister = uiModel("RepoLister", {
       keyMap.events.on(CLOSE, self.toggleChooser);
 
       keyMap.events.on(CHOOSE, chosenRec => {
-        // console.log(chosenNode, self.selectedCell);
-        // return;
+        // console.log(chosenRec);
         const newNode = {};
         if (chosenRec.linkId) {
           newNode.ref = chosenRec.linkId;
