@@ -49,7 +49,6 @@ export const Editor = types
     ...ContextRepo.Mixin,
     // ...ContextUser.Mixin,
     heldKeyCoords: types.maybe(HeldKeyCoords),
-    // chooser: types.maybe(Chooser),
     repoList: types.optional(RepoLister, {})
   })
   .actions(self => {

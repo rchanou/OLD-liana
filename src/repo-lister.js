@@ -1,7 +1,7 @@
 import { types, destroy } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
-import { Chooser, CLOSE } from "./chooser";
+import { Chooser, CHOOSE, CLOSE } from "./chooser";
 import { uiModel, cursorify } from "./user-interface";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
@@ -96,12 +96,15 @@ export const RepoLister = uiModel("RepoLister", {
   chooser: types.maybe(Chooser)
 })
   .views(self => ({
+    get repoCells() {
+      return makeRepoCells(self.repo);
+    },
     get baseCells() {
+      return self.repoCells.concat(self.chooser ? self.chooser.baseCells : []);
+
       if (self.chooser) {
         return self.chooser.baseCells;
       }
-
-      return makeRepoCells(self.repo);
     },
     get cursorCell() {
       if (self.chooser) {
@@ -159,7 +162,26 @@ export const RepoLister = uiModel("RepoLister", {
   .views(self => ({
     get chooserMap() {
       const { keyMap } = self.chooser;
+
       keyMap.events.on(CLOSE, self.toggleChooser);
+
+      keyMap.events.on(CHOOSE, chosenRec => {
+        // console.log(chosenNode, self.selectedCell);
+        // return;
+        const newNode = {};
+        if (chosenRec.linkId) {
+          newNode.ref = chosenRec.linkId;
+        } else if (chosenRec.inputId) {
+          newNode.input = chosenRec.inputId;
+        } else if (chosenRec.depId) {
+          newNode.dep = chosenRec.depId;
+        }
+
+        const { forLink, nodeIndex } = self.selectedCell;
+        forLink.setNode(nodeIndex, newNode);
+        self.toggleChooser();
+      });
+
       return keyMap;
     },
     get keyMap() {
@@ -356,12 +378,14 @@ export const RepoLister = uiModel("RepoLister", {
         3: { 6: { label: "Change", action: toggleChangeCellMode } }
       };
 
-      // TODO: check on something for "semantic" than gotoCellKey?
-      if (selectedCell.gotoCellKey) {
+      if (selectedCell.forLink) {
         keyMap[2][5] = {
           label: "Chooser",
           action: self.toggleChooser
         };
+      }
+
+      if (selectedCell.gotoCellKey) {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {

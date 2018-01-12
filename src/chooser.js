@@ -7,30 +7,31 @@ import { uiModel, cursorify } from "./user-interface";
 const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   const cells = [];
 
-  records.forEach(rec => {
-    if (!rec.label) {
+  records.forEach(record => {
+    if (!record.label) {
       return;
     }
 
     // HACK: key-finding logic seems hella dirty but simplest way for now
     let key;
-    if (rec.linkId !== undefined) {
-      key = `SCL-${rec.linkId}`;
-    } else if (rec.inputId !== undefined) {
-      key = `SCI-${rec.inputId}`;
-    } else if (rec.depId !== undefined) {
-      key = `SCD-${rec.depId}`;
+    if (record.linkId !== undefined) {
+      key = `SCL-${record.linkId}`;
+    } else if (record.inputId !== undefined) {
+      key = `SCI-${record.inputId}`;
+    } else if (record.depId !== undefined) {
+      key = `SCD-${record.depId}`;
     }
 
-    if (rec.label.includes(filter)) {
+    if (record.label.includes(filter)) {
       cells.push({
+        record,
         key,
         x,
         y: y++,
         width: 5,
         selectable: true,
-        fill: rec.color,
-        text: rec.label
+        fill: record.color,
+        text: record.label
       });
     }
   });
@@ -38,6 +39,7 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
+export const CHOOSE = "CHOOSE";
 export const CLOSE = "CLOSE";
 
 export const Chooser = uiModel("Chooser", {
@@ -78,7 +80,13 @@ export const Chooser = uiModel("Chooser", {
           2: {
             1: { label: "◀", action: self.moveLeft },
             2: { label: "▼", action: self.moveDown },
-            3: { label: "▶", action: self.moveRight }
+            3: { label: "▶", action: self.moveRight },
+            6: {
+              label: "Choose",
+              action() {
+                events.emit(CHOOSE, self.selectedCell.record);
+              }
+            }
           },
           3: {
             6: {

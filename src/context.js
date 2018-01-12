@@ -17,11 +17,12 @@ export const setupContext = (Model, key) => {
       return context;
     }
 
+    // TODO: should I leave in this defaultContext behavior?
     if (isRoot(node)) {
       if (defaultContext) {
         return defaultContext;
       }
-      console.warn("say what", Key, RefKey);
+
       defaultContext = Model.create();
       return defaultContext;
       // throw new Error(`Could not find required Context ${Model.name}.`);
