@@ -8,10 +8,13 @@ export const formatOut = out => {
   } else if (out === Dependency) {
     return "...";
   } else if (typeof out === "function") {
+    // TODO: more elegant display of functions and higher-order functions
     return "func";
   } else if (out instanceof Hole) {
+    // NOTE: this case isn't getting hit, "pending" links are outting undefined for some reason
     return "?";
   } else if (out == null) {
+    // TODO: better way to show this too
     return "";
   } else {
     return JSON.stringify(out);
@@ -19,7 +22,6 @@ export const formatOut = out => {
 };
 
 const UI = ContextRepo.refModel("UI", {
-  // ...ContextRepo.Mixin,
   selectedCellIndex: types.optional(types.number, 0)
 })
   .views(self => ({
@@ -83,11 +85,16 @@ const UI = ContextRepo.refModel("UI", {
       }
 
       return base;
-    },
-    get events() {
-      return new EventEmitter();
     }
   }))
+  .views(self => {
+    const events = new EventEmitter();
+    return {
+      get events() {
+        return events;
+      }
+    };
+  })
   .actions(self => ({
     selectCellIndex(index) {
       self.selectedCellIndex = index;

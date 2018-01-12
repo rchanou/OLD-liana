@@ -60,13 +60,14 @@ export const Chooser = uiModel("Chooser", {
         .concat(makeSearchCells(dependencies, filter, 10));
     },
     get cursorCell() {
-      return cursorify(self.selectedCell, "CHOOSER", self.inputMode ? self.filter : undefined);
+      return cursorify(
+        self.selectedCell,
+        "CHOOSER",
+        self.inputMode ? self.filter : undefined
+      );
     },
     get keyMap() {
-      const { events } = self;
-
       return {
-        events,
         1: {
           2: { label: "▲", action: self.moveUp }
         },
@@ -77,7 +78,7 @@ export const Chooser = uiModel("Chooser", {
           6: {
             label: "Choose",
             action() {
-              events.emit(CHOOSE, self.selectedCell.record);
+              self.events.emit(CHOOSE, self.selectedCell.record);
             }
           }
         },
@@ -85,7 +86,7 @@ export const Chooser = uiModel("Chooser", {
           6: {
             label: "Cancel",
             action() {
-              events.emit(CLOSE);
+              self.events.emit(CLOSE);
             }
           }
         }

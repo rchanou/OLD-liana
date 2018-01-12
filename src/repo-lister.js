@@ -111,12 +111,28 @@ export const RepoLister = uiModel("RepoLister", {
     setInput(value) {
       self.input = value;
     },
+    setChosenRecord(chosenRec) {
+      const newNode = {};
+      if (chosenRec.linkId) {
+        newNode.ref = chosenRec.linkId;
+      } else if (chosenRec.inputId) {
+        newNode.input = chosenRec.inputId;
+      } else if (chosenRec.depId) {
+        newNode.dep = chosenRec.depId;
+      }
+
+      const { forLink, nodeIndex } = self.selectedCell;
+      forLink.setNode(nodeIndex, newNode);
+      self.toggleChooser();
+    },
     toggleChooser(forLink, nodeIndex) {
       if (self.chooser) {
         destroy(self.chooser);
       } else {
         const { forLink, nodeIndex } = self.selectedCell;
         self.chooser = { forLink, nodeIndex };
+        self.chooser.events.on(CLOSE, self.toggleChooser);
+        self.chooser.events.on(CHOOSE, self.setChosenRecord);
       }
     },
     toggleChangeCellMode() {
@@ -149,35 +165,18 @@ export const RepoLister = uiModel("RepoLister", {
     }
   }))
   .views(self => ({
-    get chooserMap() {
-      const { keyMap } = self.chooser;
-
-      keyMap.events.on(CLOSE, self.toggleChooser);
-
-      keyMap.events.on(CHOOSE, chosenRec => {
-        // console.log(chosenRec);
-        const newNode = {};
-        if (chosenRec.linkId) {
-          newNode.ref = chosenRec.linkId;
-        } else if (chosenRec.inputId) {
-          newNode.input = chosenRec.inputId;
-        } else if (chosenRec.depId) {
-          newNode.dep = chosenRec.depId;
-        }
-
-        const { forLink, nodeIndex } = self.selectedCell;
-        forLink.setNode(nodeIndex, newNode);
-        self.toggleChooser();
-      });
-
-      return keyMap;
-    },
     get keyMap() {
       if (self.chooser) {
-        return self.chooserMap;
+        return self.chooser.keyMap;
       }
 
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
       const { forLink, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -289,7 +288,8 @@ export const RepoLister = uiModel("RepoLister", {
       if (self.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.baseCells.findIndex(
-            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+            cell =>
+              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -377,7 +377,9 @@ export const RepoLister = uiModel("RepoLister", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.cells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.cells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
