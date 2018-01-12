@@ -1,8 +1,8 @@
 import { types, destroy } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
-import { Chooser, CHOOSE, CLOSE } from "./chooser";
-import { uiModel, cursorify, formatOut } from "./user-interface";
+import { Chooser } from "./chooser";
+import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
   const cells = [];
@@ -76,24 +76,26 @@ const NodeRef = types.model("NodeRef", {
 });
 
 export const RepoLister = uiModel("RepoLister", {
-  // settingNode: types.maybe(NodeRef),
   changeCellMode: optionalBoolean,
   changeOpMode: optionalBoolean,
   addNodeMode: optionalBoolean,
   addOpMode: optionalBoolean,
   input: types.maybe(types.string),
-  chooser: types.maybe(Chooser)
+  chooser: types.maybe(Chooser),
+  editingNode: types.maybe(NodeRef)
 })
   .views(self => ({
     get repoCells() {
       return makeRepoCells(self.repo);
     },
     get baseCells() {
-      return self.repoCells.concat(self.chooser ? self.chooser.baseCells : []);
+      // return self.repoCells.concat(self.chooser ? self.chooser.baseCells : []);
 
       if (self.chooser) {
         return self.chooser.baseCells;
       }
+
+      return self.repoCells;
     },
     get cursorCell() {
       if (self.chooser) {
@@ -111,20 +113,6 @@ export const RepoLister = uiModel("RepoLister", {
     setInput(value) {
       self.input = value;
     },
-    setChosenRecord(chosenRec) {
-      const newNode = {};
-      if (chosenRec.linkId) {
-        newNode.ref = chosenRec.linkId;
-      } else if (chosenRec.inputId) {
-        newNode.input = chosenRec.inputId;
-      } else if (chosenRec.depId) {
-        newNode.dep = chosenRec.depId;
-      }
-
-      const { forLink, nodeIndex } = self.selectedCell;
-      forLink.setNode(nodeIndex, newNode);
-      self.toggleChooser();
-    },
     toggleChooser(forLink, nodeIndex) {
       if (self.chooser) {
         destroy(self.chooser);
@@ -132,7 +120,6 @@ export const RepoLister = uiModel("RepoLister", {
         const { forLink, nodeIndex } = self.selectedCell;
         self.chooser = { forLink, nodeIndex };
         self.chooser.events.on(CLOSE, self.toggleChooser);
-        self.chooser.events.on(CHOOSE, self.setChosenRecord);
       }
     },
     toggleChangeCellMode() {

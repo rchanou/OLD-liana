@@ -107,6 +107,9 @@ export const Val = types
     with() {
       return self.out;
     },
+    equivalent(other) {
+      return self.val === other.val;
+    },
     get label() {
       const { val } = self;
       if (typeof val === "string") {
@@ -179,6 +182,9 @@ export const Op = types
     with(inputs) {
       return self.out;
     },
+    equivalent(other) {
+      return self.op === other.op;
+    },
     get label() {
       // TODO: look up?
       return self.op;
@@ -219,6 +225,9 @@ export const Dependency = types
       with() {
         return self.out;
       },
+      equivalent(other) {
+        return other === self || other.dep === self;
+      },
       get label() {
         return self.path.replace("https://unpkg.com/", "").split("/")[0];
       },
@@ -239,6 +248,9 @@ export const DepRef = types
     with() {
       return self.out;
     },
+    equivalent(other) {
+      return self.dep === other || self.dep === other.dep;
+    },
     get label() {
       return self.dep.label;
     },
@@ -252,7 +264,12 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
+export const InputType = types.enumeration("InputType", [
+  stringType,
+  numType,
+  boolType,
+  anyType
+]);
 
 // is there a better way of doing this?
 export class Hole {
@@ -290,6 +307,9 @@ export const Input = types
         return new Hole({ [input]: true });
       }
     },
+    equivalent(other) {
+      return other === self || other.input === self;
+    },
     get label() {
       // TODO: look up appropriate label based on user context
       return self.labelSet || `{${self.inputId}}`;
@@ -310,6 +330,9 @@ export const InputRef = types
     with(inputs) {
       return self.input.with(inputs);
     },
+    equivalent(other) {
+      return self.input === other || self.input === other.input;
+    },
     get label() {
       return self.input.label;
     },
@@ -320,7 +343,14 @@ export const InputRef = types
 
 curry.placeholder = Input;
 
-export const Node = types.union(Val, Op, InputRef, types.late(() => LinkRef), types.late(() => SubRef), DepRef);
+export const Node = types.union(
+  Val,
+  Op,
+  InputRef,
+  types.late(() => LinkRef),
+  types.late(() => SubRef),
+  DepRef
+);
 
 export const Link = types
   .model("Link", {
@@ -363,6 +393,9 @@ export const Link = types
       }
 
       return self.derive(nodeVals);
+    },
+    equivalent(other) {
+      return other === self || other.ref === self;
     },
     get label() {
       if (!self.labelSet) {
@@ -418,7 +451,10 @@ export const LinkRef = types
         const holeInputIds = Object.keys(linkVal.inputs);
 
         return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [holeInputIds[i], input]);
+          const newInputEntries = newInputs.map((input, i) => [
+            holeInputIds[i],
+            input
+          ]);
           const allInputEntries = [...inputEntries, ...newInputEntries];
           const allInputs = new Map(allInputEntries);
           return self.ref.with(allInputs);
@@ -429,6 +465,9 @@ export const LinkRef = types
     },
     with() {
       return self.out;
+    },
+    equivalent(other) {
+      return self.ref === other || self.ref === other.ref;
     },
     get label() {
       return self.ref.label;
@@ -464,7 +503,15 @@ export const SubLink = types
     }
   }));
 
-export const SubNode = types.union(Val, Op, InputRef, LinkRef, SubParam, SubLink, types.late(() => SubRef));
+export const SubNode = types.union(
+  Val,
+  Op,
+  InputRef,
+  LinkRef,
+  SubParam,
+  SubLink,
+  types.late(() => SubRef)
+);
 
 export const Sub = types
   .model("Sub", {
@@ -509,10 +556,14 @@ export const Repo = types
       return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
     },
     get inputList() {
-      return self.inputs.values().map(input => ({ value: input.inputId, label: input.label }));
+      return self.inputs
+        .values()
+        .map(input => ({ value: input.inputId, label: input.label }));
     },
     get depList() {
-      return self.dependencies.values().map(dep => ({ value: dep.depId, label: dep.label }));
+      return self.dependencies
+        .values()
+        .map(dep => ({ value: dep.depId, label: dep.label }));
     }
   }))
   .actions(self => ({

@@ -198,7 +198,7 @@ class Story extends React.Component {
     return <ReactEditor editor={store} />;
   }
   componentWillUnmount() {
-    destroy(this.state.store);
+    // destroy(this.state.store);
   }
 }
 

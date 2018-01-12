@@ -1,48 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency } from "./core";
-import { uiModel, cursorify, formatOut } from "./user-interface";
-
-const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
-  const cells = [];
-
-  records.forEach(record => {
-    if (!record.label) {
-      return;
-    }
-
-    // HACK: key-finding logic seems hella dirty but simplest way for now
-    let key, text;
-    if (record.linkId !== undefined) {
-      key = `SCL-${record.linkId}`;
-      text = `${record.label} = ${formatOut(record.out)}`;
-    } else if (record.inputId !== undefined) {
-      key = `SCI-${record.inputId}`;
-      text = record.label;
-    } else if (record.depId !== undefined) {
-      key = `SCD-${record.depId}`;
-      text = record.label;
-    }
-
-    if (record.label.includes(filter)) {
-      cells.push({
-        record,
-        key,
-        x,
-        y: y++,
-        width: 5,
-        selectable: true,
-        fill: record.color,
-        text
-      });
-    }
-  });
-
-  return cells;
-};
-
-export const CHOOSE = "CHOOSE";
-export const CLOSE = "CLOSE";
+import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
 
 export const Chooser = uiModel("Chooser", {
   forLink: types.reference(Link),
@@ -51,21 +10,69 @@ export const Chooser = uiModel("Chooser", {
   inputMode: types.optional(types.boolean, false)
 })
   .views(self => ({
+    get currentNode() {
+      return self.forLink.nodes[self.nodeIndex];
+    },
+    get input() {
+      return self.inputMode ? self.filter : null;
+    },
     get baseCells() {
-      const { repo, filter } = self;
+      const { filter, repo, currentNode, forLink } = self;
+
+      const makeSearchCells = (records, x = 0, y = 0) => {
+        const cells = [];
+
+        records.forEach(record => {
+          if (!record.label) {
+            return;
+          }
+
+          // HACK: key-finding logic seems hella dirty but simplest way for now
+          let key, text;
+          if (record.linkId !== undefined) {
+            key = `SCL-${record.linkId}`;
+            text = `${record.label} = ${formatOut(record.out)}`;
+          } else if (record.inputId !== undefined) {
+            key = `SCI-${record.inputId}`;
+            text = record.label;
+          } else if (record.depId !== undefined) {
+            key = `SCD-${record.depId}`;
+            text = record.label;
+          }
+
+          const selectable =
+            !record.equivalent(currentNode) && !record.equivalent(forLink);
+
+          if (record.label.includes(filter)) {
+            cells.push({
+              record,
+              key,
+              x,
+              y: y++,
+              width: 5,
+              selectable,
+              fill: selectable ? record.color : "#999",
+              text
+            });
+          }
+        });
+
+        return cells;
+      };
+
       const { links, inputs, dependencies } = repo;
 
-      return makeSearchCells(links, filter)
-        .concat(makeSearchCells(inputs, filter, 5))
-        .concat(makeSearchCells(dependencies, filter, 10));
+      return makeSearchCells(links)
+        .concat(makeSearchCells(inputs, 5))
+        .concat(makeSearchCells(dependencies, 10));
     },
-    get cursorCell() {
-      return cursorify(
-        self.selectedCell,
-        "CHOOSER",
-        self.inputMode ? self.filter : undefined
-      );
-    },
+    // get cursorCell() {
+    //   return cursorify(
+    //     self.selectedCell,
+    //     "CHOOSER",
+    //     self.inputMode ? self.filter : undefined
+    //   );
+    // },
     get keyMap() {
       return {
         1: {
@@ -78,7 +85,20 @@ export const Chooser = uiModel("Chooser", {
           6: {
             label: "Choose",
             action() {
-              self.events.emit(CHOOSE, self.selectedCell.record);
+              const chosenRec = self.selectedCell.record;
+
+              const newNode = {};
+              if (chosenRec.linkId) {
+                newNode.ref = chosenRec.linkId;
+              } else if (chosenRec.inputId) {
+                newNode.input = chosenRec.inputId;
+              } else if (chosenRec.depId) {
+                newNode.dep = chosenRec.depId;
+              }
+
+              const { forLink, nodeIndex } = self;
+              forLink.setNode(nodeIndex, newNode);
+              self.events.emit(CLOSE);
             }
           }
         },
