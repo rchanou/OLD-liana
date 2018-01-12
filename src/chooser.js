@@ -1,8 +1,7 @@
 import { types } from "mobx-state-tree";
-import EventEmitter from "eventemitter3";
 
 import { Link, Input, Dependency } from "./core";
-import { uiModel, cursorify } from "./user-interface";
+import { uiModel, cursorify, formatOut } from "./user-interface";
 
 const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   const cells = [];
@@ -13,13 +12,16 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
     }
 
     // HACK: key-finding logic seems hella dirty but simplest way for now
-    let key;
+    let key, text;
     if (record.linkId !== undefined) {
       key = `SCL-${record.linkId}`;
+      text = `${record.label} = ${formatOut(record.out)}`;
     } else if (record.inputId !== undefined) {
       key = `SCI-${record.inputId}`;
+      text = record.label;
     } else if (record.depId !== undefined) {
       key = `SCD-${record.depId}`;
+      text = record.label;
     }
 
     if (record.label.includes(filter)) {
@@ -31,7 +33,7 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
         width: 5,
         selectable: true,
         fill: record.color,
-        text: record.label
+        text
       });
     }
   });
@@ -59,9 +61,6 @@ export const Chooser = uiModel("Chooser", {
     },
     get cursorCell() {
       return cursorify(self.selectedCell, "CHOOSER", self.inputMode ? self.filter : undefined);
-    },
-    get events() {
-      return new EventEmitter();
     },
     get keyMap() {
       const { events } = self;
@@ -96,9 +95,6 @@ export const Chooser = uiModel("Chooser", {
   .actions(self => ({
     handleInput(e) {
       self.filter = e.target.value;
-    },
-    beforeDestroy() {
-      self.events.removeAllListeners();
     }
   }));
 // TODO: check if this and any subscriptions cause memory leaks and try to handle those

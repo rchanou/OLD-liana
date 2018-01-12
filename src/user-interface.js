@@ -1,6 +1,22 @@
 import { types } from "mobx-state-tree";
+import EventEmitter from "eventemitter3";
+import { Dependency, Input, Hole, ContextRepo } from "./core";
 
-import { ContextRepo } from "./core";
+export const formatOut = out => {
+  if (out instanceof Error) {
+    return out.message;
+  } else if (out === Dependency) {
+    return "...";
+  } else if (typeof out === "function") {
+    return "func";
+  } else if (out instanceof Hole) {
+    return "?";
+  } else if (out == null) {
+    return "";
+  } else {
+    return JSON.stringify(out);
+  }
+};
 
 const UI = types
   .model("UI", {
@@ -68,6 +84,9 @@ const UI = types
       }
 
       return base;
+    },
+    get events() {
+      return new EventEmitter();
     }
   }))
   .actions(self => ({
@@ -128,6 +147,9 @@ const UI = types
     },
     moveUp() {
       self.moveBy(-1, "y");
+    },
+    beforeDestroy() {
+      self.events.removeAllListeners();
     }
   }));
 

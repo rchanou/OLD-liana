@@ -2,7 +2,7 @@ import { types, destroy } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
 import { Chooser, CHOOSE, CLOSE } from "./chooser";
-import { uiModel, cursorify } from "./user-interface";
+import { uiModel, cursorify, formatOut } from "./user-interface";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
   const cells = [];
@@ -55,24 +55,13 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
 
     currentX += 2;
 
-    let text;
-    if (out instanceof Error) {
-      text = out.message;
-    } else if (out === Dependency) {
-      text = "...";
-    } else if (typeof out === "function") {
-      text = "func";
-    } else {
-      text = JSON.stringify(out);
-    }
-
     cells.push({
       key: `${key}-V`,
       x: currentX,
       y: currentY,
       width: 2,
       selectable: false,
-      text
+      text: formatOut(out)
     });
   });
 
