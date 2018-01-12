@@ -1,8 +1,9 @@
-import { types } from "mobx-state-tree";
+import { types, destroy } from "mobx-state-tree";
 
-import { Link, Dependency, ContextRepo } from "./core";
-import { cursorify } from "./cells";
+import { Link, Dependency } from "./core";
+import { Chooser } from "./chooser";
 import { uiModel } from "./user-interface";
+import { cursorify } from "./cells";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
   const cells = [];
@@ -87,29 +88,28 @@ const NodeRef = types.model("NodeRef", {
 });
 
 export const RepoLister = uiModel("RepoLister", {
-  ...ContextRepo.Mixin,
   // settingNode: types.maybe(NodeRef),
   changeCellMode: optionalBoolean,
   changeOpMode: optionalBoolean,
   addNodeMode: optionalBoolean,
   addOpMode: optionalBoolean,
-  input: types.maybe(types.string)
+  input: types.maybe(types.string),
+  chooser: types.maybe(Chooser)
 })
   .views(self => ({
-    get repo() {
-      return self[ContextRepo.RefKey];
-    },
     get baseCells() {
+      if (self.chooser) {
+        return self.chooser.baseCells;
+      }
+
       return makeRepoCells(self.repo);
     },
-    get selectedCell() {
-      return self.baseCells[self.selectedCellIndex];
-    },
     get cursorCell() {
+      if (self.chooser) {
+        return self.chooser.cursorCell;
+      }
+
       return cursorify(self.selectedCell, "RL", self.input);
-    },
-    get cells() {
-      return self.baseCells.concat(self.cursorCell);
     }
   }))
   .actions(self => ({
@@ -117,11 +117,16 @@ export const RepoLister = uiModel("RepoLister", {
       // console.log("fun", e.target.value);
       self.input = e.target.value;
     },
-    selectCellIndex(index) {
-      self.selectedCellIndex = index;
-    },
     setInput(value) {
       self.input = value;
+    },
+    toggleChooser(forLink, nodeIndex) {
+      if (self.chooser) {
+        destroy(self.chooser);
+      } else {
+        const { forLink, nodeIndex } = self.selectedCell;
+        self.chooser = { forLink, nodeIndex };
+      }
     },
     toggleChangeCellMode() {
       self.changeCellMode = !self.changeCellMode;
@@ -153,8 +158,19 @@ export const RepoLister = uiModel("RepoLister", {
     }
   }))
   .views(self => ({
-    makeKeyMap(openChooser) {
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+    get keyMap() {
+      const {
+        selectedCell,
+        setInput,
+        toggleChooser,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
+
+      if (self.chooser) {
+        return self.chooser.makeKeyMap(toggleChooser);
+      }
 
       const { forLink, nodeIndex } = selectedCell;
 
@@ -331,7 +347,7 @@ export const RepoLister = uiModel("RepoLister", {
           3: { label: "▶", action: self.moveRight },
           5: {
             label: "Chooser",
-            action: openChooser
+            action: toggleChooser
           },
           9: {
             label: "Delete",
@@ -364,8 +380,5 @@ export const RepoLister = uiModel("RepoLister", {
       }
 
       return keyMap;
-    },
-    get keyMap() {
-      return self.makeKeyMap();
     }
   }));

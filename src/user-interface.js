@@ -1,10 +1,22 @@
 import { types } from "mobx-state-tree";
 
+import { ContextRepo } from "./core";
+
 const UI = types
   .model("UI", {
+    ...ContextRepo.Mixin,
     selectedCellIndex: types.optional(types.number, 0)
   })
   .views(self => ({
+    get repo() {
+      return self[ContextRepo.RefKey];
+    },
+    get selectedCell() {
+      return self.baseCells[self.selectedCellIndex];
+    },
+    get cells() {
+      return self.baseCells.concat(self.cursorCell || []);
+    },
     get cellMap() {
       const base = {
         y: { crossMin: 0, crossMax: 0 },
@@ -55,6 +67,9 @@ const UI = types
     }
   }))
   .actions(self => ({
+    selectCellIndex(index) {
+      self.selectedCellIndex = index;
+    },
     moveBy(step = +1, axis = "x") {
       const crossAxis = axis === "x" ? "y" : "x";
 

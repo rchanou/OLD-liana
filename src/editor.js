@@ -52,7 +52,7 @@ export const Editor = types
     ...ContextRepo.Mixin,
     // ...ContextUser.Mixin,
     heldKeyCoords: types.maybe(HeldKeyCoords),
-    chooser: types.maybe(Chooser),
+    // chooser: types.maybe(Chooser),
     repoList: types.optional(RepoLister, {})
   })
   .actions(self => {
@@ -102,34 +102,16 @@ export const Editor = types
       }
     };
   })
-  .actions(self => ({
-    toggleChooser(forLink, nodeIndex) {
-      if (self.chooser) {
-        destroy(self.chooser);
-      } else {
-        const { forLink, nodeIndex } = self.repoList.selectedCell;
-        self.chooser = { forLink, nodeIndex };
-      }
-    }
-  }))
   .views(self => ({
-    get current() {
-      return self.chooser || self.repoList;
-    },
     get cells() {
-      return self.current.cells;
+      return self.repoList.cells;
       // return self.repoList.cells.concat(self.chooser ? self.chooser.cells : []);
     },
     get keyMap() {
-      if (self.chooser) {
-        return self.chooser.makeKeyMap(self.toggleChooser);
-      }
-
-      return self.repoList.makeKeyMap(self.toggleChooser);
-      // return self.current.keyMap;
+      return self.repoList.keyMap;
     },
     get handleInput() {
-      return self.current.handleInput;
+      return self.repoList.handleInput;
     }
   }));
 

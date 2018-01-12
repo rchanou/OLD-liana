@@ -1,8 +1,8 @@
 import { types } from "mobx-state-tree";
 
-import { Link, Input, Dependency, ContextRepo } from "./core";
-import { cursorify } from "./cells";
+import { Link, Input, Dependency } from "./core";
 import { uiModel } from "./user-interface";
+import { cursorify } from "./cells";
 
 const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   const cells = [];
@@ -39,16 +39,12 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
 };
 
 export const Chooser = uiModel("Chooser", {
-  ...ContextRepo.Mixin,
   forLink: types.reference(Link),
   nodeIndex: types.maybe(types.number),
   filter: types.optional(types.string, ""),
   inputMode: types.optional(types.boolean, false)
 })
   .views(self => ({
-    get repo() {
-      return self[ContextRepo.RefKey];
-    },
     get baseCells() {
       const { repo, input } = self;
       const { links, inputs, dependencies } = repo;
@@ -57,22 +53,13 @@ export const Chooser = uiModel("Chooser", {
         .concat(makeSearchCells(inputs, input, 5))
         .concat(makeSearchCells(dependencies, input, 10));
     },
-    get selectedCell() {
-      return self.baseCells[self.selectedCellIndex];
-    },
     get cursorCell() {
       return cursorify(self.selectedCell, "CHOOSER", self.inputMode ? self.filter : undefined);
-    },
-    get cells() {
-      return self.baseCells.concat(self.cursorCell);
     }
   }))
   .actions(self => ({
     handleInput(e) {
       self.filter = e.target.value;
-    },
-    selectCellIndex(index) {
-      self.selectedCellIndex = index;
     }
   }))
   .views(self => ({
