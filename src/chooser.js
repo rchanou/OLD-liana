@@ -1,8 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency } from "./core";
-import { uiModel } from "./user-interface";
-import { cursorify } from "./cells";
+import { uiModel, cursorify } from "./user-interface";
 
 const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   const cells = [];
@@ -46,12 +45,12 @@ export const Chooser = uiModel("Chooser", {
 })
   .views(self => ({
     get baseCells() {
-      const { repo, input } = self;
+      const { repo, filter } = self;
       const { links, inputs, dependencies } = repo;
 
-      return makeSearchCells(links, input)
-        .concat(makeSearchCells(inputs, input, 5))
-        .concat(makeSearchCells(dependencies, input, 10));
+      return makeSearchCells(links, filter)
+        .concat(makeSearchCells(inputs, filter, 5))
+        .concat(makeSearchCells(dependencies, filter, 10));
     },
     get cursorCell() {
       return cursorify(self.selectedCell, "CHOOSER", self.inputMode ? self.filter : undefined);

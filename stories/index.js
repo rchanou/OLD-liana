@@ -217,8 +217,7 @@ storiesOf("Liana", module)
     <Story
       editor={{
         ...context,
-        repoList: { selectedCellIndex: 75 },
-        chooser: { forLink: "0" }
+        repoList: { selectedCellIndex: 75, chooser: { forLink: "0" } }
       }}
     />
   ));

@@ -4,9 +4,6 @@ import EventEmitter from "eventemitter3";
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { RepoLister } from "./repo-lister";
-import { Chooser } from "./chooser";
-import { cursorify } from "./cells";
-import { uiModel } from "./user-interface";
 
 const keyLayout = {
   // TODO: make customizable

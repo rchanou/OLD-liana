@@ -2,8 +2,7 @@ import { types, destroy } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
 import { Chooser } from "./chooser";
-import { uiModel } from "./user-interface";
-import { cursorify } from "./cells";
+import { uiModel, cursorify } from "./user-interface";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
   const cells = [];

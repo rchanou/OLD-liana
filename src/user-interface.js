@@ -114,3 +114,19 @@ const UI = types
   }));
 
 export const uiModel = (...args) => types.compose(types.model(...args), UI);
+
+export const cursorify = (baseCell, key, input) => {
+  const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;
+
+  return {
+    x,
+    y,
+    width,
+    forLink,
+    nodeIndex,
+    gotoCellKey,
+    input,
+    cursor: true,
+    key: `CURSOR-${key}`
+  };
+};
