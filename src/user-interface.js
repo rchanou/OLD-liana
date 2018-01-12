@@ -18,14 +18,13 @@ export const formatOut = out => {
   }
 };
 
-const UI = types
-  .model("UI", {
-    ...ContextRepo.Mixin,
-    selectedCellIndex: types.optional(types.number, 0)
-  })
+const UI = ContextRepo.refModel("UI", {
+  // ...ContextRepo.Mixin,
+  selectedCellIndex: types.optional(types.number, 0)
+})
   .views(self => ({
     get repo() {
-      return self[ContextRepo.RefKey];
+      return self[ContextRepo.REFKEY];
     },
     get selectedCell() {
       return self.baseCells[self.selectedCellIndex];

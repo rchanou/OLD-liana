@@ -5,13 +5,13 @@ export const setupContext = (Model, key) => {
     throw new Error("Name required for context model type!");
   }
 
-  const Key = key || `context${Model.name}`;
-  const RefKey = `${Key}Ref`;
+  const KEY = key || `context${Model.name}`;
+  const REFKEY = `${KEY}Ref`;
 
   let defaultContext;
 
   const getContext = node => {
-    const context = node[Key];
+    const context = node[KEY];
 
     if (context) {
       return context;
@@ -52,13 +52,18 @@ export const setupContext = (Model, key) => {
   );
 
   const Mixin = {
-    [Key]: types.maybe(Model),
-    [RefKey]: Ref
+    [KEY]: types.maybe(Model),
+    [REFKEY]: Ref
   };
 
-  const RefMixin = {
-    [RefKey]: Ref
-  };
+  const RefModel = types.model(`${Model.name}Ref`, Mixin).actions(self => ({
+    postProcessSnapshot(snapshot) {
+      delete snapshot[REFKEY];
+      return snapshot;
+    }
+  }));
 
-  return { Key, Model, Ref, Mixin, RefKey, RefMixin };
+  const refModel = (...args) => types.compose(RefModel, types.model(...args));
+
+  return { KEY, REFKEY, refModel, Ref, Mixin };
 };

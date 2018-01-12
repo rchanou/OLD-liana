@@ -44,13 +44,11 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
-export const Editor = types
-  .model("Editor", {
-    ...ContextRepo.Mixin,
-    // ...ContextUser.Mixin,
-    heldKeyCoords: types.maybe(HeldKeyCoords),
-    repoList: types.optional(RepoLister, {})
-  })
+export const Editor = ContextRepo.refModel("Editor", {
+  // ...ContextUser.Mixin,
+  heldKeyCoords: types.maybe(HeldKeyCoords),
+  repoList: types.optional(RepoLister, {})
+})
   .actions(self => {
     const { dom } = getEnv(self);
 

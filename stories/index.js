@@ -161,7 +161,7 @@ const repo = {
 // addEventListener("beforeunload", saveRepo);
 
 const context = {
-  [ContextRepo.Key]: repo
+  [ContextRepo.KEY]: repo
 };
 
 const params = new Map(
@@ -183,9 +183,7 @@ class Story extends React.Component {
 
     const store = Editor.create(this.props.editor, { ...env, dom });
 
-    if (!window.s) {
-      window.s = store;
-    }
+    window.s = store;
 
     this.setState({ store });
   }
