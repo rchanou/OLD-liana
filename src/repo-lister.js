@@ -153,7 +153,7 @@ export const RepoLister = uiModel("RepoLister", {
     }
   }))
   .views(self => ({
-    get keyMap() {
+    makeKeyMap(openChooser) {
       const {
         selectedCell,
         setInput,
@@ -336,6 +336,10 @@ export const RepoLister = uiModel("RepoLister", {
           1: { label: "◀", action: self.moveLeft },
           2: { label: "▼", action: self.moveDown },
           3: { label: "▶", action: self.moveRight },
+          5: {
+            label: "Chooser",
+            action: openChooser
+          },
           9: {
             label: "Delete",
             action() {
@@ -369,5 +373,8 @@ export const RepoLister = uiModel("RepoLister", {
       }
 
       return keyMap;
+    },
+    get keyMap() {
+      return self.makeKeyMap();
     }
   }));

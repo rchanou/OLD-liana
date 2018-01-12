@@ -38,13 +38,10 @@ const makeSearchCells = (records, filter = "", x = 0, y = 0) => {
   return cells;
 };
 
-export const EXIT = "EXIT";
-
 export const Chooser = uiModel(`Chooser`, {
   ...ContextRepo.Mixin,
   forLink: types.reference(Link),
   nodeIndex: types.maybe(types.number),
-  // selectedCellIndex: types.optional(types.number, 0),
   filter: types.optional(types.string, ""),
   inputMode: types.optional(types.boolean, false)
 })
@@ -82,7 +79,7 @@ export const Chooser = uiModel(`Chooser`, {
     }
   }))
   .views(self => ({
-    makeKeyMap(events) {
+    makeKeyMap(exit) {
       return {
         1: {
           2: { label: "▲", action: self.moveUp }
@@ -95,9 +92,7 @@ export const Chooser = uiModel(`Chooser`, {
         3: {
           6: {
             label: "Cancel",
-            action() {
-              events.emit(EXIT);
-            }
+            action: exit
           }
         }
       };

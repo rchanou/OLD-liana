@@ -1,4 +1,5 @@
 import React from "react";
+import { findDOMNode } from "react-dom";
 import { autorun } from "mobx";
 import { getSnapshot, destroy } from "mobx-state-tree";
 
@@ -174,36 +175,44 @@ window.g = store => getSnapshot(store);
 
 const env = { system: SystemJS };
 
+class Story extends React.Component {
+  state = {};
+
+  componentDidMount() {
+    const dom = findDOMNode(this);
+    console.log("dat dome doe", dom);
+    const store = Editor.create(this.props.editor, { ...env, dom });
+    this.setState({ store });
+  }
+
+  render() {
+    const { store } = this.state;
+
+    if (!store) {
+      return null;
+    }
+
+    return <ReactEditor editor={store} />;
+  }
+  componentWillUnmount() {
+    destroy(this.state.store);
+  }
+}
+
 storiesOf("Liana", module)
   .add("editor", () => (
-    <ReactEditor
-      editor={Editor.create(
-        {
-          ...context,
-          repoList: { selectedCellIndex: 75 }
-        },
-        env
-      )}
+    <Story
+      editor={{
+        ...context,
+        repoList: { selectedCellIndex: 75 }
+      }}
     />
   ))
   .add("editor in chooser", () => {
-    window.s = Editor.create(
-      {
-        ...context,
-        repoList: { selectedCellIndex: 75 },
-        chooser: { forLink: "0" }
-      },
-      env
-    );
-    return <ReactEditor editor={window.s} />;
-  })
-  .add("chooser", () => {
-    window.c = Chooser.create(
-      {
-        ...context,
-        forLink: "0"
-      },
-      env
-    );
-    return <ReactEditor editor={window.c} />;
+    window.s = {
+      ...context,
+      repoList: { selectedCellIndex: 75 },
+      chooser: { forLink: "0" }
+    };
+    return <Story editor={window.s} />;
   });
