@@ -163,12 +163,11 @@ export const RepoLister = uiModel("RepoLister", {
       return keyMap;
     },
     get keyMap() {
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
-
       if (self.chooser) {
         return self.chooserMap;
       }
 
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
       const { forLink, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -342,10 +341,6 @@ export const RepoLister = uiModel("RepoLister", {
           1: { label: "◀", action: self.moveLeft },
           2: { label: "▼", action: self.moveDown },
           3: { label: "▶", action: self.moveRight },
-          5: {
-            label: "Chooser",
-            action: self.toggleChooser
-          },
           9: {
             label: "Delete",
             action() {
@@ -361,7 +356,12 @@ export const RepoLister = uiModel("RepoLister", {
         3: { 6: { label: "Change", action: toggleChangeCellMode } }
       };
 
+      // TODO: check on something for "semantic" than gotoCellKey?
       if (selectedCell.gotoCellKey) {
+        keyMap[2][5] = {
+          label: "Chooser",
+          action: self.toggleChooser
+        };
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
