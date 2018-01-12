@@ -37,29 +37,33 @@ const UI = types
         const { x, y } = cell;
 
         if (!yx[y]) {
-          yx[y] = {};
+          yx[y] = { min: 0, max: 0 };
         }
 
         yx[y][x] = i;
 
-        if (x > yx.crossMax) {
+        if (x > yx[y].max) {
           yx.crossMax = x;
+          yx[y].max = x;
         }
-        if (x < yx.crossMin) {
+        if (x < yx[y].min) {
           yx.crossMin = x;
+          yx[y].min = x;
         }
 
         if (!xy[x]) {
-          xy[x] = {};
+          xy[x] = { min: 0, max: 0 };
         }
 
         xy[x][y] = i;
 
-        if (y > xy.crossMax) {
+        if (y > xy[x].max) {
           xy.crossMax = y;
+          xy[x].max = y;
         }
-        if (y < xy.crossMin) {
+        if (y < xy[x].min) {
           xy.crossMin = y;
+          xy[x].min = y;
         }
       }
 
@@ -72,7 +76,7 @@ const UI = types
     },
     moveBy(step = +1, axis = "x") {
       const crossAxis = axis === "x" ? "y" : "x";
-
+      // debugger;
       const currentCell = self.selectedCell;
       if (!currentCell) {
         return;
@@ -87,8 +91,8 @@ const UI = types
       }
 
       let axisPos = currentCell[axis];
-      const min = crossAxisMap.crossMin;
-      const max = crossAxisMap.crossMax;
+      const { min } = crossAxisSet;
+      const { max } = crossAxisSet;
 
       while (min <= axisPos && axisPos <= max) {
         axisPos += step;
@@ -97,6 +101,20 @@ const UI = types
           self.selectCellIndex(foundIndex);
           return;
         }
+      }
+
+      if (axis === "y") {
+        return;
+      }
+
+      let foundIndex;
+      if (axisPos > max) {
+        foundIndex = crossAxisSet[min];
+      } else if (axisPos < min) {
+        foundIndex = crossAxisSet[max];
+      }
+      if (foundIndex !== undefined) {
+        self.selectCellIndex(foundIndex);
       }
     },
     moveRight() {
