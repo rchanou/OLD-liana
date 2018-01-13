@@ -24,7 +24,8 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       y: currentY,
       width: 2,
       selectable: true,
-      text: label
+      text: label,
+      labelForLink: link
     });
 
     for (let i = 0; i < nodes.length; i++) {
@@ -88,7 +89,8 @@ export const RepoLister = uiModel("RepoLister", {
   addOpMode: optionalBoolean,
   // input: types.maybe(types.string),
   chooser: types.maybe(Chooser),
-  editingNode: types.maybe(NodeRef)
+  editingNode: types.maybe(NodeRef),
+  editingLabelForLink: types.maybe(types.reference(Link))
 })
   .views(self => ({
     get baseCells() {
@@ -102,21 +104,26 @@ export const RepoLister = uiModel("RepoLister", {
       return self.allCells;
     },
     get input() {
-      if (!self.editingNode) {
-        return null;
+      if (self.editingNode) {
+        return self.editingNode.node.out;
       }
 
-      return self.editingNode.node.out;
+      if (self.editingLabelForLink) {
+        return self.editingLabelForLink.label;
+      }
+
+      return null;
     }
   }))
   .actions(self => ({
     handleInput(e) {
-      // console.log("fun", e.target.value);
-      // self.input = e.target.value;
-      self.editingNode.node.select(e.target.value);
-    },
-    setInput(value) {
-      self.input = value;
+      if (self.editingNode) {
+        self.editingNode.node.select(e.target.value);
+      }
+
+      if (self.editingLabelForLink) {
+        self.editingLabelForLink.setLabel(e.target.value);
+      }
     },
     toggleChooser(forLink, nodeIndex) {
       if (self.chooser) {
@@ -134,7 +141,6 @@ export const RepoLister = uiModel("RepoLister", {
         const { forLink, nodeIndex } = self.selectedCell;
         self.editingNode = { forLink, nodeIndex };
       }
-      // self.changeCellMode = !self.changeCellMode;
     },
     toggleChangeOpMode() {
       self.changeOpMode = !self.changeOpMode;
@@ -142,24 +148,15 @@ export const RepoLister = uiModel("RepoLister", {
     toggleAddNodeMode() {
       self.addNodeMode = !self.addNodeMode;
     },
-    beginSettingNode(nodeRef) {
-      self.settingNode = nodeRef;
-    },
-    setNode(value) {
-      const { settingNode } = self;
-
-      if (!settingNode) {
-        return;
-      }
-
-      const { link, index } = settingNode;
-      link.nodes[index].select(value);
-    },
-    endSettingNode() {
-      self.settingNode = null;
-    },
     setChoosingLink(forLink) {
       self.linkChooser = { forLink };
+    },
+    toggleLabelEdit() {
+      if (self.editingLabelForLink) {
+        self.editingLabelForLink = null;
+      } else {
+        self.editingLabelForLink = self.selectedCell.labelForLink;
+      }
     }
   }))
   .views(self => ({
@@ -180,19 +177,14 @@ export const RepoLister = uiModel("RepoLister", {
       if (self.input != null) {
         return keyCode => {
           if (keyCode == 13) {
-            toggleChangeCellMode();
-            self.moveRight();
-          }
-        };
-        // TODO: can probably just return a single function and match on that to determine input mode
-        return {
-          onInput(keyCode) {
-            if (keyCode == 13) {
+            if (self.editingNode) {
               toggleChangeCellMode();
               self.moveRight();
             }
-          },
-          2: { 4: { label: "Input" }, 5: { label: "Mode" } }
+            if (self.editingLabelForLink) {
+              self.toggleLabelEdit();
+            }
+          }
         };
       }
 
@@ -365,6 +357,13 @@ export const RepoLister = uiModel("RepoLister", {
         },
         3: { 6: { label: "Change", action: toggleChangeCellMode } }
       };
+
+      if (selectedCell.labelForLink) {
+        keyMap[2][6] = {
+          label: "Change Label",
+          action: self.toggleLabelEdit
+        };
+      }
 
       if (selectedCell.forLink) {
         keyMap[2][5] = {

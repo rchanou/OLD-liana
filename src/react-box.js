@@ -35,7 +35,7 @@ const lineStyle = {
 };
 
 const cursorStyle = {
-  border: "3px solid green",
+  border: "3px solid yellow",
   background: "none"
 };
 
@@ -106,7 +106,14 @@ const ReactBox = observer(({ box, onInput, editor }) => {
   let element;
   if (input != null) {
     style.background = "#eee";
-    element = <Input key={key} value={input} style={style} onChange={editor.handleInput} />;
+    element = (
+      <Input
+        key={key}
+        value={input}
+        style={style}
+        onChange={editor.handleInput}
+      />
+    );
   } else {
     element = (
       <div key={key} style={style}>
@@ -135,7 +142,12 @@ export const ReactTree = observer(({ editor }) => {
   let throwawayIdCounter = 0;
 
   const cellBoxes = cells.map(cell => (
-    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} editor={editor} />
+    <ReactBox
+      key={cell ? cell.key : throwawayIdCounter++}
+      box={cell}
+      onInput={onInput}
+      editor={editor}
+    />
   ));
 
   return <div style={containerStyle}>{cellBoxes}</div>;

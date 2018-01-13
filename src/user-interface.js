@@ -40,15 +40,12 @@ const UI = ContextRepo.refModel("UI", {
       },
       get cursorCell() {
         const { input, selectedCell } = self;
-        const { x, y, width, forLink, nodeIndex, gotoCellKey } = selectedCell;
+        const { x, y, width } = selectedCell;
 
         return {
           x,
           y,
           width,
-          // forLink,
-          // nodeIndex,
-          // gotoCellKey,
           input,
           cursor: true,
           key: cursorId
@@ -59,8 +56,8 @@ const UI = ContextRepo.refModel("UI", {
       },
       get cellMap() {
         const base = {
-          y: { crossMin: 0, crossMax: 0 },
-          x: { crossMin: 0, crossMax: 0 }
+          y: {},
+          x: {}
         };
         const yx = base.y;
         const xy = base.x;
