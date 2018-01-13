@@ -178,6 +178,12 @@ export const RepoLister = uiModel("RepoLister", {
       const { forLink, nodeIndex } = selectedCell;
 
       if (self.input != null) {
+        return keyCode => {
+          if (keyCode == 13) {
+            toggleChangeCellMode();
+            self.moveRight();
+          }
+        };
         // TODO: can probably just return a single function and match on that to determine input mode
         return {
           onInput(keyCode) {

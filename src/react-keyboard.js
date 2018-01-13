@@ -21,8 +21,25 @@ const baseStyle = {
 
 const totalHeight = yUnit * 4;
 
+const inputModeEl = (
+  <div
+    style={{
+      ...baseStyle,
+      width: "100vw",
+      height: yUnit * 3,
+      top: `calc(100vh - ${yUnit * 3}px)`
+    }}
+  >
+    Input Mode
+  </div>
+);
+
 export const ReactKeyboard = observer(({ editor }) => {
   const { keyMap, heldKeyCoords } = editor;
+
+  if (typeof keyMap === "function") {
+    return inputModeEl;
+  }
 
   const els = [];
 

@@ -45,7 +45,6 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
 });
 
 export const Editor = ContextRepo.refModel("Editor", {
-  // ...ContextUser.Mixin,
   heldKeyCoords: types.maybe(HeldKeyCoords),
   repoList: types.optional(RepoLister, {})
 })
@@ -57,8 +56,8 @@ export const Editor = ContextRepo.refModel("Editor", {
         const { keyCode } = e;
         const { keyMap } = self;
 
-        if (keyMap.onInput) {
-          keyMap.onInput(keyCode);
+        if (typeof keyMap === "function") {
+          keyMap(keyCode);
           return;
         }
 
