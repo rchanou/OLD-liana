@@ -75,13 +75,34 @@ class Cursor extends React.Component {
 
   componentDidUpdate() {
     const { me } = this;
-    const { y } = me.getBoundingClientRect();
 
-    if (y < 50) {
-      window.scrollTo(0, y - 100);
-    } else if (y > window.innerHeight - 200) {
-      window.scrollTo(0, y + 100);
-    }
+    // TODO: much room for improvement here
+    const scroll = () => {
+      me.removeEventListener("transitionend", scroll);
+
+      let lastY;
+      const step = () =>
+        requestAnimationFrame(() => {
+          const { y } = me.getBoundingClientRect();
+
+          if (y === lastY) {
+            return;
+          }
+
+          lastY = y;
+
+          if (y < 50) {
+            window.scrollTo(0, window.scrollY - 9);
+            step();
+          } else if (y > window.innerHeight - 200) {
+            window.scrollTo(0, window.scrollY + 9);
+            step();
+          }
+        });
+      step();
+    };
+
+    me.addEventListener("transitionend", scroll);
   }
 
   render() {

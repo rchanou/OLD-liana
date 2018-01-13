@@ -386,7 +386,7 @@ export const RepoLister = uiModel("RepoLister", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.cells.findIndex(
+            const gotoCellIndex = self.baseCells.findIndex(
               cell => cell.key === selectedCell.gotoCellKey
             );
 

@@ -219,3 +219,6 @@ storiesOf("Liana", module)
       }}
     />
   ));
+
+document.addEventListener("onerror", () => {
+});
