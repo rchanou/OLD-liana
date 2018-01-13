@@ -70,10 +70,20 @@ class Input extends React.Component {
 class Cursor extends React.Component {
   componentDidMount() {
     this.me = findDOMNode(this);
-  }
-  componentDidUpdate() {
     this.me.scrollIntoView();
   }
+
+  componentDidUpdate() {
+    const { me } = this;
+    const { y } = me.getBoundingClientRect();
+
+    if (y < 50) {
+      window.scrollTo(0, y - 100);
+    } else if (y > window.innerHeight - 200) {
+      window.scrollTo(0, y + 100);
+    }
+  }
+
   render() {
     return <div {...this.props} />;
   }
@@ -115,10 +125,11 @@ const ReactBox = observer(({ box, onInput, editor }) => {
       />
     );
   } else {
+    const Tag = cursor ? Cursor : "div";
     element = (
-      <div key={key} style={style}>
+      <Tag key={key} style={style}>
         {text}
-      </div>
+      </Tag>
     );
   }
 

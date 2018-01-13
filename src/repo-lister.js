@@ -134,6 +134,9 @@ export const RepoLister = uiModel("RepoLister", {
       }
     },
     toggleChangeCellMode() {
+      self.changeCellMode = !self.changeCellMode;
+    },
+    toggleEditingValMode() {
       if (self.editingNode) {
         destroy(self.editingNode);
       } else {
@@ -177,8 +180,8 @@ export const RepoLister = uiModel("RepoLister", {
         return keyCode => {
           if (keyCode == 13) {
             if (self.editingNode) {
-              toggleChangeCellMode();
-              self.moveRight();
+              self.toggleEditingValMode();
+              // self.moveRight();
             }
             if (self.editingLabelForLink) {
               self.toggleLabelEdit();
@@ -196,13 +199,6 @@ export const RepoLister = uiModel("RepoLister", {
                 toggleChangeCellMode();
                 toggleChangeOpMode();
               }
-            },
-            7: {
-              label: "Link",
-              action() {
-                toggleChangeCellMode();
-                self.setChoosingLink(forLink);
-              }
             }
           },
           3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
@@ -210,21 +206,23 @@ export const RepoLister = uiModel("RepoLister", {
 
         if (nodeIndex) {
           keyMap[1] = {
-            6: {
+            7: {
               label: "Num",
               action() {
                 forLink.setNode(nodeIndex, { val: 0 });
                 toggleChangeCellMode();
+                self.toggleEditingValMode();
               }
             },
-            7: {
+            8: {
               label: "Text",
               action() {
                 forLink.setNode(nodeIndex, { val: "" });
                 toggleChangeCellMode();
+                self.toggleEditingValMode();
               }
             },
-            8: {
+            9: {
               label: "Bool",
               action() {
                 forLink.setNode(nodeIndex, { val: false });
@@ -356,6 +354,7 @@ export const RepoLister = uiModel("RepoLister", {
           1: { label: "◀", action: self.moveLeft },
           2: { label: "▼", action: self.moveDown },
           3: { label: "▶", action: self.moveRight },
+          6: { label: "Change", action: toggleChangeCellMode },
           9: {
             label: "Delete",
             action() {
@@ -366,7 +365,7 @@ export const RepoLister = uiModel("RepoLister", {
             }
           }
         },
-        3: { 6: { label: "Change", action: toggleChangeCellMode } }
+        3: {}
       };
 
       if (selectedCell.labelForLink) {
