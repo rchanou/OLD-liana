@@ -54,7 +54,7 @@ const UI = ContextRepo.refModel("UI", {
           key: cursorId
         };
       },
-      get cells() {
+      get allCells() {
         return self.baseCells.concat(self.cursorCell || []);
       },
       get cellMap() {
@@ -151,6 +151,9 @@ const UI = ContextRepo.refModel("UI", {
           return;
         }
       }
+
+      // NOTE: Short-circuiting wraparound logic below  at the moment (allow param to set?)
+      return;
 
       if (axis === "y") {
         return;

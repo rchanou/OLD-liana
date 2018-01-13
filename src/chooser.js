@@ -66,13 +66,6 @@ export const Chooser = uiModel("Chooser", {
         .concat(makeSearchCells(inputs, 5))
         .concat(makeSearchCells(dependencies, 10));
     },
-    // get cursorCell() {
-    //   return cursorify(
-    //     self.selectedCell,
-    //     "CHOOSER",
-    //     self.inputMode ? self.filter : undefined
-    //   );
-    // },
     get keyMap() {
       return {
         1: {

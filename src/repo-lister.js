@@ -70,45 +70,50 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
 
 const optionalBoolean = types.optional(types.boolean, false);
 
-const NodeRef = types.model("NodeRef", {
-  link: types.reference(Link),
-  index: types.maybe(types.number)
-});
+const NodeRef = types
+  .model("NodeRef", {
+    forLink: types.reference(Link),
+    nodeIndex: types.maybe(types.number)
+  })
+  .views(self => ({
+    get node() {
+      return self.forLink.nodes[self.nodeIndex];
+    }
+  }));
 
 export const RepoLister = uiModel("RepoLister", {
   changeCellMode: optionalBoolean,
   changeOpMode: optionalBoolean,
   addNodeMode: optionalBoolean,
   addOpMode: optionalBoolean,
-  input: types.maybe(types.string),
+  // input: types.maybe(types.string),
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef)
 })
   .views(self => ({
-    get repoCells() {
+    get baseCells() {
       return makeRepoCells(self.repo);
     },
-    get baseCells() {
-      // return self.repoCells.concat(self.chooser ? self.chooser.baseCells : []);
-
+    get activeCells() {
       if (self.chooser) {
-        return self.chooser.baseCells;
+        return self.chooser.allCells;
       }
 
-      return self.repoCells;
+      return self.allCells;
     },
-    get cursorCell() {
-      if (self.chooser) {
-        return self.chooser.cursorCell;
+    get input() {
+      if (!self.editingNode) {
+        return null;
       }
 
-      return cursorify(self.selectedCell, "RL", self.input);
+      return self.editingNode.node.out;
     }
   }))
   .actions(self => ({
     handleInput(e) {
       // console.log("fun", e.target.value);
-      self.input = e.target.value;
+      // self.input = e.target.value;
+      self.editingNode.node.select(e.target.value);
     },
     setInput(value) {
       self.input = value;
@@ -123,7 +128,13 @@ export const RepoLister = uiModel("RepoLister", {
       }
     },
     toggleChangeCellMode() {
-      self.changeCellMode = !self.changeCellMode;
+      if (self.editingNode) {
+        destroy(self.editingNode);
+      } else {
+        const { forLink, nodeIndex } = self.selectedCell;
+        self.editingNode = { forLink, nodeIndex };
+      }
+      // self.changeCellMode = !self.changeCellMode;
     },
     toggleChangeOpMode() {
       self.changeOpMode = !self.changeOpMode;
@@ -167,11 +178,11 @@ export const RepoLister = uiModel("RepoLister", {
       const { forLink, nodeIndex } = selectedCell;
 
       if (self.input != null) {
+        // TODO: can probably just return a single function and match on that to determine input mode
         return {
           onInput(keyCode) {
             if (keyCode == 13) {
-              forLink.setVal(nodeIndex, self.input);
-              setInput(null);
+              toggleChangeCellMode();
               self.moveRight();
             }
           },
@@ -207,7 +218,6 @@ export const RepoLister = uiModel("RepoLister", {
               action() {
                 forLink.setNode(nodeIndex, { val: 0 });
                 toggleChangeCellMode();
-                setInput("0");
               }
             },
             7: {
@@ -215,7 +225,6 @@ export const RepoLister = uiModel("RepoLister", {
               action() {
                 forLink.setNode(nodeIndex, { val: "" });
                 toggleChangeCellMode();
-                setInput("");
               }
             },
             8: {
@@ -292,7 +301,7 @@ export const RepoLister = uiModel("RepoLister", {
               action() {
                 const lastNodeIndex = forLink.addNode({ val: 0 });
                 selectNewCell(lastNodeIndex);
-                setInput("0");
+                toggleChangeCellMode();
               }
             },
             7: {
@@ -300,7 +309,7 @@ export const RepoLister = uiModel("RepoLister", {
               action() {
                 const lastNodeIndex = forLink.addNode({ val: "" });
                 selectNewCell(lastNodeIndex);
-                setInput("");
+                toggleChangeCellMode();
               }
             },
             8: {
@@ -342,10 +351,8 @@ export const RepoLister = uiModel("RepoLister", {
             label: "Delete",
             action() {
               if (typeof nodeIndex === "number") {
-                const deleted = selectedCell.forLink.deleteNode(nodeIndex);
-                if (nodeIndex > selectedCell.forLink.nodes.length - 1) {
-                  self.moveLeft();
-                }
+                selectedCell.forLink.deleteNode(nodeIndex);
+                self.selectCellIndex(self.selectedCellIndex - 1);
               }
             }
           }

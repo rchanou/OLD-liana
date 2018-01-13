@@ -59,6 +59,11 @@ export const setupContext = (Model, key) => {
   const RefModel = types.model(`${Model.name}Ref`, Mixin).actions(self => ({
     postProcessSnapshot(snapshot) {
       delete snapshot[REFKEY];
+
+      if (!snapshot[KEY]) {
+        delete snapshot[KEY];
+      }
+
       return snapshot;
     }
   }));

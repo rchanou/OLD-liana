@@ -98,7 +98,7 @@ export const Editor = ContextRepo.refModel("Editor", {
   })
   .views(self => ({
     get cells() {
-      return self.repoList.cells;
+      return self.repoList.activeCells;
       // return self.repoList.cells.concat(self.chooser ? self.chooser.cells : []);
     },
     get keyMap() {
