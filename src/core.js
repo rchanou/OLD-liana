@@ -568,10 +568,14 @@ export const Repo = types
   }))
   .actions(self => ({
     addLink() {
+      const linkId = `N${newLinkIdCounter++}`;
+
       self.links.put({
-        linkId: `N${newLinkIdCounter++}`,
+        linkId,
         nodes: [{ op: "+" }]
       });
+
+      return linkId;
     },
     putLink(newLink) {
       self.links.put(newLink);

@@ -87,7 +87,6 @@ export const RepoLister = uiModel("RepoLister", {
   changeOpMode: optionalBoolean,
   addNodeMode: optionalBoolean,
   addOpMode: optionalBoolean,
-  // input: types.maybe(types.string),
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef),
   editingLabelForLink: types.maybe(types.reference(Link))
@@ -337,7 +336,19 @@ export const RepoLister = uiModel("RepoLister", {
           2: { label: "▲", action: self.moveUp },
           5: {
             label: "Add Link",
-            action: self.repo.addLink // TODO: auto-select added link
+            action() {
+              self.repo.addLink();
+
+              // TODO: this logic to find the last-added label feels kinda hacky; improve?
+              let i = self.baseCells.length;
+              while (--i) {
+                if (self.baseCells[i].labelForLink) {
+                  self.selectCellIndex(i);
+                  self.toggleLabelEdit();
+                  return;
+                }
+              }
+            }
           },
           6: { label: "Add", action: toggleAddNodeMode }
         },
