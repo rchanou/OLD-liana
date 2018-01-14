@@ -3,7 +3,7 @@ import EventEmitter from "eventemitter3";
 
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
-import { RepoLister } from "./repo-lister";
+import { RepoEditor } from "./repo-editor";
 
 const keyLayout = {
   // TODO: make customizable
@@ -46,7 +46,7 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
 
 export const Editor = ContextRepo.refModel("Editor", {
   heldKeyCoords: types.maybe(HeldKeyCoords),
-  repoList: types.optional(RepoLister, {})
+  repoList: types.optional(RepoEditor, {})
 })
   .actions(self => {
     const { dom } = getEnv(self);

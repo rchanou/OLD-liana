@@ -1,9 +1,9 @@
-import { types, destroy } from "mobx-state-tree";
+import { types, destroy, getSnapshot } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
 import { Chooser } from "./chooser";
 import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
-import { minify, unminify } from "./minify";
+import { minify } from "./minify";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -85,7 +85,7 @@ const NodeRef = types
     }
   }));
 
-export const RepoLister = uiModel("RepoLister", {
+export const RepoEditor = uiModel("RepoLister", {
   changeCellMode: optionalBoolean,
   changeOpMode: optionalBoolean,
   addNodeMode: optionalBoolean,
@@ -337,10 +337,13 @@ export const RepoLister = uiModel("RepoLister", {
           0: {
             label: "Save",
             action() {
-              localStorage.setItem(
-                LOCAL_STORAGE_KEY,
-                JSON.stringify(self.repo.snapshot)
-              );
+              const snapshot = getSnapshot(self.repo);
+
+              const minified = minify(snapshot);
+
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(minified));
+
+              console.log(JSON.stringify(snapshot));
             }
           },
           2: { label: "▲", action: self.moveUp },

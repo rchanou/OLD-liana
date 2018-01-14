@@ -10,7 +10,7 @@ import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
 import { setupContext } from "./context";
-import { minify, unminify } from "./minify";
+import { unminify } from "./minify";
 import * as Color from "./color";
 
 const optionalMap = type => types.optional(types.map(type), {});
@@ -307,6 +307,9 @@ export const Input = types
       if (!snapshot.labelSet) {
         delete snapshot.labelSet;
       }
+      if (!snapshot.type) {
+        delete snapshot.type;
+      }
       return snapshot;
     }
   }))
@@ -379,6 +382,17 @@ export const Link = types
     labelSet: LabelSet,
     tags: types.optional(types.array(types.string), [])
   })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      if (!snapshot.labelSet) {
+        delete snapshot.labelSet;
+      }
+      if (!snapshot.tags.length) {
+        delete snapshot.tags;
+      }
+      return snapshot;
+    }
+  }))
   .views(self => ({
     derive(nodeVals) {
       // NOTE: this is a pure function, would it be better to pull this out of the model?
@@ -430,12 +444,6 @@ export const Link = types
     }
   }))
   .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      if (!snapshot.labelSet) {
-        delete snapshot.labelSet;
-      }
-      return snapshot;
-    },
     addNode(newNode = { val: "🍆" }) {
       // TODO: extend functionality, remove test string
       const { nodes } = self;
@@ -587,11 +595,6 @@ export const Repo = types
   .preProcessSnapshot(
     snapshot => (!snapshot || snapshot.links ? snapshot : unminify(snapshot))
   )
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      return minify(snapshot);
-    }
-  }))
   .views(self => ({
     get linkList() {
       return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
@@ -605,9 +608,6 @@ export const Repo = types
       return self.dependencies
         .values()
         .map(dep => ({ value: dep.depId, label: dep.label }));
-    },
-    get snapshot() {
-      return getSnapshot(self);
     }
   }))
   .actions(self => ({
