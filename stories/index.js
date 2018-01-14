@@ -1,5 +1,5 @@
 import React from "react";
-import { destroy } from "mobx-state-tree";
+import { destroy, getSnapshot } from "mobx-state-tree";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";

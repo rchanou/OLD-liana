@@ -27,7 +27,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       y: currentY,
       width: 2,
       selectable: true,
-      text: label,
+      text: `${linkId}: ${label}`,
       labelForLink: link
     });
 

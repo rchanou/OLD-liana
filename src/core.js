@@ -375,12 +375,12 @@ export const Node = types.union(
   DepRef
 );
 
-const derive = nodeVals => {
-  if (nodeVals.indexOf(Dependency) !== -1) {
+const derive = nodeOuts => {
+  if (nodeOuts.indexOf(Dependency) !== -1) {
     return Dependency;
   }
 
-  const [head, ...nodeInputs] = nodeVals;
+  const [head, ...nodeInputs] = nodeOuts;
 
   if (typeof head === "function") {
     const inputs = nodeInputs.filter(input => input === Input);
@@ -414,30 +414,30 @@ export const Link = types
   }))
   .views(self => ({
     get out() {
-      const nodeVals = self.nodes.map(node => node.out);
-      return derive(nodeVals);
+      const nodeOuts = self.nodes.map(node => node.out);
+      return derive(nodeOuts);
     },
     with(inputs) {
-      const nodeVals = self.nodes.map(node => node.with(inputs));
+      const nodeOuts = self.nodes.map(node => node.with(inputs));
 
-      const holes = nodeVals.filter(val => val instanceof Hole);
+      const holes = nodeOuts.filter(val => val instanceof Hole);
 
       if (holes.length) {
         return new Hole(...holes.map(hole => hole.inputs));
       }
 
-      return derive(nodeVals);
+      return derive(nodeOuts);
     },
     equivalent(other) {
       return other === self || other.ref === self;
     },
     get label() {
-      if (!self.labelSet) {
-        return `(${self.linkId})`;
+      if (self.labelSet) {
+        // TODO: handle maps for localization, icon labels, etc.
+        return self.labelSet;
       }
 
-      // TODO: handle maps for localization, icon labels, etc.
-      return self.labelSet;
+      return `(${self.linkId})`;
     },
     get color() {
       return Color.pending;
