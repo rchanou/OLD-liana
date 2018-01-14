@@ -375,6 +375,25 @@ export const Node = types.union(
   DepRef
 );
 
+const derive = nodeVals => {
+  if (nodeVals.indexOf(Dependency) !== -1) {
+    return Dependency;
+  }
+
+  const [head, ...nodeInputs] = nodeVals;
+
+  if (typeof head === "function") {
+    const inputs = nodeInputs.filter(input => input === Input);
+    if (inputs.length) {
+      const curried = curry(head, nodeInputs.length);
+      return ary(curried(...nodeInputs), inputs.length);
+    }
+    return head(...nodeInputs);
+  } else {
+    return head;
+  }
+};
+
 export const Link = types
   .model("Link", {
     linkId: types.identifier(types.string),
@@ -394,28 +413,9 @@ export const Link = types
     }
   }))
   .views(self => ({
-    derive(nodeVals) {
-      // NOTE: this is a pure function, would it be better to pull this out of the model?
-      if (nodeVals.indexOf(Dependency) !== -1) {
-        return Dependency;
-      }
-
-      const [head, ...nodeInputs] = nodeVals;
-
-      if (typeof head === "function") {
-        const inputs = nodeInputs.filter(input => input === Input);
-        if (inputs.length) {
-          const curried = curry(head, nodeInputs.length);
-          return ary(curried(...nodeInputs), inputs.length);
-        }
-        return head(...nodeInputs);
-      } else {
-        return head;
-      }
-    },
     get out() {
       const nodeVals = self.nodes.map(node => node.out);
-      return self.derive(nodeVals);
+      return derive(nodeVals);
     },
     with(inputs) {
       const nodeVals = self.nodes.map(node => node.with(inputs));
@@ -426,7 +426,7 @@ export const Link = types
         return new Hole(...holes.map(hole => hole.inputs));
       }
 
-      return self.derive(nodeVals);
+      return derive(nodeVals);
     },
     equivalent(other) {
       return other === self || other.ref === self;
