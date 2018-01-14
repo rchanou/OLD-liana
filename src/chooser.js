@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import { Link, Input, Dependency } from "./core";
-import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
+import { uiModel, cursorify, formatOut } from "./user-interface";
 
 export const Chooser = uiModel("Chooser", {
   forLink: types.reference(Link),
@@ -43,7 +43,10 @@ export const Chooser = uiModel("Chooser", {
           const selectable =
             !record.equivalent(currentNode) && !record.equivalent(forLink);
 
-          if (record.label.includes(filter)) {
+          if (
+            record.label.includes(filter) ||
+            formatOut(record.out).includes(filter)
+          ) {
             cells.push({
               record,
               key,
@@ -76,7 +79,7 @@ export const Chooser = uiModel("Chooser", {
         .concat(makeSearchCells(inputs, 5))
         .concat(makeSearchCells(dependencies, 10));
     },
-    get keyMap() {
+    keyMap(exit = () => {}) {
       if (self.inputMode) {
         return keyCode => {
           if (keyCode == 13) {
@@ -115,7 +118,7 @@ export const Chooser = uiModel("Chooser", {
 
               const { forLink, nodeIndex } = self;
               forLink.setNode(nodeIndex, newNode);
-              self.events.emit(CLOSE);
+              exit();
             }
           }
         },
@@ -123,7 +126,7 @@ export const Chooser = uiModel("Chooser", {
           6: {
             label: "Cancel",
             action() {
-              self.events.emit(CLOSE);
+              exit();
             }
           }
         }
@@ -135,7 +138,6 @@ export const Chooser = uiModel("Chooser", {
       self.inputMode = !self.inputMode;
     },
     handleInput(e) {
-      console.log("fuf", e.target.value);
       self.filter = e.target.value;
     }
   }));

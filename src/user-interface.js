@@ -1,8 +1,5 @@
 import { types } from "mobx-state-tree";
-import EventEmitter from "eventemitter3";
 import { Dependency, Input, Hole, ContextRepo } from "./core";
-
-export const CLOSE = "CLOSE";
 
 export const formatOut = out => {
   if (out instanceof Error) {
@@ -108,14 +105,6 @@ const UI = ContextRepo.refModel("UI", {
       }
     };
   })
-  .views(self => {
-    const events = new EventEmitter();
-    return {
-      get events() {
-        return events;
-      }
-    };
-  })
   .actions(self => ({
     selectCellIndex(index) {
       self.selectedCellIndex = index;
@@ -177,9 +166,6 @@ const UI = ContextRepo.refModel("UI", {
     },
     moveUp() {
       self.moveBy(-1, "y");
-    },
-    beforeDestroy() {
-      self.events.removeAllListeners();
     }
   }));
 

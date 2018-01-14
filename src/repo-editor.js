@@ -2,7 +2,7 @@ import { types, destroy, getSnapshot } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
 import { Chooser } from "./chooser";
-import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
+import { uiModel, cursorify, formatOut } from "./user-interface";
 import { minify } from "./minify";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -118,13 +118,6 @@ export const RepoEditor = uiModel("RepoLister", {
     }
   }))
   .actions(self => ({
-    afterCreate() {
-      // TODO: think of some way to avoidd having to do this manually
-      // probably just go back to passing in callbacks
-      if (self.chooser) {
-        self.chooser.events.on(CLOSE, self.toggleChooser);
-      }
-    },
     handleInput(e) {
       if (self.chooser) {
         self.chooser.handleInput(e);
@@ -144,7 +137,6 @@ export const RepoEditor = uiModel("RepoLister", {
       } else {
         const { forLink, nodeIndex } = self.selectedCell;
         self.chooser = { forLink, nodeIndex };
-        self.chooser.events.on(CLOSE, self.toggleChooser);
       }
     },
     toggleChangeCellMode() {
@@ -178,7 +170,7 @@ export const RepoEditor = uiModel("RepoLister", {
   .views(self => ({
     get keyMap() {
       if (self.chooser) {
-        return self.chooser.keyMap;
+        return self.chooser.keyMap(self.toggleChooser);
       }
 
       const {
