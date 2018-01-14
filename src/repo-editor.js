@@ -294,23 +294,23 @@ export const RepoEditor = uiModel("RepoLister", {
 
         return {
           1: {
-            6: {
+            7: {
               label: "Num",
               action() {
                 const lastNodeIndex = forLink.addNode({ val: 0 });
                 selectNewCell(lastNodeIndex);
-                toggleChangeCellMode();
+                self.toggleEditingValMode();
               }
             },
-            7: {
+            8: {
               label: "Text",
               action() {
                 const lastNodeIndex = forLink.addNode({ val: "" });
                 selectNewCell(lastNodeIndex);
-                toggleChangeCellMode();
+                self.toggleEditingValMode();
               }
             },
-            8: {
+            9: {
               label: "Bool",
               action() {
                 const lastNodeIndex = forLink.addNode({ val: false });
