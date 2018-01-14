@@ -5,9 +5,9 @@ import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
 
 export const Chooser = uiModel("Chooser", {
   forLink: types.reference(Link),
-  nodeIndex: types.maybe(types.number),
+  nodeIndex: types.number,
   filter: types.optional(types.string, ""),
-  inputMode: types.optional(types.boolean, false)
+  inputMode: types.optional(types.boolean, true)
 })
   .views(self => ({
     get currentNode() {
@@ -62,11 +62,30 @@ export const Chooser = uiModel("Chooser", {
 
       const { links, inputs, dependencies } = repo;
 
-      return makeSearchCells(links)
+      return [
+        {
+          key: "FILTER",
+          x: 0,
+          y: 0,
+          width: 5,
+          text: self.filter,
+          selectable: true
+        }
+      ]
+        .concat(makeSearchCells(links, 0, 1))
         .concat(makeSearchCells(inputs, 5))
         .concat(makeSearchCells(dependencies, 10));
     },
     get keyMap() {
+      if (self.inputMode) {
+        return keyCode => {
+          if (keyCode == 13) {
+            self.toggleInputMode();
+            self.selectCellIndex(self.selectedCellIndex + 1);
+          }
+        };
+      }
+
       return {
         1: {
           2: { label: "▲", action: self.moveUp }
@@ -78,6 +97,11 @@ export const Chooser = uiModel("Chooser", {
           6: {
             label: "Choose",
             action() {
+              if (self.selectedCell.key === "FILTER") {
+                self.toggleInputMode();
+                return;
+              }
+
               const chosenRec = self.selectedCell.record;
 
               const newNode = {};
@@ -107,7 +131,11 @@ export const Chooser = uiModel("Chooser", {
     }
   }))
   .actions(self => ({
+    toggleInputMode() {
+      self.inputMode = !self.inputMode;
+    },
     handleInput(e) {
+      console.log("fuf", e.target.value);
       self.filter = e.target.value;
     }
   }));

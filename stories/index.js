@@ -27,9 +27,7 @@ class Story extends React.Component {
 
   componentDidMount() {
     // const dom = findDOMNode(this);
-
     window.s = Editor.create(this.props.editor, env);
-
     this.setState({ store: window.s });
   }
 
@@ -54,6 +52,7 @@ class Story extends React.Component {
 
     return <ReactEditor editor={store} />;
   }
+
   componentWillUnmount() {
     destroy(this.state.store);
   }
@@ -80,7 +79,10 @@ storiesOf("Liana", module)
     <Story
       editor={{
         ...context,
-        repoList: { selectedCellIndex: 75, chooser: { forLink: "0" } }
+        repoList: {
+          selectedCellIndex: 75,
+          chooser: { forLink: "16", nodeIndex: 1 }
+        }
       }}
     />
   ));

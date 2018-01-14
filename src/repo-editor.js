@@ -118,7 +118,18 @@ export const RepoEditor = uiModel("RepoLister", {
     }
   }))
   .actions(self => ({
+    afterCreate() {
+      // TODO: think of some way to avoidd having to do this manually
+      // probably just go back to passing in callbacks
+      if (self.chooser) {
+        self.chooser.events.on(CLOSE, self.toggleChooser);
+      }
+    },
     handleInput(e) {
+      if (self.chooser) {
+        self.chooser.handleInput(e);
+      }
+
       if (self.editingNode) {
         self.editingNode.node.select(e.target.value);
       }
@@ -338,11 +349,8 @@ export const RepoEditor = uiModel("RepoLister", {
             label: "Save",
             action() {
               const snapshot = getSnapshot(self.repo);
-
               const minified = minify(snapshot);
-
               localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(minified));
-
               console.log(JSON.stringify(snapshot));
             }
           },
