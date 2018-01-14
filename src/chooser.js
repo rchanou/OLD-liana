@@ -84,7 +84,9 @@ export const Chooser = uiModel("Chooser", {
         return keyCode => {
           if (keyCode == 13) {
             self.toggleInputMode();
-            self.selectCellIndex(self.selectedCellIndex + 1);
+            if (self.baseCells.length > 1) {
+              self.selectCellIndex(self.selectedCellIndex + 1);
+            }
           }
         };
       }

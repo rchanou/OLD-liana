@@ -77,11 +77,9 @@ const UI = ContextRepo.refModel("UI", {
           yx[y][x] = i;
 
           if (x > yx[y].max) {
-            yx.crossMax = x;
             yx[y].max = x;
           }
           if (x < yx[y].min) {
-            yx.crossMin = x;
             yx[y].min = x;
           }
 
@@ -92,11 +90,9 @@ const UI = ContextRepo.refModel("UI", {
           xy[x][y] = i;
 
           if (y > xy[x].max) {
-            xy.crossMax = y;
             xy[x].max = y;
           }
           if (y < xy[x].min) {
-            xy.crossMin = y;
             xy[x].min = y;
           }
         }
