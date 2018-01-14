@@ -3,6 +3,9 @@ import { types, destroy } from "mobx-state-tree";
 import { Link, Dependency } from "./core";
 import { Chooser } from "./chooser";
 import { uiModel, cursorify, formatOut, CLOSE } from "./user-interface";
+import { minify, unminify } from "./minify";
+
+const LOCAL_STORAGE_KEY = "LIANA";
 
 export const makeRepoCells = (repo, x = 0, y = 0) => {
   const cells = [];
@@ -331,6 +334,15 @@ export const RepoLister = uiModel("RepoLister", {
 
       const keyMap = {
         1: {
+          0: {
+            label: "Save",
+            action() {
+              localStorage.setItem(
+                LOCAL_STORAGE_KEY,
+                JSON.stringify(self.repo.snapshot)
+              );
+            }
+          },
           2: { label: "▲", action: self.moveUp },
           5: {
             label: "Add Link",

@@ -1,8 +1,16 @@
-import { types, getEnv, getParent, getType, flow } from "mobx-state-tree";
+import {
+  types,
+  getEnv,
+  getParent,
+  getType,
+  flow,
+  getSnapshot
+} from "mobx-state-tree";
 import { isObservableMap } from "mobx";
 import { curry, ary } from "lodash";
 
 import { setupContext } from "./context";
+import { minify, unminify } from "./minify";
 import * as Color from "./color";
 
 const optionalMap = type => types.optional(types.map(type), {});
@@ -198,7 +206,7 @@ export const Dependency = types
   .model("Dependency", {
     depId: types.identifier(types.string),
     path: types.string,
-    resolved: false
+    resolved: types.optional(types.boolean, false)
   })
   .actions(self => {
     const { system } = getEnv(self);
@@ -208,7 +216,11 @@ export const Dependency = types
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
-      })
+      }),
+      postProcessSnapshot(snapshot) {
+        delete snapshot.resolved;
+        return snapshot;
+      }
     };
   })
   .views(self => {
@@ -290,6 +302,14 @@ export const Input = types
     type: types.maybe(InputType, anyType),
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      if (!snapshot.labelSet) {
+        delete snapshot.labelSet;
+      }
+      return snapshot;
+    }
+  }))
   .views(self => ({
     get out() {
       return Input;
@@ -410,6 +430,12 @@ export const Link = types
     }
   }))
   .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      if (!snapshot.labelSet) {
+        delete snapshot.labelSet;
+      }
+      return snapshot;
+    },
     addNode(newNode = { val: "🍆" }) {
       // TODO: extend functionality, remove test string
       const { nodes } = self;
@@ -439,6 +465,14 @@ export const LinkRef = types
     // TODO: inputs may be replace-able with simple boolean
     inputs: types.maybe(types.map(Node))
   })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      if (!snapshot.inputs) {
+        delete snapshot.inputs;
+      }
+      return snapshot;
+    }
+  }))
   .views(self => ({
     get out() {
       if (!self.inputs) {
@@ -548,9 +582,16 @@ export const Repo = types
     inputs: optionalMap(Input),
     links: optionalMap(Link),
     subs: optionalMap(Sub),
-    linkLabelSets: optionalMap(LabelSet),
-    selectedLabelSet: types.maybe(types.reference(LabelSet))
+    linkLabelSets: optionalMap(LabelSet)
   })
+  .preProcessSnapshot(
+    snapshot => (!snapshot || snapshot.links ? snapshot : unminify(snapshot))
+  )
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      return minify(snapshot);
+    }
+  }))
   .views(self => ({
     get linkList() {
       return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
@@ -564,6 +605,9 @@ export const Repo = types
       return self.dependencies
         .values()
         .map(dep => ({ value: dep.depId, label: dep.label }));
+    },
+    get snapshot() {
+      return getSnapshot(self);
     }
   }))
   .actions(self => ({

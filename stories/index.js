@@ -1,7 +1,6 @@
 import React from "react";
-import { findDOMNode } from "react-dom";
 import { autorun } from "mobx";
-import { getSnapshot, destroy } from "mobx-state-tree";
+import { destroy } from "mobx-state-tree";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
@@ -16,7 +15,7 @@ const LOCAL_STORAGE_KEY = "LIANA";
 
 const testDep = "https://unpkg.com/redux@3.7.2/dist/redux.min.js";
 
-const repo = {
+const defaultRepo = {
   dependencies: {
     0: {
       depId: "0",
@@ -160,10 +159,6 @@ const repo = {
 // };
 // addEventListener("beforeunload", saveRepo);
 
-const context = {
-  [ContextRepo.KEY]: repo
-};
-
 const params = new Map(
   Object.entries({
     0: 4,
@@ -179,13 +174,23 @@ class Story extends React.Component {
   state = {};
 
   componentDidMount() {
-    const dom = findDOMNode(this);
+    // const dom = findDOMNode(this);
 
-    const store = Editor.create(this.props.editor, { ...env, dom });
+    window.s = Editor.create(this.props.editor, env);
 
-    window.s = store;
+    this.setState({ store: window.s });
+  }
 
-    this.setState({ store });
+  componentDidCatch() {
+    destroy(this.state.store);
+
+    window.s = Editor.create({
+      [ContextRepo.KEY]: defaultRepo,
+      repoList: { selectedCellIndex: 75 },
+      env
+    });
+
+    this.setState({ store: window.s });
   }
 
   render() {
@@ -198,9 +203,17 @@ class Story extends React.Component {
     return <ReactEditor editor={store} />;
   }
   componentWillUnmount() {
-    // destroy(this.state.store);
+    destroy(this.state.store);
   }
 }
+
+const storedRepo = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+const repoToLoad = storedRepo ? JSON.parse(storedRepo) : defaultRepo;
+
+const context = {
+  [ContextRepo.KEY]: repoToLoad
+};
 
 storiesOf("Liana", module)
   .add("editor", () => (
@@ -219,6 +232,3 @@ storiesOf("Liana", module)
       }}
     />
   ));
-
-document.addEventListener("onerror", () => {
-});
