@@ -6,8 +6,6 @@ import {
   flow,
   getSnapshot
 } from "mobx-state-tree";
-import { isObservableMap } from "mobx";
-import { curry, ary } from "lodash";
 
 import { setupContext } from "./context";
 import { unminify } from "./minify";
