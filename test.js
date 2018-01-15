@@ -10,7 +10,7 @@ const base = {
   5: [{ o: "+" }, { r: 2 }, { r: 3 }],
   6: [{ r: 4 }, { r: 5 }],
   7: [{ r: 1 }, { i: 2 }, 3],
-  8: { f: [6, 0, 1] },
+  8: { f: [6] },
   9: [{ r: 8 }, 29, 420]
 };
 
@@ -67,11 +67,19 @@ const defn = (repo, id, ...argIds) => {
   if (!argIds.length) {
     const nodes = repo[id];
     const defaultArgIds = [];
-    for (const node of nodes) {
-      if (typeof node === "object" && "i" in node) {
-        defaultArgIds.push(node.i);
+    const findInputs = nodes => {
+      for (const node of nodes) {
+        if (typeof node === "object") {
+          if ("i" in node) {
+            defaultArgIds.push(node.i);
+          } else if ("r" in node) {
+            const innerNodes = repo[node.r];
+            findInputs(innerNodes);
+          }
+        }
       }
-    }
+    };
+    findInputs(nodes);
     return defn(repo, id, ...defaultArgIds);
   }
 
