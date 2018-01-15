@@ -131,9 +131,9 @@ export const Val = types
     get out() {
       return self.val;
     },
-    equivalent(other) {
-      return self.val === other.val;
-    },
+    // equivalent(other) {
+    //   return self.val === other.val;
+    // },
     get label() {
       const { val } = self;
       if (typeof val === "string") {
@@ -203,9 +203,9 @@ export const Op = types
     get out() {
       return opFuncs[self.op];
     },
-    equivalent(other) {
-      return self.op === other.op;
-    },
+    // equivalent(other) {
+    //   return self.op === other.op;
+    // },
     get label() {
       // TODO: look up?
       return self.op;
@@ -267,9 +267,9 @@ export const DepRef = types
     get out() {
       return self.dep.out;
     },
-    equivalent(other) {
-      return self.dep === other || self.dep === other.dep;
-    },
+    // equivalent(other) {
+    //   return self.dep === other || self.dep === other.dep;
+    // },
     get label() {
       return self.dep.label;
     },
@@ -350,9 +350,9 @@ export const InputRef = types
     get out() {
       return self.input.out;
     },
-    equivalent(other) {
-      return self.input === other || self.input === other.input;
-    },
+    // equivalent(other) {
+    //   return self.input === other || self.input === other.input;
+    // },
     get label() {
       return self.input.label;
     },
@@ -440,7 +440,7 @@ export const Link = types
       return head(...args);
     },
     equivalent(other) {
-      return other === self || other.ref === self;
+      return other === self || other.ref === self || other.fn === self;
     },
     get label() {
       if (self.labelSet) {
@@ -481,8 +481,6 @@ export const Link = types
 export const LinkRef = types
   .model("LinkRef", {
     ref: types.reference(Link)
-    // TODO: inputs may be replace-able with simple boolean
-    // inputs: types.maybe(types.map(Node))
   })
   .actions(self => ({
     postProcessSnapshot(snapshot) {
@@ -502,9 +500,9 @@ export const LinkRef = types
     get out() {
       return self.ref.out;
     },
-    equivalent(other) {
-      return self.ref === other || self.ref === other.ref;
-    },
+    // equivalent(other) {
+    //   return self.ref === other || self.ref === other.ref;
+    // },
     get label() {
       return self.ref.label;
     },
