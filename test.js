@@ -20,15 +20,15 @@ const base = {
   // 15:[{]
 };
 
-const findInputs = (repo, nodes) => {
+const findInputs = (repo, id) => {
+  const nodes = repo[id];
   const foundInputs = [];
   for (const node of nodes) {
     if (typeof node === "object") {
       if ("i" in node) {
         foundInputs.push(node.i);
       } else if ("r" in node) {
-        const innerNodes = repo[node.r];
-        const innerInputs = findInputs(repo, innerNodes);
+        const innerInputs = findInputs(repo, node.r);
         foundInputs.push(...innerInputs);
       }
     }
@@ -41,15 +41,12 @@ const calc = (repo, id, root = true) => {
     if (typeof node !== "object") {
       return node;
     }
-
     if ("i" in node) {
       return repo.i[node.i];
     }
-
     if ("f" in node) {
       return defn(repo, node.f);
     }
-
     switch (node.o) {
       case "g":
         return global;
@@ -62,40 +59,38 @@ const calc = (repo, id, root = true) => {
           return a + b;
         };
     }
-
     return calc(repo, node.r, false);
   };
-
-  const nodes = repo[id];
-
-  if (root && nodes.some(node => typeof node === "object" && "i" in node)) {
-    return defn(repo, id);
+  // if (root && nodes.some(node => typeof node === "object" && "i" in node)) {
+  if (root) {
+    const inputs = findInputs(repo, id);
+    if (inputs.length) {
+      return defn(repo, id, ...inputs);
+    }
   }
-  const [funcNode, ...argNodes] = nodes;
+  const [funcNode, ...argNodes] = repo[id];
   const funcVal = calcNode(funcNode);
-
   if (typeof funcVal !== "function") {
     // TODO: could this possibly have different behavior?
     return funcVal;
   }
-
   const argVals = argNodes.map(calcNode);
   return funcVal(...argVals);
 };
 
 const defn = (repo, id, ...argIds) => {
   if (!argIds.length) {
-    const nodes = repo[id];
-    const defaultArgIds = findInputs(repo, nodes);
-    return defn(repo, id, ...defaultArgIds);
+    const defaultInputs = findInputs(repo, id);
+    return defn(repo, id, ...defaultInputs);
   }
-
   if (!repo._d[id]) {
     repo._d[id] = [];
   }
   const past = repo._d[id];
-
   return (...args) => {
+    if (id == 6) {
+      debugger;
+    }
     const latest = { i: args };
     past.push(latest);
     for (let i = 0; i < argIds.length; i++) {
@@ -108,13 +103,14 @@ const defn = (repo, id, ...argIds) => {
 };
 
 const a = calc(base, 2);
-console.log(a(3), global.Math.pow(3, 2));
+console.log(a(3), Math.pow(3, 2));
 
 const b = defn(base, 7, 2);
 console.log(b(9), Math.pow(9, 3));
 
-const d = calc(base, 6);
-console.log(d, 61);
+const d = calc(base, 6, true);
+console.log(d(11, 60), 61);
+
 // console.log(d(7, 24), 25);
 // console.log(d());
 // console.log(d(3));
