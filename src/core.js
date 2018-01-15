@@ -512,22 +512,22 @@ export const LinkRef = types
   }));
 
 // TODO: better way to generate ids?
-let callIdCounter = 0;
+// let callIdCounter = 0;
 export const Fn = types
   .model("Fn", {
-    fn: types.reference(Link),
-    callId: types.optional(
-      types.identifier(types.number),
-      () => callIdCounter++
-    )
+    fn: types.reference(Link)
+    // callId: types.optional(
+    //   types.identifier(types.number),
+    //   () => callIdCounter++
+    // )
   })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      // TODO: maybe we should keep these ids?
-      delete snapshot.callId;
-      return snapshot;
-    }
-  }))
+  // .actions(self => ({
+  //   postProcessSnapshot(snapshot) {
+  //     // TODO: maybe we should keep these ids?
+  //     delete snapshot.callId;
+  //     return snapshot;
+  //   }
+  // }))
   .views(self => ({
     get out() {
       return self.fn.out;
