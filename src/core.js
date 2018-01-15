@@ -301,9 +301,6 @@ export const Input = types
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .actions(self => ({
-    afterCreate() {
-      window._inputs[self.inputId] = {};
-    },
     postProcessSnapshot(snapshot) {
       delete snapshot.hack;
       if (!snapshot.labelSet) {
@@ -319,8 +316,8 @@ export const Input = types
     const callMap = {};
 
     return {
-      call(callId) {
-        return window._inputs[self.inputId][callId];
+      call() {
+        return window._inputs[self.inputId];
       },
       get out() {
         // can be used to display sample values and such
@@ -344,8 +341,8 @@ export const InputRef = types
     input: types.reference(Input)
   })
   .views(self => ({
-    call(callId) {
-      return self.input.call(callId);
+    call() {
+      return self.input.call();
     },
     get out() {
       return self.input.out;
@@ -370,7 +367,6 @@ export const Node = types.union(
   DepRef
 );
 
-const defaultCallId = "BASE";
 export const Link = types
   .model("Link", {
     linkId: types.identifier(types.string),
@@ -394,11 +390,9 @@ export const Link = types
     }
   }))
   .views(self => ({
-    call(callId) {
+    call() {
       const { nodes } = self;
-      const nodeOuts = nodes.map(
-        node => (node.call ? node.call(callId) : node.out)
-      );
+      const nodeOuts = nodes.map(node => (node.call ? node.call() : node.out));
       if (nodeOuts.indexOf(Dependency) !== -1) {
         return Dependency;
       }
@@ -422,9 +416,9 @@ export const Link = types
       if (length) {
         return function(...args) {
           for (let i = 0; i < length; i++) {
-            window._inputs[inputIds[i]][defaultCallId] = args[i];
+            window._inputs[inputIds[i]] = args[i];
           }
-          return self.call(defaultCallId);
+          return self.call();
         };
       }
 
@@ -494,8 +488,8 @@ export const LinkRef = types
     get inputs() {
       return self.ref.inputs;
     },
-    call(callId) {
-      return self.ref.call(callId);
+    call() {
+      return self.ref.call();
     },
     get out() {
       return self.ref.out;
