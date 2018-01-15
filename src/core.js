@@ -131,9 +131,6 @@ export const Val = types
     get out() {
       return self.val;
     },
-    with() {
-      return self.out;
-    },
     equivalent(other) {
       return self.val === other.val;
     },
@@ -206,9 +203,6 @@ export const Op = types
     get out() {
       return opFuncs[self.op];
     },
-    with(inputs) {
-      return self.out;
-    },
     equivalent(other) {
       return self.op === other.op;
     },
@@ -253,9 +247,6 @@ export const Dependency = types
 
         return Dependency;
       },
-      with() {
-        return self.out;
-      },
       equivalent(other) {
         return other === self || other.dep === self;
       },
@@ -275,9 +266,6 @@ export const DepRef = types
   .views(self => ({
     get out() {
       return self.dep.out;
-    },
-    with() {
-      return self.out;
     },
     equivalent(other) {
       return self.dep === other || self.dep === other.dep;
@@ -302,20 +290,10 @@ export const InputType = types.enumeration("InputType", [
   anyType
 ]);
 
-// is there a better way of doing this?
-export class Hole {
-  constructor(...inputSets) {
-    this.inputs = {};
-
-    for (const inputSet of inputSets) {
-      for (const input in inputSet) {
-        this.inputs[input] = true;
-      }
-    }
-  }
-}
-
+// HACK: couldn't think of a way to contain this in mobx models
+// TODO: possibly revisit this (but this is just a PoC, so...)
 window._inputs = {};
+
 export const Input = types
   .model("Input", {
     inputId: types.identifier(types.string),
@@ -345,20 +323,8 @@ export const Input = types
         return window._inputs[self.inputId][callId];
       },
       get out() {
-        // return window._inputs[self.inputId];
-      },
-      with(inputs) {
-        const { input } = self;
-        if (inputs && inputs.has(input)) {
-          const mapValue = inputs.get(input);
-          if (isObservableMap(inputs)) {
-            return mapValue.out;
-          } else {
-            return mapValue;
-          }
-        } else {
-          return new Hole({ [input]: true });
-        }
+        // can be used to display sample values and such
+        return window._inputs[self.inputId];
       },
       equivalent(other) {
         return other === self || other.input === self;
@@ -383,10 +349,6 @@ export const InputRef = types
     },
     get out() {
       return self.input.out;
-      // return Input;
-    },
-    with(inputs) {
-      return self.input.with(inputs);
     },
     equivalent(other) {
       return self.input === other || self.input === other.input;
@@ -399,8 +361,6 @@ export const InputRef = types
     }
   }));
 
-curry.placeholder = Input;
-
 export const Node = types.union(
   Val,
   Op,
@@ -410,36 +370,20 @@ export const Node = types.union(
   DepRef
 );
 
-const derive = nodeOuts => {
-  if (nodeOuts.indexOf(Dependency) !== -1) {
-    return Dependency;
-  }
-
-  const [head, ...args] = nodeOuts;
-
-  if (typeof head !== "function") {
-    return head;
-  }
-
-  return head(...args);
-  // const inputs = nodeInputs.filter(input => input === Input);
-  // if (inputs.length) {
-  //   const curried = curry(head, nodeInputs.length);
-  //   return ary(curried(...nodeInputs), inputs.length);
-  // }
-};
-
-const inputOrder = types.maybe(types.array(types.reference(Input)));
+const defaultCallId = "BASE";
 export const Link = types
   .model("Link", {
     linkId: types.identifier(types.string),
     nodes: types.maybe(types.array(Node)),
+    inputOrder: types.maybe(types.array(types.reference(Input))),
     labelSet: LabelSet,
-    tags: types.optional(types.array(types.string), []),
-    inputOrder
+    tags: types.optional(types.array(types.string), [])
   })
   .actions(self => ({
     postProcessSnapshot(snapshot) {
+      if (!snapshot.inputOrder) {
+        delete snapshot.inputOrder;
+      }
       if (!snapshot.labelSet) {
         delete snapshot.labelSet;
       }
@@ -467,18 +411,20 @@ export const Link = types
     get inputs() {
       return self.inputOrder || findInputs(self);
     },
+    get inputIds() {
+      return self.inputs.map(input => input.inputId);
+    },
     get out() {
-      if (self.inputs.length) {
-        const callId = "BASE";
-        const { inputs } = self;
-        const { length } = inputs;
-        const inputIds = inputs.map(input => input.inputId);
+      // TODO: this if-clause effectively creates an "auto-currying" system
+      // should I try taking it out and require manual "unwrapping"?
+      const { inputIds } = self;
+      const { length } = inputIds;
+      if (length) {
         return function(...args) {
           for (let i = 0; i < length; i++) {
-            // console.log(inputIds[i], args[i]);
-            window._inputs[inputIds[i]][callId] = args[i];
+            window._inputs[inputIds[i]][defaultCallId] = args[i];
           }
-          return self.call(callId);
+          return self.call(defaultCallId);
         };
       }
 
@@ -492,17 +438,6 @@ export const Link = types
         return head;
       }
       return head(...args);
-    },
-    with(inputs) {
-      const nodeOuts = self.nodes.map(node => node.with(inputs));
-
-      const holes = nodeOuts.filter(val => val instanceof Hole);
-
-      if (holes.length) {
-        return new Hole(...holes.map(hole => hole.inputs));
-      }
-
-      return derive(nodeOuts);
     },
     equivalent(other) {
       return other === self || other.ref === self;
@@ -567,9 +502,6 @@ export const LinkRef = types
     get out() {
       return self.ref.out;
     },
-    with() {
-      return self.out;
-    },
     equivalent(other) {
       return self.ref === other || self.ref === other.ref;
     },
@@ -581,19 +513,7 @@ export const LinkRef = types
     }
   }));
 
-export const SubParam = types
-  .model("SubParam", {
-    param: types.number
-  })
-  .views(self => ({
-    get out() {
-      return self.param;
-    },
-    with() {
-      return self.out;
-    }
-  }));
-
+// TODO: better way to generate ids?
 let callIdCounter = 0;
 export const Fn = types
   .model("Fn", {
@@ -602,25 +522,17 @@ export const Fn = types
       types.identifier(types.number),
       () => callIdCounter++
     )
-    // inputOrder
-    // inputs: types.array(types.reference(Input))
   })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      // TODO: maybe we should keep these ids?
+      delete snapshot.callId;
+      return snapshot;
+    }
+  }))
   .views(self => ({
-    // get inputs() {
-    //   return self.fn.inputs; //inputOrder || findInputs(self.fn);
-    // },
     get out() {
       return self.fn.out;
-      // const { inputs, callId } = self;
-      // const { length } = inputs;
-      // const inputIds = inputs.map(input => input.inputId);
-      // return function(...args) {
-      //   for (let i = 0; i < length; i++) {
-      //     // console.log(inputIds[i], args[i]);
-      //     window._inputs[inputIds[i]][callId] = args[i];
-      //   }
-      //   return self.fn.call(callId);
-      // };
     },
     get label() {
       return self.fn.label;
@@ -629,6 +541,19 @@ export const Fn = types
       return Color.reified;
     }
   }));
+
+// export const SubParam = types
+//   .model("SubParam", {
+//     param: types.number
+//   })
+//   .views(self => ({
+//     get out() {
+//       return self.param;
+//     },
+//     with() {
+//       return self.out;
+//     }
+//   }));
 
 // export const SubLink = types
 //   .model("SubLink", {
