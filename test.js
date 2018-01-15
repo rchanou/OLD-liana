@@ -13,10 +13,14 @@ const base = {
   6: [{ r: 4 }, { r: 5 }],
   7: [{ r: 1 }, { i: 2 }, 3],
   9: [{ f: 6 }, 29, 420],
-  11: [{ f: 6 }, 13, 84]
+  11: [{ f: 6 }, 13, 84],
+  12: [{ o: "." }, { o: "g" }, "setInterval"],
+  13: [{ o: "." }, { o: "g" }, "console"],
+  14: [{ o: "." }, { r: 13 }, "log"]
+  // 15:[{]
 };
 
-const findInputs = nodes => {
+const findInputs = (repo, nodes) => {
   const foundInputs = [];
   for (const node of nodes) {
     if (typeof node === "object") {
@@ -24,7 +28,8 @@ const findInputs = nodes => {
         foundInputs.push(node.i);
       } else if ("r" in node) {
         const innerNodes = repo[node.r];
-        findInputs(innerNodes);
+        const innerInputs = findInputs(repo, innerNodes);
+        foundInputs.push(...innerInputs);
       }
     }
   }
@@ -32,11 +37,6 @@ const findInputs = nodes => {
 };
 
 const calc = (repo, id, root = true) => {
-  // if (!Array.isArray(repo[id])) {
-  //   const def = repo[id];
-  //   return defn(repo, ...def.f);
-  // }
-
   const calcNode = node => {
     if (typeof node !== "object") {
       return node;
@@ -67,15 +67,10 @@ const calc = (repo, id, root = true) => {
   };
 
   const nodes = repo[id];
-  // console.log(nodes);
-  // if (!Array.isArray(nodes)) {
-  // return calcNode(nodes);
-  // }
 
   if (root && nodes.some(node => typeof node === "object" && "i" in node)) {
     return defn(repo, id);
   }
-
   const [funcNode, ...argNodes] = nodes;
   const funcVal = calcNode(funcNode);
 
@@ -91,20 +86,7 @@ const calc = (repo, id, root = true) => {
 const defn = (repo, id, ...argIds) => {
   if (!argIds.length) {
     const nodes = repo[id];
-    const defaultArgIds = [];
-    const findInputs = nodes => {
-      for (const node of nodes) {
-        if (typeof node === "object") {
-          if ("i" in node) {
-            defaultArgIds.push(node.i);
-          } else if ("r" in node) {
-            const innerNodes = repo[node.r];
-            findInputs(innerNodes);
-          }
-        }
-      }
-    };
-    findInputs(nodes);
+    const defaultArgIds = findInputs(repo, nodes);
     return defn(repo, id, ...defaultArgIds);
   }
 
