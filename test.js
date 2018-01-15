@@ -1,3 +1,5 @@
+const util = require("util");
+
 const base = {
   // i: { 0: 3, 1: 5, 2: 12 },
   i: {},
@@ -11,7 +13,10 @@ const base = {
   6: [{ r: 4 }, { r: 5 }],
   7: [{ r: 1 }, { i: 2 }, 3],
   8: { f: [6] },
-  9: [{ r: 8 }, 29, 420]
+  9: [{ r: 8 }, 29, 420],
+  10: { f: [6, 1, 0] },
+  11: [{ r: 10 }, 29, 420],
+  12: [{ r: 10 }]
 };
 
 const calc = (repo, id) => {
@@ -118,4 +123,4 @@ console.log(e, 421);
 const f = defn(base, 2);
 console.log(f(7), 49);
 
-console.log(JSON.stringify(base));
+console.log(util.inspect(base._d, { depth: null }));
