@@ -31,17 +31,21 @@ class Story extends React.Component {
     this.setState({ store: window.s });
   }
 
-  componentDidCatch() {
-    destroy(this.state.store);
+  // componentDidCatch() {
+  //   destroy(this.state.store);
 
-    window.s = Editor.create({
-      [ContextRepo.KEY]: defaultRepo,
-      repoList: { selectedCellIndex: 75 },
-      env
-    });
+  //   window.s = Editor.create({
+  //     [ContextRepo.KEY]: defaultRepo,
+  //     repoList: { selectedCellIndex: 75 },
+  //     env
+  //   });
 
-    this.setState({ store: window.s });
-  }
+  //   this.setState({ store: window.s });
+  // }
+
+  // componentWillUnmount() {
+  // destroy(this.state.store);
+  // }
 
   render() {
     const { store } = this.state;
@@ -52,10 +56,6 @@ class Story extends React.Component {
 
     return <ReactEditor editor={store} />;
   }
-
-  componentWillUnmount() {
-    destroy(this.state.store);
-  }
 }
 
 const storedRepo = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -63,7 +63,7 @@ const storedRepo = localStorage.getItem(LOCAL_STORAGE_KEY);
 const repoToLoad = storedRepo ? JSON.parse(storedRepo) : defaultRepo;
 
 const context = {
-  [ContextRepo.KEY]: repoToLoad
+  [ContextRepo.KEY]: defaultRepo
 };
 
 storiesOf("Liana", module)

@@ -9,13 +9,16 @@ export const formatOut = out => {
   } else if (typeof out === "function") {
     // TODO: more elegant display of functions and higher-order functions
     return "func";
-  } else if (out instanceof Hole) {
+  } else if (out === Input) {
     // NOTE: this case isn't getting hit, "pending" links are outting undefined for some reason
     return "?";
   } else if (out == null) {
     // TODO: better way to show this too
     return "";
   } else {
+    if (Number.isNaN(out)) {
+      return "NaN";
+    }
     return JSON.stringify(out);
   }
 };

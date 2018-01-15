@@ -97,6 +97,19 @@ const opFuncs = {
   }
 };
 
+const findInputs = link => {
+  const foundInputs = [];
+  const { nodes } = link;
+  for (const node of nodes) {
+    if ("input" in node) {
+      foundInputs.push(node.input);
+    } else if (node.ref) {
+      foundInputs.push(...node.inputs);
+    }
+  }
+  return foundInputs;
+};
+
 const Label = types.model("Label", {
   labelId: types.identifier(types.string),
   text: optionalString
@@ -106,7 +119,13 @@ const LabelSet = types.maybe(types.union(types.string, types.map(Label)));
 
 export const Val = types
   .model("Val", {
-    val: types.union(types.string, types.number, types.boolean, types.null)
+    val: types.union(
+      types.string,
+      types.number,
+      types.boolean,
+      types.null
+      // types.undefined
+    )
   })
   .views(self => ({
     get out() {
@@ -296,6 +315,7 @@ export class Hole {
   }
 }
 
+window._inputs = {};
 export const Input = types
   .model("Input", {
     inputId: types.identifier(types.string),
@@ -303,7 +323,11 @@ export const Input = types
     labelSet: types.maybe(types.union(types.string, types.map(Label)))
   })
   .actions(self => ({
+    afterCreate() {
+      window._inputs[self.inputId] = {};
+    },
     postProcessSnapshot(snapshot) {
+      delete snapshot.hack;
       if (!snapshot.labelSet) {
         delete snapshot.labelSet;
       }
@@ -313,42 +337,53 @@ export const Input = types
       return snapshot;
     }
   }))
-  .views(self => ({
-    get out() {
-      return Input;
-    },
-    with(inputs) {
-      const { input } = self;
-      if (inputs && inputs.has(input)) {
-        const mapValue = inputs.get(input);
-        if (isObservableMap(inputs)) {
-          return mapValue.out;
+  .views(self => {
+    const callMap = {};
+
+    return {
+      call(callId) {
+        return window._inputs[self.inputId][callId];
+      },
+      get out() {
+        // return window._inputs[self.inputId];
+      },
+      with(inputs) {
+        const { input } = self;
+        if (inputs && inputs.has(input)) {
+          const mapValue = inputs.get(input);
+          if (isObservableMap(inputs)) {
+            return mapValue.out;
+          } else {
+            return mapValue;
+          }
         } else {
-          return mapValue;
+          return new Hole({ [input]: true });
         }
-      } else {
-        return new Hole({ [input]: true });
+      },
+      equivalent(other) {
+        return other === self || other.input === self;
+      },
+      get label() {
+        // TODO: look up appropriate label based on user context
+        return self.labelSet || `{${self.inputId}}`;
+      },
+      get color() {
+        return Color.input;
       }
-    },
-    equivalent(other) {
-      return other === self || other.input === self;
-    },
-    get label() {
-      // TODO: look up appropriate label based on user context
-      return self.labelSet || `{${self.inputId}}`;
-    },
-    get color() {
-      return Color.input;
-    }
-  }));
+    };
+  });
 
 export const InputRef = types
   .model("InputRef", {
     input: types.reference(Input)
   })
   .views(self => ({
+    call(callId) {
+      return self.input.call(callId);
+    },
     get out() {
-      return Input;
+      return self.input.out;
+      // return Input;
     },
     with(inputs) {
       return self.input.with(inputs);
@@ -371,7 +406,7 @@ export const Node = types.union(
   Op,
   InputRef,
   types.late(() => LinkRef),
-  types.late(() => SubRef),
+  types.late(() => Fn),
   DepRef
 );
 
@@ -380,24 +415,26 @@ const derive = nodeOuts => {
     return Dependency;
   }
 
-  const [head, ...nodeInputs] = nodeOuts;
+  const [head, ...args] = nodeOuts;
 
-  if (typeof head === "function") {
-    const inputs = nodeInputs.filter(input => input === Input);
-    if (inputs.length) {
-      const curried = curry(head, nodeInputs.length);
-      return ary(curried(...nodeInputs), inputs.length);
-    }
-    return head(...nodeInputs);
-  } else {
+  if (typeof head !== "function") {
     return head;
   }
+
+  return head(...args);
+  // const inputs = nodeInputs.filter(input => input === Input);
+  // if (inputs.length) {
+  //   const curried = curry(head, nodeInputs.length);
+  //   return ary(curried(...nodeInputs), inputs.length);
+  // }
 };
 
 export const Link = types
   .model("Link", {
     linkId: types.identifier(types.string),
-    nodes: types.array(Node),
+    nodes: types.maybe(types.array(Node)),
+    // fun: types.maybe(types.reference(types.late(() => Link))),
+    // params: types.maybe(types.array(types.reference(Input))),
     labelSet: LabelSet,
     tags: types.optional(types.array(types.string), [])
   })
@@ -413,9 +450,48 @@ export const Link = types
     }
   }))
   .views(self => ({
+    call(callId) {
+      const { nodes } = self;
+      const nodeOuts = nodes.map(
+        node => (node.call ? node.call(callId) : node.out)
+      );
+      if (nodeOuts.indexOf(Dependency) !== -1) {
+        return Dependency;
+      }
+      const [head, ...args] = nodeOuts;
+      if (typeof head !== "function") {
+        return head;
+      }
+      return head(...args);
+    },
+    get inputs() {
+      return findInputs(self);
+    },
     get out() {
-      const nodeOuts = self.nodes.map(node => node.out);
-      return derive(nodeOuts);
+      if (self.inputs.length) {
+        const callId = "BASE";
+        const { inputs } = self;
+        const { length } = inputs;
+        const inputIds = inputs.map(input => input.inputId);
+        return function(...args) {
+          for (let i = 0; i < length; i++) {
+            // console.log(inputIds[i], args[i]);
+            window._inputs[inputIds[i]][callId] = args[i];
+          }
+          return self.call(callId);
+        };
+      }
+
+      const { nodes } = self;
+      const nodeOuts = nodes.map(node => node.out);
+      if (nodeOuts.indexOf(Dependency) !== -1) {
+        return Dependency;
+      }
+      const [head, ...args] = nodeOuts;
+      if (typeof head !== "function") {
+        return head;
+      }
+      return head(...args);
     },
     with(inputs) {
       const nodeOuts = self.nodes.map(node => node.with(inputs));
@@ -469,9 +545,9 @@ export const Link = types
 
 export const LinkRef = types
   .model("LinkRef", {
-    ref: types.reference(Link),
+    ref: types.reference(Link)
     // TODO: inputs may be replace-able with simple boolean
-    inputs: types.maybe(types.map(Node))
+    // inputs: types.maybe(types.map(Node))
   })
   .actions(self => ({
     postProcessSnapshot(snapshot) {
@@ -482,28 +558,14 @@ export const LinkRef = types
     }
   }))
   .views(self => ({
+    get inputs() {
+      return findInputs(self.ref);
+    },
+    call(callId) {
+      return self.ref.call(callId);
+    },
     get out() {
-      if (!self.inputs) {
-        return self.ref.out;
-      }
-
-      const linkVal = self.ref.with(self.inputs);
-      if (linkVal instanceof Hole) {
-        const inputEntries = self.inputs.entries().slice();
-        const holeInputIds = Object.keys(linkVal.inputs);
-
-        return (...newInputs) => {
-          const newInputEntries = newInputs.map((input, i) => [
-            holeInputIds[i],
-            input
-          ]);
-          const allInputEntries = [...inputEntries, ...newInputEntries];
-          const allInputs = new Map(allInputEntries);
-          return self.ref.with(allInputs);
-        };
-      }
-
-      return linkVal;
+      return self.ref.out;
     },
     with() {
       return self.out;
@@ -515,7 +577,7 @@ export const LinkRef = types
       return self.ref.label;
     },
     get color() {
-      return self.inputs ? Color.reified : self.ref.color;
+      return self.ref.color;
     }
   }));
 
@@ -532,55 +594,90 @@ export const SubParam = types
     }
   }));
 
-export const SubLink = types
-  .model("SubLink", {
-    subLink: types.number
+let callIdCounter = 0;
+export const Fn = types
+  .model("Fn", {
+    fn: types.reference(Link),
+    callId: types.optional(
+      types.identifier(types.number),
+      () => callIdCounter++
+    )
+    // inputs: types.array(types.reference(Input))
   })
   .views(self => ({
-    get out() {
-      return self.subLink;
+    get inputs() {
+      return findInputs(self.fn);
     },
-    with() {
-      return self.out;
+    get out() {
+      const { inputs, callId } = self;
+      const { length } = inputs;
+      const inputIds = inputs.map(input => input.inputId);
+      return function(...args) {
+        for (let i = 0; i < length; i++) {
+          // console.log(inputIds[i], args[i]);
+          window._inputs[inputIds[i]][callId] = args[i];
+        }
+        return self.fn.call(callId);
+      };
+    },
+    get label() {
+      return self.fn.label;
+    },
+    get color() {
+      return Color.reified;
     }
   }));
 
-export const SubNode = types.union(
-  Val,
-  Op,
-  InputRef,
-  LinkRef,
-  SubParam,
-  SubLink,
-  types.late(() => SubRef)
-);
+// export const SubLink = types
+//   .model("SubLink", {
+//     subLink: types.number
+//   })
+//   .views(self => ({
+//     get out() {
+//       return self.subLink;
+//     },
+//     with() {
+//       return self.out;
+//     }
+//   }));
 
-export const Sub = types
-  .model("Sub", {
-    subId: types.identifier(types.string),
-    nodes: types.map(types.array(SubNode))
-  })
-  .views(self => ({
-    get out() {
-      return self;
-    },
-    with() {
-      return self.out;
-    }
-  }));
+// export const SubNode = types.union(
+//   Val,
+//   Op,
+//   InputRef,
+//   LinkRef,
+//   Fn,
+//   SubParam,
+//   SubLink,
+//   types.late(() => SubRef)
+// );
 
-export const SubRef = types
-  .model("SubRef", {
-    subRef: types.reference(Sub)
-  })
-  .views(self => ({
-    get out() {
-      return self.subRef;
-    },
-    with() {
-      return self.out;
-    }
-  }));
+// export const Sub = types
+//   .model("Sub", {
+//     subId: types.identifier(types.string),
+//     nodes: types.map(types.array(SubNode))
+//   })
+//   .views(self => ({
+//     get out() {
+//       return self;
+//     },
+//     with() {
+//       return self.out;
+//     }
+//   }));
+
+// export const SubRef = types
+//   .model("SubRef", {
+//     subRef: types.reference(Sub)
+//   })
+//   .views(self => ({
+//     get out() {
+//       return self.subRef;
+//     },
+//     with() {
+//       return self.out;
+//     }
+//   }));
 
 let newLinkIdCounter = 0;
 
@@ -589,7 +686,7 @@ export const Repo = types
     dependencies: optionalMap(Dependency),
     inputs: optionalMap(Input),
     links: optionalMap(Link),
-    subs: optionalMap(Sub),
+    // subs: optionalMap(Sub),
     linkLabelSets: optionalMap(LabelSet)
   })
   .preProcessSnapshot(

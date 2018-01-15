@@ -14,7 +14,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
   let currentY = y - 1;
 
   repo.links.forEach(link => {
-    const { linkId, nodes, out, label } = link;
+    const { linkId, nodes, fun, params, out, label } = link;
 
     currentX = x;
     currentY++;
@@ -31,30 +31,52 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       labelForLink: link
     });
 
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
+    if (params) {
+      for (let i = 0; i < params.length; i++) {
+        currentX += 2;
+        const param = params[i];
+        const key = `CLP-${linkId}-${i}`;
 
-      const key = `CL-${linkId}-${i}`;
+        const newCell = {
+          key,
+          x: currentX,
+          y: currentY,
+          width: 2,
+          selectable: true,
+          forLink: link,
+          nodeIndex: i,
+          text: param.label,
+          fill: param.color
+        };
 
-      currentX += 2;
-
-      const newCell = {
-        key,
-        x: currentX,
-        y: currentY,
-        width: 2,
-        selectable: true,
-        forLink: link,
-        nodeIndex: i,
-        text: node.label,
-        fill: node.color
-      };
-
-      if (node.ref) {
-        newCell.gotoCellKey = `CL-${node.ref.linkId}-0`;
+        cells.push(newCell);
       }
+    }
 
-      cells.push(newCell);
+    if (nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        currentX += 2;
+        const node = nodes[i];
+        const key = `CL-${linkId}-${i}`;
+
+        const newCell = {
+          key,
+          x: currentX,
+          y: currentY,
+          width: 2,
+          selectable: true,
+          forLink: link,
+          nodeIndex: i,
+          text: node.label,
+          fill: node.color
+        };
+
+        if (node.ref) {
+          newCell.gotoCellKey = `CL-${node.ref.linkId}-0`;
+        }
+
+        cells.push(newCell);
+      }
     }
 
     currentX += 2;
