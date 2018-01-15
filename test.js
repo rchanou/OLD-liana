@@ -16,7 +16,22 @@ const base = {
   11: [{ f: 6 }, 13, 84]
 };
 
-const calc = (repo, id) => {
+const findInputs = nodes => {
+  const foundInputs = [];
+  for (const node of nodes) {
+    if (typeof node === "object") {
+      if ("i" in node) {
+        foundInputs.push(node.i);
+      } else if ("r" in node) {
+        const innerNodes = repo[node.r];
+        findInputs(innerNodes);
+      }
+    }
+  }
+  return foundInputs;
+};
+
+const calc = (repo, id, root = true) => {
   // if (!Array.isArray(repo[id])) {
   //   const def = repo[id];
   //   return defn(repo, ...def.f);
@@ -48,7 +63,7 @@ const calc = (repo, id) => {
         };
     }
 
-    return calc(repo, node.r);
+    return calc(repo, node.r, false);
   };
 
   const nodes = repo[id];
@@ -56,6 +71,10 @@ const calc = (repo, id) => {
   // if (!Array.isArray(nodes)) {
   // return calcNode(nodes);
   // }
+
+  if (root && nodes.some(node => typeof node === "object" && "i" in node)) {
+    return defn(repo, id);
+  }
 
   const [funcNode, ...argNodes] = nodes;
   const funcVal = calcNode(funcNode);
@@ -100,20 +119,20 @@ const defn = (repo, id, ...argIds) => {
     for (let i = 0; i < argIds.length; i++) {
       repo.i[argIds[i]] = args[i];
     }
-    const out = calc(repo, id);
+    const out = calc(repo, id, false);
     latest.o = out;
     return out;
   };
 };
 
 const a = calc(base, 2);
-console.log(a, global.Math.pow(3, 2));
+console.log(a(3), global.Math.pow(3, 2));
 
 const b = defn(base, 7, 2);
 console.log(b(9), Math.pow(9, 3));
 
-// const d = calc(base, 8);
-// console.log(d(11, 60), 61);
+const d = calc(base, 6);
+console.log(d, 61);
 // console.log(d(7, 24), 25);
 // console.log(d());
 // console.log(d(3));
