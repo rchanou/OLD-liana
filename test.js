@@ -75,8 +75,10 @@ const defn = (repo, id, ...argIds) => {
     return defn(repo, id, ...defaultArgIds);
   }
 
-  const past = [];
-  repo._d[id] = past;
+  if (!repo._d[id]) {
+    repo._d[id] = [];
+  }
+  const past = repo._d[id];
 
   return (...args) => {
     const latest = { i: args };
