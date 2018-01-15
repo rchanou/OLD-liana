@@ -93,6 +93,7 @@ const testRepo = {
     "13": {
       linkId: "13",
       nodes: [{ ref: "12" }, { input: "0" }],
+      inputOrder: ["0", "1"],
       labelSet: "counter reducer"
     },
     "15": {

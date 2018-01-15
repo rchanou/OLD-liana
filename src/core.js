@@ -436,7 +436,8 @@ export const Link = types
     // fun: types.maybe(types.reference(types.late(() => Link))),
     // params: types.maybe(types.array(types.reference(Input))),
     labelSet: LabelSet,
-    tags: types.optional(types.array(types.string), [])
+    tags: types.optional(types.array(types.string), []),
+    inputOrder: types.maybe(types.array(types.reference(Input)))
   })
   .actions(self => ({
     postProcessSnapshot(snapshot) {
@@ -465,7 +466,7 @@ export const Link = types
       return head(...args);
     },
     get inputs() {
-      return findInputs(self);
+      return self.inputOrder || findInputs(self);
     },
     get out() {
       if (self.inputs.length) {
@@ -559,7 +560,7 @@ export const LinkRef = types
   }))
   .views(self => ({
     get inputs() {
-      return findInputs(self.ref);
+      return self.ref.inputs;
     },
     call(callId) {
       return self.ref.call(callId);
@@ -602,11 +603,12 @@ export const Fn = types
       types.identifier(types.number),
       () => callIdCounter++
     )
+    // inputOrder: types.maybe(types.reference(Input))
     // inputs: types.array(types.reference(Input))
   })
   .views(self => ({
     get inputs() {
-      return findInputs(self.fn);
+      return self.inputOrder || findInputs(self.fn);
     },
     get out() {
       const { inputs, callId } = self;
