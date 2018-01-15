@@ -1,5 +1,7 @@
 const base = {
-  i: { 0: 3, 1: 5, 2: 12 },
+  // i: { 0: 3, 1: 5, 2: 12 },
+  i: {},
+  _d: {},
   0: [{ o: "." }, { o: "g" }, "Math"],
   1: [{ o: "." }, { r: 0 }, "pow"],
   2: [{ r: 1 }, { i: 0 }, 2],
@@ -8,7 +10,8 @@ const base = {
   5: [{ o: "+" }, { r: 2 }, { r: 3 }],
   6: [{ r: 4 }, { r: 5 }],
   7: [{ r: 1 }, { i: 2 }, 3],
-  8: { f: [6, 0, 1] }
+  8: { f: [6, 0, 1] },
+  9: [{ r: 8 }, 29, 420]
 };
 
 const calc = (repo, id) => {
@@ -61,12 +64,29 @@ const calc = (repo, id) => {
 };
 
 const defn = (repo, id, ...argIds) => {
+  if (!argIds.length) {
+    const nodes = repo[id];
+    const defaultArgIds = [];
+    for (const node of nodes) {
+      if (typeof node === "object" && "i" in node) {
+        defaultArgIds.push(node.i);
+      }
+    }
+    return defn(repo, id, ...defaultArgIds);
+  }
+
+  const past = [];
+  repo._d[id] = past;
+
   return (...args) => {
+    const latest = { i: args };
+    past.push(latest);
     for (let i = 0; i < argIds.length; i++) {
       repo.i[argIds[i]] = args[i];
     }
-
-    return calc(repo, id);
+    const out = calc(repo, id);
+    latest.o = out;
+    return out;
   };
 };
 
@@ -81,3 +101,11 @@ console.log(d(11, 60), 61);
 console.log(d(7, 24), 25);
 console.log(d());
 console.log(d(3));
+
+const e = calc(base, 9);
+console.log(e, 421);
+
+const f = defn(base, 2);
+console.log(f(7), 49);
+
+console.log(JSON.stringify(base));
