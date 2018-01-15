@@ -98,7 +98,7 @@ const testRepo = {
     },
     "15": {
       linkId: "15",
-      nodes: [{ ref: "8" }, { fn: "13" }],
+      nodes: [{ ref: "8" }, { fn: "13", inputOrder: ["0", "1"] }],
       labelSet: "counter store"
     },
     "16": {

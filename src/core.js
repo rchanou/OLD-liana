@@ -429,15 +429,14 @@ const derive = nodeOuts => {
   // }
 };
 
+const inputOrder = types.maybe(types.array(types.reference(Input)));
 export const Link = types
   .model("Link", {
     linkId: types.identifier(types.string),
     nodes: types.maybe(types.array(Node)),
-    // fun: types.maybe(types.reference(types.late(() => Link))),
-    // params: types.maybe(types.array(types.reference(Input))),
     labelSet: LabelSet,
     tags: types.optional(types.array(types.string), []),
-    inputOrder: types.maybe(types.array(types.reference(Input)))
+    inputOrder
   })
   .actions(self => ({
     postProcessSnapshot(snapshot) {
@@ -603,24 +602,25 @@ export const Fn = types
       types.identifier(types.number),
       () => callIdCounter++
     )
-    // inputOrder: types.maybe(types.reference(Input))
+    // inputOrder
     // inputs: types.array(types.reference(Input))
   })
   .views(self => ({
-    get inputs() {
-      return self.inputOrder || findInputs(self.fn);
-    },
+    // get inputs() {
+    //   return self.fn.inputs; //inputOrder || findInputs(self.fn);
+    // },
     get out() {
-      const { inputs, callId } = self;
-      const { length } = inputs;
-      const inputIds = inputs.map(input => input.inputId);
-      return function(...args) {
-        for (let i = 0; i < length; i++) {
-          // console.log(inputIds[i], args[i]);
-          window._inputs[inputIds[i]][callId] = args[i];
-        }
-        return self.fn.call(callId);
-      };
+      return self.fn.out;
+      // const { inputs, callId } = self;
+      // const { length } = inputs;
+      // const inputIds = inputs.map(input => input.inputId);
+      // return function(...args) {
+      //   for (let i = 0; i < length; i++) {
+      //     // console.log(inputIds[i], args[i]);
+      //     window._inputs[inputIds[i]][callId] = args[i];
+      //   }
+      //   return self.fn.call(callId);
+      // };
     },
     get label() {
       return self.fn.label;
