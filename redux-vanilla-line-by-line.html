@@ -35,32 +35,91 @@
     let eq = (a, b) => a === b
     let iif = (cond, trueVal, falseVal) => cond ? trueVal : falseVal
     let identity = x => x
+    let obj = (...kvs) => {
+      const obj = {};
+      for (let i = 0; i < kvs.length; i = i + 2) {
+        obj[kvs[i]] = kvs[i + 1];
+      }
+      return obj;
+    }
+    let call = (obj, methodName, ...args) => obj[methodName](...args)
+    let mutate = (obj, key, value) => obj[key] = value
 
     let inc = x => add(x, 1)
     let dec = x => minus(x, 1)
     let getUpdaterFromType = actionType => sw(actionType, 'INCREMENT', inc, 'DECREMENT', dec, identity)
     let getType = action => dot(action, 'type')
+
     let getUpdaterFromAction = action => {
       let actionType = getType(action)
       return getUpdaterFromType(actionType)
     }
+
     let counterOnNonZero = (state, action) => {
       let updater = getUpdaterFromAction(action)
-      let updatedState = updater(state)
-      return updatedState
+      return updater(state);
     }
+
     let getZero = () => 0
+
     let counter = (state, action) => {
       let isUndefined = eq(state, undefined)
       let counterToUse = iif(isUndefined, getZero, counterOnNonZero)
-      let nextState = counterToUse(state, action)
-      return nextState
+      return counterToUse(state, action)
     }
-    let Redux = dot(window, 'Redux')
-    let createStore = dot(Redux, 'createStore')
+
+    let redux = dot(window, 'Redux')
+    let createStore = dot(redux, 'createStore')
     let store = createStore(counter)
 
-    let s = store
+    let getStoreDispatch = store => dot(store, 'dispatch')
+
+    let dispatchInc = store => {
+      let dispatch = getStoreDispatch(store)
+      const action = obj('type', 'INCREMENT')
+      dispatch(action)
+    }
+    let incHandler = () => {
+      dispatchInc(store)
+    }
+
+    let dispatchDec = store => {
+      let dispatch = getStoreDispatch(store)
+      const action = obj('type', 'DECREMENT')
+      dispatch(action)
+    }
+    let decHandler = () => {
+      dispatchDec(store)
+    }
+
+    let getListenAdder = el => dot(el, 'addEventListener')
+    let addClickListener = (el, handler) => {
+      call(el, 'addEventListener', 'click', handler)
+    }
+
+    let doc = dot(window, 'document')
+    let getElById = dot(doc, 'getElementById')
+
+    let incEl = call(doc, 'getElementById', 'increment')
+    addClickListener(incEl, incHandler)
+
+    let decEl = call(doc, 'getElementById', 'decrement')
+    addClickListener(decEl, decHandler)
+
+    let getStoreGetState = store => dot(store, 'getState')
+    let storeGetState = getStoreGetState(store)
+
+    let valEl = call(doc, 'getElementById', 'value')
+    let render = () => {
+      let state = storeGetState()
+      mutate(valEl, 'innerHTML', state)
+    }
+
+    let getStoreSubscribe = store => dot(store, 'subscribe')
+    let storeSubscribe = getStoreSubscribe(store)
+
+    render()
+    storeSubscribe(render)
   </script>
 </body>
 
