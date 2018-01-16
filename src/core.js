@@ -78,7 +78,7 @@ const opFuncs = {
     return condition ? trueVal : falseVal;
   },
   [switchOp](switcher, ...casePairs) {
-    console.log(switcher, ...casePairs, "SWIT");
+    // console.log(switcher, ...casePairs, "SWIT");
     const { length } = casePairs;
     for (let i = 0; i < length; i += 2) {
       if (switcher === casePairs[i]) {
@@ -310,29 +310,25 @@ export const Input = types
       return snapshot;
     }
   }))
-  .views(self => {
-    const callMap = {};
-
-    return {
-      call() {
-        return window._inputs[self.inputId];
-      },
-      get out() {
-        // can be used to display sample values and such
-        return window._inputs[self.inputId];
-      },
-      equivalent(other) {
-        return other === self || other.input === self;
-      },
-      get label() {
-        // TODO: look up appropriate label based on user context
-        return self.labelSet || `{${self.inputId}}`;
-      },
-      get color() {
-        return Color.input;
-      }
-    };
-  });
+  .views(self => ({
+    call() {
+      return window._inputs[self.inputId];
+    },
+    get out() {
+      // can be used to display sample values and such
+      return window._inputs[self.inputId];
+    },
+    equivalent(other) {
+      return other === self || other.input === self;
+    },
+    get label() {
+      // TODO: look up appropriate label based on user context
+      return self.labelSet || `{${self.inputId}}`;
+    },
+    get color() {
+      return Color.input;
+    }
+  }));
 
 export const InputRef = types
   .model("InputRef", {
