@@ -1,0 +1,16 @@
++ add
+- minus
+# identity
+$ switch
+? if
+. dot
+@ slot
+_ always
+
+a   /+  /0  1     incrementer
+b   /-  /0  1     decrementer
+c   /$  /0  'INCREMENT' /a 'DECREMENT' /b  /#      get updater from type
+d   /.  /0  'type'      get type
+e   /c  /@      updater
+f   /d  /@      action type
+g   /e  /0

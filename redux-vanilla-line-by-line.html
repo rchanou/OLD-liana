@@ -34,16 +34,15 @@
     }
     let eq = (a, b) => a === b
     let iif = (cond, trueVal, falseVal) => cond ? trueVal : falseVal
+    let identity = x => x
 
     let inc = x => add(x, 1)
     let dec = x => minus(x, 1)
-    let identity = x => x
     let getUpdaterFromType = actionType => sw(actionType, 'INCREMENT', inc, 'DECREMENT', dec, identity)
     let getType = action => dot(action, 'type')
     let getUpdaterFromAction = action => {
       let actionType = getType(action)
-      let updater = getUpdaterFromType(actionType)
-      return updater
+      return getUpdaterFromType(actionType)
     }
     let counterOnNonZero = (state, action) => {
       let updater = getUpdaterFromAction(action)
