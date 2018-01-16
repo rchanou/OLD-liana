@@ -1,15 +1,6 @@
 import { getType, types } from "mobx-state-tree";
 
-import {
-  ContextRepo,
-  InputRef,
-  Link,
-  LinkRef,
-  Fn,
-  Op,
-  DepRef,
-  Val
-} from "./core";
+import { ContextRepo, InputRef, Link, LinkRef, Fn, Op, DepRef, Val } from "./core";
 import { uiModel, formatOut } from "./user-interface";
 
 const optionalMap = type => types.optional(types.map(type), {});
@@ -17,18 +8,14 @@ const optionalMap = type => types.optional(types.map(type), {});
 const Path = types.array(types.union(types.string, types.number));
 
 export const Tree = uiModel("ViewRepoTree", {
-  // rootLink: types.string,
   rootLink: types.reference(Link),
   openPaths: optionalMap(types.boolean)
-  // selectedPath: types.optional(Path, []),
-  // selectedIndex: types.maybe(types.number, 0)
 }).views(self => {
   const { repo } = self;
   const { links } = repo;
 
   const getCells = (link, opts = {}) => {
     const { rootLink, openPaths, selectedPath, selectedCellIndex } = self;
-    // link = link || rootLink
     const { linkId, nodes } = link;
     const {
       x = 0,
@@ -40,16 +27,11 @@ export const Tree = uiModel("ViewRepoTree", {
       path = [linkId],
       linkPath = [linkId],
       root = true,
-      // selected = false,
       siblingCount = 1,
       open = true
     } = opts;
 
     const allCells = [];
-
-    // const sameAsSelectedPath =
-    //   selectedPath.length === linkPath.length &&
-    //   selectedPath.every((token, j) => token === linkPath[j]);
 
     let currentX = x;
 
@@ -70,7 +52,6 @@ export const Tree = uiModel("ViewRepoTree", {
         width: 1,
         root: false,
         selectable: true,
-        // selected: sameAsSelectedPath && selectedCellIndex === i,
         category,
         siblings,
         downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
@@ -118,7 +99,6 @@ export const Tree = uiModel("ViewRepoTree", {
           immediateNextIsRef,
           nextIsRef,
           isLast,
-          // selected: sameAsSelectedPath && selectedCellIndex === i,
           siblingCount: siblings,
           open: openPaths.get(linkPath.join("/"))
         });
@@ -140,8 +120,7 @@ export const Tree = uiModel("ViewRepoTree", {
           break;
         case Val:
           const { val } = node;
-          const boxSize =
-            typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+          const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
           allCells.push({
             ...defaultCell,
             width: boxSize
@@ -166,9 +145,7 @@ export const Tree = uiModel("ViewRepoTree", {
     // TODO: we need some crazy logic to make this more adaptable
     // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
     const thisSize = nextIsRef
-      ? Math.max(...allCells.map(n => n.x)) -
-        x +
-        (immediateNextIsRef ? 2 : allCells[allCells.length - 1].width + 1)
+      ? Math.max(...allCells.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allCells[allCells.length - 1].width + 1)
       : Math.max(...allCells.map(n => n.x + n.width)) - x;
 
     const thisNode = {
@@ -177,10 +154,7 @@ export const Tree = uiModel("ViewRepoTree", {
       ...(root
         ? {}
         : {
-            downPath:
-              linkPath.length < 3
-                ? linkPath.slice(0, -1)
-                : linkPath.slice(0, -2)
+            downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2)
           }),
       x,
       y,
@@ -189,7 +163,6 @@ export const Tree = uiModel("ViewRepoTree", {
       text: label,
       category: Link,
       selectable: true,
-      // selected: selected || (sameAsSelectedPath && selectedCellIndex === null),
       siblings: siblingCount
     };
     allCells.push(thisNode);
@@ -201,8 +174,7 @@ export const Tree = uiModel("ViewRepoTree", {
         const box = allCells[i];
         const { path } = box;
         let j = path.length - 1;
-        let currentKey =
-          "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+        let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
         if (!box.link) {
           j--;
           currentKey += "/" + (j in path ? path[j] : "");
@@ -222,36 +194,17 @@ export const Tree = uiModel("ViewRepoTree", {
   return {
     get baseCells() {
       return getCells(self.rootLink);
+    },
+    keyMap(exit) {
+      return {
+        1: { ...self.baseKeyMap[1] },
+        2: { ...self.baseKeyMap[2] },
+        3: { 6: { label: "Cancel", action: exit } }
+      };
     }
   };
 });
 // .actions(self => ({
-//   move(dir) {
-//     const { siblings } = self.selectedCell;
-//     let newSelectedIndex = self.selectedIndex + dir;
-//     if (newSelectedIndex < 0) {
-//       newSelectedIndex = siblings - 1;
-//     } else if (newSelectedIndex > siblings - 1) {
-//       newSelectedIndex = 0;
-//     }
-//     self.selectedIndex = newSelectedIndex;
-//   },
-//   up() {
-//     const { selectedCell } = self;
-//     const { upPath } = selectedCell;
-//     if (upPath) {
-//       self.selectedPath = upPath;
-//       self.selectedIndex = 0;
-//     }
-//   },
-//   down() {
-//     const { selectedCell } = self;
-//     const { downPath } = selectedCell;
-//     if (downPath) {
-//       self.selectedPath = downPath;
-//       self.selectedIndex = 0;
-//     }
-//   },
 //   open() {
 //     const { pathKey } = self;
 //     const current = self.openPaths.get(pathKey);

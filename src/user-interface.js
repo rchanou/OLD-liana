@@ -54,6 +54,18 @@ const UI = ContextRepo.refModel("UI", {
       get allCells() {
         return self.baseCells.concat(self.cursorCell || []);
       },
+      get baseKeyMap() {
+        return {
+          1: {
+            2: { label: "▲", action: self.moveUp }
+          },
+          2: {
+            1: { label: "◀", action: self.moveLeft },
+            2: { label: "▼", action: self.moveDown },
+            3: { label: "▶", action: self.moveRight }
+          }
+        };
+      },
       get cellMap() {
         const base = {
           y: {},
@@ -109,6 +121,7 @@ const UI = ContextRepo.refModel("UI", {
       self.selectedCellIndex = index;
     },
     moveBy(step = +1, axis = "x") {
+      console.log("le move");
       const crossAxis = axis === "x" ? "y" : "x";
       // debugger;
       const currentCell = self.selectedCell;

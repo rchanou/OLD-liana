@@ -128,7 +128,7 @@ export const RepoEditor = uiModel("RepoLister", {
       }
 
       if (self.tree) {
-        return self.tree.baseCells;
+        return self.tree.allCells;
       }
 
       return self.allCells;
@@ -193,6 +193,13 @@ export const RepoEditor = uiModel("RepoLister", {
       } else {
         self.editingLabelForLink = self.selectedCell.labelForLink;
       }
+    },
+    toggleTree() {
+      if (self.tree) {
+        destroy(self.tree);
+      } else {
+        self.tree = { rootLink: self.selectedCell.forLink };
+      }
     }
   }))
   .views(self => ({
@@ -201,13 +208,11 @@ export const RepoEditor = uiModel("RepoLister", {
         return self.chooser.keyMap(self.toggleChooser);
       }
 
-      const {
-        selectedCell,
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      if (self.tree) {
+        return self.tree.keyMap(self.toggleTree);
+      }
+
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
       const { forLink, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -313,8 +318,7 @@ export const RepoEditor = uiModel("RepoLister", {
       if (self.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.baseCells.findIndex(
-            cell =>
-              cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
+            cell => cell.key === `CL-${forLink.linkId}-${forLink.nodes.length - 1}`
           );
 
           if (newSelectedCellIndex !== -1) {
@@ -363,8 +367,11 @@ export const RepoEditor = uiModel("RepoLister", {
         };
       }
 
+      const { baseKeyMap } = self;
+
       const keyMap = {
         1: {
+          ...baseKeyMap[1],
           0: {
             label: "Save",
             action() {
@@ -374,7 +381,7 @@ export const RepoEditor = uiModel("RepoLister", {
               console.log(JSON.stringify(snapshot));
             }
           },
-          2: { label: "▲", action: self.moveUp },
+          // 2: { label: "▲", action: self.moveUp },
           5: {
             label: "Add Link",
             action() {
@@ -394,9 +401,10 @@ export const RepoEditor = uiModel("RepoLister", {
           6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
-          1: { label: "◀", action: self.moveLeft },
-          2: { label: "▼", action: self.moveDown },
-          3: { label: "▶", action: self.moveRight },
+          ...baseKeyMap[2],
+          // 1: { label: "◀", action: self.moveLeft },
+          // 2: { label: "▼", action: self.moveDown },
+          // 3: { label: "▶", action: self.moveRight },
           6: { label: "Change", action: toggleChangeCellMode },
           9: {
             label: "Delete",
@@ -423,15 +431,17 @@ export const RepoEditor = uiModel("RepoLister", {
           label: "Chooser",
           action: self.toggleChooser
         };
+        keyMap[3][5] = {
+          label: "Tree",
+          action: self.toggleTree
+        };
       }
 
       if (selectedCell.gotoCellKey) {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
