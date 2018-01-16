@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Redux basic example</title>
+  <script src="https://unpkg.com/redux@latest/dist/redux.min.js"></script>
+</head>
+
+<body>
+  <div>
+    <p>
+      Clicked:
+      <span id="value">0</span> times
+      <button id="increment">+</button>
+      <button id="decrement">-</button>
+      <button id="incrementIfOdd">Increment if odd</button>
+      <button id="incrementAsync">Increment async</button>
+    </p>
+  </div>
+  <script>
+    let dot = (o, k) => o[k]
+    let add = (x, y) => x + y
+    let minus = (x, y) => x - y
+    let sw = (switcher, ...casePairs) => {
+      const { length } = casePairs;
+      for (let i = 0; i < length; i += 2) {
+        if (switcher === casePairs[i]) {
+          return casePairs[i + 1];
+        }
+      }
+      if (length % 2) {
+        return casePairs[length - 1];
+      }
+    }
+    let eq = (a, b) => a === b
+    let iif = (cond, trueVal, falseVal) => cond ? trueVal : falseVal
+
+    let inc = x => add(x, 1)
+    let dec = x => minus(x, 1)
+    let identity = x => x
+    let getUpdaterFromType = actionType => sw(actionType, 'INCREMENT', inc, 'DECREMENT', dec, identity)
+    let getType = action => dot(action, 'type')
+    let getUpdaterFromAction = action => {
+      let actionType = getType(action)
+      let updater = getUpdaterFromType(actionType)
+      return updater
+    }
+    let counterOnNonZero = (state, action) => {
+      let updater = getUpdaterFromAction(action)
+      let updatedState = updater(state)
+      return updatedState
+    }
+    let getZero = () => 0
+    let counter = (state, action) => {
+      let isUndefined = eq(state, undefined)
+      let counterToUse = iif(isUndefined, getZero, counterOnNonZero)
+      let nextState = counterToUse(state, action)
+      return nextState
+    }
+    let Redux = dot(window, 'Redux')
+    let createStore = dot(Redux, 'createStore')
+    let store = createStore(counter)
+
+    let s = store
+  </script>
+</body>
+
+</html>
