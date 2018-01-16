@@ -19,6 +19,7 @@ export const access = ".";
 export const array = "[";
 export const object = "{";
 export const mutate = "@";
+export const identity = "#";
 
 export const add = "+";
 export const subtract = "-";
@@ -84,14 +85,23 @@ const opFuncs = {
     return condition ? trueVal : falseVal;
   },
   [switchOp](switcher, ...casePairs) {
-    for (let i = 0; i < casePairs.length; i += 2) {
+    const { length } = casePairs;
+    for (let i = 0; i < length; i += 2) {
       if (switcher === casePairs[i]) {
         return casePairs[i + 1];
       }
     }
+    if (length % 2) {
+      return casePairs[length - 1];
+    }
   },
   [lessThan](a, b) {
     return a < b;
+  },
+  [identity](x) {
+    return function() {
+      return x;
+    };
   }
 };
 
@@ -188,7 +198,8 @@ export const ops = [
   strictEqual,
   notEqual,
   notStrictEqual,
-  mutate
+  mutate,
+  identity
 ];
 
 export const OpEnum = types.enumeration("OpEnum", ops);

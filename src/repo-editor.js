@@ -2,6 +2,7 @@ import { types, destroy, getSnapshot } from "mobx-state-tree";
 
 import { Link, Dependency } from "./core";
 import { Chooser } from "./chooser";
+import { Tree } from "./tree";
 import { uiModel, cursorify, formatOut } from "./user-interface";
 import { minify } from "./minify";
 
@@ -114,7 +115,8 @@ export const RepoEditor = uiModel("RepoLister", {
   addOpMode: optionalBoolean,
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef),
-  editingLabelForLink: types.maybe(types.reference(Link))
+  editingLabelForLink: types.maybe(types.reference(Link)),
+  tree: types.maybe(Tree)
 })
   .views(self => ({
     get baseCells() {
@@ -123,6 +125,10 @@ export const RepoEditor = uiModel("RepoLister", {
     get activeCells() {
       if (self.chooser) {
         return self.chooser.allCells;
+      }
+
+      if (self.tree) {
+        return self.tree.baseCells;
       }
 
       return self.allCells;

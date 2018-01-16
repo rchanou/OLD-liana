@@ -53,52 +53,63 @@ const testRepo = {
       nodes: [{ ref: "6" }, { ref: "5" }],
       labelSet: "hypotenuse for 5 & 12"
     },
-    "8": {
-      linkId: "8",
+    a: {
+      linkId: "a",
       nodes: [{ op: "." }, { dep: "0" }, { val: "createStore" }],
       labelSet: "create store"
     },
-    "9": {
-      linkId: "9",
+    b: {
+      linkId: "b",
       nodes: [{ op: "." }, { input: "1" }, { val: "type" }],
       labelSet: "action type"
     },
-    "10": {
-      linkId: "10",
+    c: {
+      linkId: "c",
       nodes: [{ op: "+" }, { input: "2" }, { val: 1 }],
       labelSet: "increment"
     },
-    "11": {
-      linkId: "11",
+    d: {
+      linkId: "d",
       nodes: [{ op: "+" }, { input: "3" }, { val: -1 }],
       labelSet: "decrement"
     },
-    "11a": {
-      linkId: "11a",
-      nodes: [{ op: "?" }, { input: "0" }, { val: 0 }, { ref: "12" }]
+    da: { linkId: "da", nodes: [{ op: "#" }, { val: 0 }] },
+    ea: {
+      linkId: "ea",
+      nodes: [{ op: "?" }, { input: "0" }, { ref: "e" }, { ref: "da" }]
     },
-    "12": {
-      linkId: "12",
+    eb: { linkId: "eb", nodes: [{ ref: "ea" }, { input: "0" }] },
+    // '11b':{
+    //   linkId:'11b',nodes
+    // },
+    e: {
+      linkId: "e",
       nodes: [
         { op: "s" },
         // { val: undefined },
-        { ref: "9" },
+        { ref: "b" },
         { val: "INCREMENT" },
-        { fn: "10" },
+        { fn: "c" },
         { val: "DECREMENT" },
-        { fn: "11" }
+        { fn: "d" },
+        { op: "#" }
       ],
       labelSet: "updater"
     },
-    "13": {
-      linkId: "13",
-      nodes: [{ ref: "12" }, { input: "0" }],
-      inputOrder: ["0", "1"],
+    f: {
+      linkId: "f",
+      nodes: [{ ref: "e" }, { input: "0" }],
+      // inputOrder: ["0", "1"],
       labelSet: "counter reducer"
     },
-    "15": {
-      linkId: "15",
-      nodes: [{ ref: "8" }, { fn: "13", inputOrder: ["0", "1"] }],
+    // "14": {
+    //   linkId: "14",
+    //   nodes: [{}],
+    //   labelSet: "updated state"
+    // },
+    g: {
+      linkId: "g",
+      nodes: [{ ref: "a" }, { fn: "f", inputOrder: ["0", "1"] }],
       labelSet: "counter store"
     },
     "16": {
@@ -113,8 +124,7 @@ const testRepo = {
       labelSet: "array"
     }
   },
-  subs: {},
-  linkLabelSets: {}
+  subs: {}
 };
 
 export default testRepo;

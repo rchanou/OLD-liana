@@ -71,7 +71,10 @@ storiesOf("Liana", module)
     <Story
       editor={{
         ...context,
-        repoList: { selectedCellIndex: 75 }
+        repoList: {
+          tree: { rootLink: "g" },
+          selectedCellIndex: 75
+        }
       }}
     />
   ))

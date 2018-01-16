@@ -160,8 +160,10 @@ const ReactBox = observer(({ box, onInput, editor }) => {
         key={`${key}L`}
         style={{
           ...lineStyle,
-          left: unit * (x + 0.5) - 3 * spacer,
-          top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
+          // left: unit * (x + 0.5) - 3 * spacer,
+          left: (x + 0.2) * unit,
+          top: (y + 0.7) * unit
+          // top: `calc(100vh - ${(y + 1) * unit + 3 * spacer}px)`
         }}
       />
     ) : null;
