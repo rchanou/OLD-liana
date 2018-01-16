@@ -95,6 +95,7 @@ const testRepo = {
         { op: "#" }
       ],
       labelSet: "updater"
+      // inputOrder: ["1"]
     },
     f: {
       linkId: "f",

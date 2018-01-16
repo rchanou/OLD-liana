@@ -1,11 +1,4 @@
-import {
-  types,
-  getEnv,
-  getParent,
-  getType,
-  flow,
-  getSnapshot
-} from "mobx-state-tree";
+import { types, getEnv, getParent, getType, flow, getSnapshot } from "mobx-state-tree";
 
 import { setupContext } from "./context";
 import { unminify } from "./minify";
@@ -85,6 +78,7 @@ const opFuncs = {
     return condition ? trueVal : falseVal;
   },
   [switchOp](switcher, ...casePairs) {
+    console.log(switcher, ...casePairs, "SWIT");
     const { length } = casePairs;
     for (let i = 0; i < length; i += 2) {
       if (switcher === casePairs[i]) {
@@ -292,12 +286,7 @@ export const stringType = "s";
 export const numType = "n";
 export const boolType = "b";
 export const anyType = "a";
-export const InputType = types.enumeration("InputType", [
-  stringType,
-  numType,
-  boolType,
-  anyType
-]);
+export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
 
 // HACK: couldn't think of a way to contain this in mobx models
 // TODO: possibly revisit this (but this is just a PoC, so...)
@@ -367,14 +356,7 @@ export const InputRef = types
     }
   }));
 
-export const Node = types.union(
-  Val,
-  Op,
-  InputRef,
-  types.late(() => LinkRef),
-  types.late(() => Fn),
-  DepRef
-);
+export const Node = types.union(Val, Op, InputRef, types.late(() => LinkRef), types.late(() => Fn), DepRef);
 
 export const Link = types
   .model("Link", {
@@ -514,23 +496,10 @@ export const LinkRef = types
     }
   }));
 
-// TODO: better way to generate ids?
-// let callIdCounter = 0;
 export const Fn = types
   .model("Fn", {
     fn: types.reference(Link)
-    // callId: types.optional(
-    //   types.identifier(types.number),
-    //   () => callIdCounter++
-    // )
   })
-  // .actions(self => ({
-  //   postProcessSnapshot(snapshot) {
-  //     // TODO: maybe we should keep these ids?
-  //     delete snapshot.callId;
-  //     return snapshot;
-  //   }
-  // }))
   .views(self => ({
     get out() {
       return self.fn.out;
@@ -617,22 +586,16 @@ export const Repo = types
     // subs: optionalMap(Sub),
     linkLabelSets: optionalMap(LabelSet)
   })
-  .preProcessSnapshot(
-    snapshot => (!snapshot || snapshot.links ? snapshot : unminify(snapshot))
-  )
+  .preProcessSnapshot(snapshot => (!snapshot || snapshot.links ? snapshot : unminify(snapshot)))
   .views(self => ({
     get linkList() {
       return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
     },
     get inputList() {
-      return self.inputs
-        .values()
-        .map(input => ({ value: input.inputId, label: input.label }));
+      return self.inputs.values().map(input => ({ value: input.inputId, label: input.label }));
     },
     get depList() {
-      return self.dependencies
-        .values()
-        .map(dep => ({ value: dep.depId, label: dep.label }));
+      return self.dependencies.values().map(dep => ({ value: dep.depId, label: dep.label }));
     }
   }))
   .actions(self => ({

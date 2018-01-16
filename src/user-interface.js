@@ -121,7 +121,6 @@ const UI = ContextRepo.refModel("UI", {
       self.selectedCellIndex = index;
     },
     moveBy(step = +1, axis = "x") {
-      console.log("le move");
       const crossAxis = axis === "x" ? "y" : "x";
       // debugger;
       const currentCell = self.selectedCell;

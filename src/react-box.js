@@ -70,6 +70,7 @@ class Input extends React.Component {
 class Cursor extends React.Component {
   componentDidMount() {
     this.me = findDOMNode(this);
+    window.scrollTo(0, 0);
     this.me.scrollIntoView();
   }
 
@@ -137,14 +138,7 @@ const ReactBox = observer(({ box, onInput, editor }) => {
   let element;
   if (input != null) {
     style.background = "#eee";
-    element = (
-      <Input
-        key={key}
-        value={input}
-        style={style}
-        onChange={editor.handleInput}
-      />
-    );
+    element = <Input key={key} value={input} style={style} onChange={editor.handleInput} />;
   } else {
     const Tag = cursor ? Cursor : "div";
     element = (
@@ -176,12 +170,7 @@ export const ReactTree = observer(({ editor }) => {
   let throwawayIdCounter = 0;
 
   const cellBoxes = cells.map(cell => (
-    <ReactBox
-      key={cell ? cell.key : throwawayIdCounter++}
-      box={cell}
-      onInput={onInput}
-      editor={editor}
-    />
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} editor={editor} />
   ));
 
   return <div style={containerStyle}>{cellBoxes}</div>;

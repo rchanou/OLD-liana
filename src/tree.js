@@ -54,7 +54,8 @@ export const Tree = uiModel("ViewRepoTree", {
         selectable: true,
         category,
         siblings,
-        downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1)
+        downPath: linkPath.length < 2 ? linkPath : linkPath.slice(0, -1),
+        forNode: node
       };
 
       const makeRefCells = linkRef => {
@@ -163,6 +164,7 @@ export const Tree = uiModel("ViewRepoTree", {
       text: label,
       category: Link,
       selectable: true,
+      forNode: link,
       siblings: siblingCount
     };
     allCells.push(thisNode);
@@ -192,8 +194,27 @@ export const Tree = uiModel("ViewRepoTree", {
   };
 
   return {
-    get baseCells() {
+    get treeCells() {
       return getCells(self.rootLink);
+    },
+    get valueCell() {
+      const valueCell = {
+        ...self.treeCells[self.selectedCellIndex],
+        x: 0,
+        y: Math.max(...self.treeCells.map(c => c.y)) + 1,
+        key: "VALUE",
+        fill: "#333",
+        width: 20,
+        selectable: false
+      };
+      const { out } = valueCell.forNode;
+      window.t = valueCell.forNode; // TODO: for testing; remove for production or whatever
+      valueCell.text = formatOut(out);
+      delete valueCell.category;
+      return valueCell;
+    },
+    get baseCells() {
+      return self.treeCells.concat(self.valueCell);
     },
     keyMap(exit) {
       return {
