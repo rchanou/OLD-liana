@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Redux basic example</title>
+  <script src="https://unpkg.com/redux@latest/dist/redux.min.js"></script>
+</head>
+
+<body>
+  <div>
+    <p>
+      Clicked:
+      <span id="value">0</span> times
+      <button id="increment">+</button>
+      <button id="decrement">-</button>
+      <button id="incrementIfOdd">Increment if odd</button>
+      <button id="incrementAsync">Increment async</button>
+    </p>
+  </div>
+  <script>
+    let dot = (o, k) => o[k]
+    let add = (x, y) => x + y
+    let minus = (x, y) => x - y
+    let sw = (switcher, ...casePairs) => {
+      const { length } = casePairs;
+      for (let i = 0; i < length; i += 2) {
+        if (switcher === casePairs[i]) {
+          return casePairs[i + 1];
+        }
+      }
+      if (length % 2) {
+        return casePairs[length - 1];
+      }
+    }
+    let eq = (a, b) => a === b
+    let iif = (cond, trueVal, falseVal) => cond ? trueVal : falseVal
+    let identity = x => x
+    let obj = (...kvs) => {
+      const obj = {};
+      for (let i = 0; i < kvs.length; i = i + 2) {
+        obj[kvs[i]] = kvs[i + 1];
+      }
+      return obj;
+    }
+    let call = (obj, methodName, ...args) => obj[methodName](...args)
+    let mutate = (obj, key, value) => obj[key] = value
+
+    let inc = x => add(x, 1)
+    let dec = x => minus(x, 1)
+    let getUpdaterFromType = actionType => sw(actionType, 'INCREMENT', inc, 'DECREMENT', dec, identity)
+    let getType = action => dot(action, 'type')
+
+    let getUpdaterFromAction = action => {
+      let actionType = getType(action)
+      return getUpdaterFromType(actionType)
+    }
+
+    let counterOnNonZero = (state, action) => {
+      let updater = getUpdaterFromAction(action)
+      return updater(state);
+    }
+
+    let getZero = () => 0
+
+    let counter = (state, action) => {
+      let isUndefined = eq(state, undefined)
+      let counterToUse = iif(isUndefined, getZero, counterOnNonZero)
+      return counterToUse(state, action)
+    }
+
+    let redux = dot(window, 'Redux')
+    let createStore = dot(redux, 'createStore')
+    let store = createStore(counter)
+
+    let getStoreDispatch = store => dot(store, 'dispatch')
+
+    let dispatchInc = store => {
+      let dispatch = getStoreDispatch(store)
+      const action = obj('type', 'INCREMENT')
+      dispatch(action)
+    }
+    let incHandler = () => {
+      dispatchInc(store)
+    }
+
+    let dispatchDec = store => {
+      let dispatch = getStoreDispatch(store)
+      const action = obj('type', 'DECREMENT')
+      dispatch(action)
+    }
+    let decHandler = () => {
+      dispatchDec(store)
+    }
+
+    let getListenAdder = el => dot(el, 'addEventListener')
+    let addClickListener = (el, handler) => {
+      call(el, 'addEventListener', 'click', handler)
+    }
+
+    let doc = dot(window, 'document')
+    let getElById = dot(doc, 'getElementById')
+
+    let incEl = call(doc, 'getElementById', 'increment')
+    addClickListener(incEl, incHandler)
+
+    let decEl = call(doc, 'getElementById', 'decrement')
+    addClickListener(decEl, decHandler)
+
+    let getStoreGetState = store => dot(store, 'getState')
+    let storeGetState = getStoreGetState(store)
+
+    let valEl = call(doc, 'getElementById', 'value')
+    let render = () => {
+      let state = storeGetState()
+      mutate(valEl, 'innerHTML', state)
+    }
+
+    let getStoreSubscribe = store => dot(store, 'subscribe')
+    let storeSubscribe = getStoreSubscribe(store)
+
+    render()
+    storeSubscribe(render)
+  </script>
+</body>
+
+</html>
