@@ -110,80 +110,64 @@ const parse = (repo, id) => {
       return head(...args);
     };
 
-    if (line.some(code => typeof code === "number")) {
-      return func;
-    }
+    return func;
 
-    return func();
+    // if (line.some(code => typeof code === "number")) {
+    //   return func;
+    // }
+
+    // return func();
   }
 
   const sub = line;
   const subRet = sub.R;
 
   return (...params) => {
-    const tokens = subRet.map(code => {
-      if (Array.isArray(code)) {
-        return code[0];
-      }
-
-      const op = ops[code];
-      if (op) {
-        return op;
-      }
-
-      if (typeof code === "number") {
-        return params[code];
-      }
-
-      if (typeof code === "object") {
-        const { i } = code;
-        if (!(i in sub)) {
-          throw new Error("Sub-line not found dawg! " + code);
+    const parseSubLine = subLine => {
+      const tokens = subLine.map(code => {
+        if (Array.isArray(code)) {
+          return code[0];
         }
 
-        const subLine = sub[i];
+        const op = ops[code];
+        if (op) {
+          return op;
+        }
 
-        const tokens = subLine.map(code => {
-          if (Array.isArray(code)) {
-            return code[0];
+        if (typeof code === "number") {
+          return params[code];
+        }
+
+        if (typeof code === "object") {
+          const { i } = code;
+          if (!(i in sub)) {
+            throw new Error("Sub-line not found dawg! " + code);
           }
 
-          const op = ops[code];
-          if (op) {
-            return op;
-          }
+          const refSubLine = sub[i];
 
-          if (typeof code === "number") {
-            return params[code];
-          }
+          return parseSubLine(refSubLine);
+        }
 
-          if (code in repo) {
-            return parse(repo, code);
-          }
+        if (code in repo) {
+          return parse(repo, code);
+        }
 
-          throw new Error("No match found for code, brah! " + code);
-        });
+        throw new Error("No match found for code, brah! " + code);
+      });
 
-        const [head, ...args] = tokens;
-        return head(...args);
-      }
+      const [head, ...args] = tokens;
+      return typeof head === "function" ? head(...args) : head;
+    };
 
-      if (code in repo) {
-        return parse(repo, code);
-      }
-
-      throw new Error("No match found for code, brah! " + code);
-    });
-
-    const [head, ...args] = tokens;
-    return typeof head === "function" ? head(...args) : head;
+    return parseSubLine(subRet);
   };
 };
 
 console.log(parse(test, "a")(3), 4);
 
 const zTest = parse(test, "z");
-console.log(zTest(321));
+console.log(zTest(321), 321);
 
 const updater = parse(test, "e");
 console.log(updater({ type: "INCREMENT" })(4), 5);
@@ -191,8 +175,12 @@ console.log(updater({ type: "INCREMENT" })(4), 5);
 const reducer = parse(test, "f");
 console.log(
   reducer(0, { type: "INCREMENT" }),
+  1,
   reducer(3, { type: "DECREMENT" }),
-  reducer(5, { type: "INCREMENT" })
+  2,
+  reducer(5, { type: "INCREMENT" }),
+  6
 );
-// const counter = parse(test, "h");
+
+const counter = parse(test, "h");
 // console.log(counter, counter(3, { type: "INCREMENT" }));
