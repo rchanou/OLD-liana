@@ -120,7 +120,6 @@ const parse = (repo, id) => {
 
       const [head, ...args] = tokens;
       return typeof head === "function" ? head(...args) : head;
-      return head(...args);
     };
 
     out[id].R = func;
@@ -164,7 +163,9 @@ const parse = (repo, id) => {
           }
 
           const refSubLine = sub[i];
-          if (!refSubLine.some(code => typeof code === "object" && "i" in code)) {
+          if (
+            !refSubLine.some(code => typeof code === "object" && "i" in code)
+          ) {
             return parseLambda(refSubLine)(...params);
           }
           const refSubVal = parseSubLine(refSubLine)(...params);
