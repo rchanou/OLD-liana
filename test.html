@@ -129,6 +129,9 @@
       const line = repo[id];
 
       if (Array.isArray(line)) {
+        if (!line.some(code => typeof code === 'number')) {
+          return parseLambda(line)()
+        }
         return parseLambda(line)
       }
 
@@ -207,7 +210,10 @@
     const counter = parse(test, "h");
     console.log(counter(), 0);
     console.log(counter(3, { type: "INCREMENT" }), 4);
+    console.log(counter(3, { type: "DECREMENT" }), 2);
     // debugger
+
+    const store = parse(test, 'l')
   </script>
 </body>
 
