@@ -77,7 +77,12 @@ const test = {
   n: {
     a: ["m", 0],
     b: ["obj", ["type"], ["INCREMENT"]],
-    R: [{ i: "a" }, { i: "b" }]
+    R: [{ i: "a" }, { i: "b" }] // dispatch inc
+  },
+  o: {
+    a: ["m", 0],
+    b: ["obj", ["type"], ["DECREMENT"]],
+    R: [{ i: "a" }, { i: "b" }] // dispatch dec
   }
 };
 
@@ -206,15 +211,18 @@ const counter = parse(test, "h");
 console.log(counter(), 0);
 console.log(counter(3, { type: "INCREMENT" }), 4);
 console.log(counter(3, { type: "DECREMENT" }), 2);
-// debugger
 
 const store = parse(test, "l");
 const dispatchInc = parse(test, "n");
+const dispatchDec = parse(test, "o");
 store.dispatch({ type: "INCREMENT" });
-store.dispatch({ type: "INCREMENT" });
+dispatchInc(store);
+dispatchInc(store);
 store.dispatch({ type: "DECREMENT" });
-store.dispatch({ type: "INCREMENT" });
-store.dispatch({ type: "INCREMENT" });
 dispatchInc(store);
 dispatchInc(store);
-console.log(store.getState(), 5);
+dispatchInc(store);
+dispatchInc(store);
+dispatchDec(store);
+dispatchInc(store);
+console.log(store.getState(), 6);
