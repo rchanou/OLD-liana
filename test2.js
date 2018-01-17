@@ -48,7 +48,7 @@ console.log(hyp5n12, hyp(5, 12), hyp(60, 11));
 
 const test = {
   z: {
-    R: [0] // always zero
+    R: [0] // identity
   },
   a: ["add", 0, [1]], // incrementer
   b: ["minus", 0, [1]], // decrementr
@@ -166,8 +166,6 @@ const parse = (repo, id) => {
 
         const [head, ...args] = tokens;
         return head(...args);
-
-        // return parse(repo, i);
       }
 
       if (code in repo) {
@@ -175,7 +173,6 @@ const parse = (repo, id) => {
       }
 
       throw new Error("No match found for code, brah! " + code);
-      // return params[code];
     });
 
     const [head, ...args] = tokens;
@@ -183,10 +180,19 @@ const parse = (repo, id) => {
   };
 };
 
-console.log(parse(test, "a")(3));
+console.log(parse(test, "a")(3), 4);
 
 const zTest = parse(test, "z");
 console.log(zTest(321));
 
 const updater = parse(test, "e");
-console.log(updater, updater({ type: "INCREMENT" })(4));
+console.log(updater({ type: "INCREMENT" })(4), 5);
+
+const reducer = parse(test, "f");
+console.log(
+  reducer(0, { type: "INCREMENT" }),
+  reducer(3, { type: "DECREMENT" }),
+  reducer(5, { type: "INCREMENT" })
+);
+// const counter = parse(test, "h");
+// console.log(counter, counter(3, { type: "INCREMENT" }));
