@@ -34,6 +34,64 @@ const instanceOfOp = "i";
 const classOp = "c";
 const thisOp = "h";
 
+const opFuncs = {
+  [global](val) {
+    return window[val];
+    // return eval(val);
+  },
+  [access](obj, key) {
+    try {
+      return obj[key];
+    } catch (ex) {
+      return ex;
+    }
+  },
+  [add](...nums) {
+    let sum;
+    for (let i = 0; i < nums.length; i++) {
+      if (i === 0) {
+        sum = nums[i];
+      } else {
+        sum += nums[i];
+      }
+    }
+    return sum;
+  },
+  [array](...items) {
+    return items;
+  },
+  [object](...kvs) {
+    const obj = {};
+    for (let i = 0; i < kvs.length; i = i + 2) {
+      obj[kvs[i]] = kvs[i + 1];
+    }
+    return obj;
+  },
+  [ifOp](condition, trueVal, falseVal) {
+    return condition ? trueVal : falseVal;
+  },
+  [switchOp](switcher, ...casePairs) {
+    // console.log(switcher, ...casePairs, "SWIT");
+    const { length } = casePairs;
+    for (let i = 0; i < length; i += 2) {
+      if (switcher === casePairs[i]) {
+        return casePairs[i + 1];
+      }
+    }
+    if (length % 2) {
+      return casePairs[length - 1];
+    }
+  },
+  [lessThan](a, b) {
+    return a < b;
+  },
+  [identity](x) {
+    return function() {
+      return x;
+    };
+  }
+};
+
 const ops = [
   global,
   access,
@@ -87,7 +145,11 @@ const Op = types
   })
   .views(self => ({
     get out() {
-      return ops[self.op];
+      const opFunc = opFuncs[self.op];
+      if (!opFunc) {
+        throw new Error(opFunc + " op not yet implemented!");
+      }
+      return opFunc;
     }
   }));
 
@@ -128,15 +190,49 @@ const Word = types.union(Val, Op, Arg, Fn, Use, PkgUse);
 
 const Line = types.array(Word);
 
+const Call = types
+  .model("Call", {
+    id: types.identifier(types.string),
+    line: Line
+  })
+  .views(self => ({
+    out(repo) {
+      const { line } = self;
+      const func = (...params) => {
+        // TODO: hoist unchanging (non-param) slots
+        const tokens = line.map(word => {
+          if ("val" in word || "op" in word) {
+            return word.out;
+          }
+          if ("arg" in word) {
+            return params[word.arg];
+          }
+          if ("fn" in word) {
+            return word.fn.out(repo);
+          }
+          throw new Error("No match found for code, brah! " + word);
+        });
+
+        const [head, ...args] = tokens;
+        return typeof head === "function" ? head(...args) : head;
+      };
+      if (!line.some(word => "arg" in word)) {
+        debugger;
+        return func();
+      }
+      return func;
+    }
+  }));
+
 const Def = types
   .model("Def", {
     id: types.identifier(types.string),
-    decs: types.maybe(types.map(Line)),
+    lines: types.maybe(types.map(Line)),
     ret: Line
   })
   .views(self => ({
     out(repo) {
-      const { decs } = self;
+      const { lines } = self;
       return (...params) => {
         const parseLine = line => {
           const tokens = line.map(word => {
@@ -147,7 +243,10 @@ const Def = types
               return params[word.arg];
             }
             if ("use" in word) {
-              const innerLine = decs.get(word.use);
+              if (!lines) {
+                throw new Error("No lines brah!");
+              }
+              const innerLine = lines.get(word.use);
               if (!innerLine) {
                 throw new Error("nononononono");
               }
@@ -187,16 +286,26 @@ const Def = types
     }
   }));
 
-const Repo = types.model("Repo", {
-  defs: types.map(Def)
-});
+const Repo = types
+  .model("Repo", {
+    lines: types.map(types.union(Call, Def))
+  })
+  .views(self => ({
+    out(id) {
+      return self.lines.get(id).out(self);
+    }
+  }));
 
 const test = {
-  defs: {
-    a: { id: "a", ret: [{ val: 0 }] }
+  lines: {
+    a: { id: "a", ret: [{ val: 0 }] },
+    b: { id: "b", ret: [{ op: add }, { arg: 0 }, { val: 1 }] },
+    ba: { id: "ba", line: [{ op: add }, { val: 1 }, { val: 2 }] }
   }
 };
 
 const store = Repo.create(test);
-const a = store.defs.get("a").out(store);
-console.log(a());
+const a = store.out("a");
+const b = store.out("b");
+console.log(a(), 0);
+console.log(store.out("ba"));
