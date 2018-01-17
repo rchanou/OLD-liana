@@ -71,29 +71,58 @@ const Pkg = types.model("Pkg", {
   resolved: types.optional(types.boolean, false)
 });
 
-const Val = types.model("Val", {
-  val: types.union(types.number, types.string, types.boolean, types.null)
-});
+const Val = types
+  .model("Val", {
+    val: types.union(types.number, types.string, types.boolean, types.null)
+  })
+  .views(self => ({
+    get out() {
+      return self.val;
+    }
+  }));
 
-const Op = types.model("Op", {
-  op: types.enumeration(ops)
-});
+const Op = types
+  .model("Op", {
+    op: types.enumeration(ops)
+  })
+  .views(self => ({
+    get out() {
+      return ops[self.op];
+    }
+  }));
 
 const Arg = types.model("Arg", {
   arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
 });
+// .views(self => ({}));
 
-const Fn = types.model("Fn", {
-  fn: types.reference(types.late(() => Def))
-});
+const Fn = types
+  .model("Fn", {
+    fn: types.reference(types.late(() => Def))
+  })
+  .views(self => ({
+    out(repo) {
+      return self.fn.out(repo);
+    }
+  }));
 
 const Use = types.model("Use", {
   use: types.string
 });
+// .views(self => ({
+//   out(repo) {
+//     return;
+//   }
+// }));
 
 const PkgUse = types.model("Use", {
   pkg: types.reference(Pkg)
 });
+// .views(self => ({
+//   get out() {
+//     return;
+//   }
+// }));
 
 const Word = types.union(Val, Op, Arg, Fn, Use, PkgUse);
 
@@ -106,7 +135,56 @@ const Def = types
     ret: Line
   })
   .views(self => ({
-    get out() {}
+    out(repo) {
+      const { decs } = self;
+      return (...params) => {
+        const parseLine = line => {
+          const tokens = line.map(word => {
+            if ("val" in word || "op" in word) {
+              return word.out;
+            }
+            if ("arg" in word) {
+              return params[word.arg];
+            }
+            if ("use" in word) {
+              const innerLine = decs.get(word.use);
+              if (!innerLine) {
+                throw new Error("nononononono");
+              }
+              if (!innerLine.some(ilWord => "use" in ilWord)) {
+                const func = (...innerParams) => {
+                  // TODO: hoist unchanging (non-param) slots
+                  const tokens = innerLine.map(code => {
+                    if ("val" in word || "op" in word) {
+                      return word.out;
+                    }
+                    if ("arg" in word) {
+                      return innerParams[word.arg];
+                    }
+                    if ("fn" in word) {
+                      return word.fn.out(repo);
+                    }
+                    throw new Error("No match found for code, brah! " + code);
+                  });
+
+                  const [head, ...args] = tokens;
+                  return typeof head === "function" ? head(...args) : head;
+                };
+                return func(...params);
+              }
+              return parseLine(innerLine)(...params);
+            }
+            if ("fn" in word) {
+              return word.fn.out(repo);
+            }
+            throw new Error("No match found!");
+          });
+          const [head, ...args] = tokens;
+          return typeof head === "function" ? head(...args) : head;
+        };
+        return parseLine(self.ret);
+      };
+    }
   }));
 
 const Repo = types.model("Repo", {
@@ -120,4 +198,5 @@ const test = {
 };
 
 const store = Repo.create(test);
-console.log(store.defs.get("a").ret[0].val);
+const a = store.defs.get("a").out(store);
+console.log(a());
