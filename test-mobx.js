@@ -1,15 +1,15 @@
 const { types } = require("mobx-state-tree");
 
 const global = "g";
-const access = ".";
+const dot = ".";
 const array = "[";
 const object = "{";
 const mutate = "@";
 const identity = "#";
 
 const add = "+";
-const subtract = "-";
-const multiply = "*";
+const minus = "-";
+const times = "*";
 const divide = "/";
 const mod = "%";
 
@@ -35,11 +35,8 @@ const classOp = "c";
 const thisOp = "h";
 
 const opFuncs = {
-  [global](val) {
-    return window[val];
-    // return eval(val);
-  },
-  [access](obj, key) {
+  [global]: typeof window !== "undefined" ? window : global,
+  [dot](obj, key) {
     try {
       return obj[key];
     } catch (ex) {
@@ -53,6 +50,17 @@ const opFuncs = {
         sum = nums[i];
       } else {
         sum += nums[i];
+      }
+    }
+    return sum;
+  },
+  [minus](...nums) {
+    let sum;
+    for (let i = 0; i < nums.length; i++) {
+      if (i === 0) {
+        sum = nums[i];
+      } else {
+        sum -= nums[i];
       }
     }
     return sum;
@@ -94,12 +102,12 @@ const opFuncs = {
 
 const ops = [
   global,
-  access,
+  dot,
   array,
   object,
   add,
-  subtract,
-  multiply,
+  minus,
+  times,
   divide,
   mod,
   ifOp,
@@ -147,7 +155,7 @@ const Op = types
     get out() {
       const opFunc = opFuncs[self.op];
       if (!opFunc) {
-        throw new Error(opFunc + " op not yet implemented!");
+        throw new Error(self.op + " op not yet implemented!");
       }
       return opFunc;
     }
@@ -157,16 +165,6 @@ const Arg = types.model("Arg", {
   arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
 });
 // .views(self => ({}));
-
-const Fn = types
-  .model("Fn", {
-    fn: types.reference(types.late(() => Def))
-  })
-  .views(self => ({
-    out(repo) {
-      return self.fn.out(repo);
-    }
-  }));
 
 const Use = types.model("Use", {
   use: types.string
@@ -186,9 +184,9 @@ const PkgUse = types.model("Use", {
 //   }
 // }));
 
-const Word = types.union(Val, Op, Arg, Fn, Use, PkgUse);
+const Word = types.union(Val, Op, Arg, types.late(() => Fn), Use, PkgUse);
 
-const Line = types.array(Word);
+const Line = types.refinement(types.array(Word), l => l.length);
 
 const Call = types
   .model("Call", {
@@ -197,32 +195,46 @@ const Call = types
   })
   .views(self => ({
     out(repo) {
-      const { line } = self;
-      const func = (...params) => {
-        // TODO: hoist unchanging (non-param) slots
-        const tokens = line.map(word => {
-          if ("val" in word || "op" in word) {
-            return word.out;
-          }
-          if ("arg" in word) {
-            return params[word.arg];
-          }
-          if ("fn" in word) {
-            return word.fn.out(repo);
-          }
-          throw new Error("No match found for code, brah! " + word);
-        });
-
-        const [head, ...args] = tokens;
-        return typeof head === "function" ? head(...args) : head;
-      };
-      if (!line.some(word => "arg" in word)) {
-        debugger;
-        return func();
-      }
-      return func;
+      return parseCallLine(repo, self.line);
     }
   }));
+
+const Dec = types.union(types.late(() => Call), types.late(() => Def));
+
+const Fn = types
+  .model("Fn", {
+    fn: types.reference(Dec)
+  })
+  .views(self => ({
+    out(repo) {
+      return self.fn.out(repo);
+    }
+  }));
+
+const parseCallLine = (repo, line) => {
+  const func = (...params) => {
+    // TODO: hoist unchanging (non-param) slots
+    const tokens = line.map(word => {
+      if ("val" in word || "op" in word) {
+        return word.out;
+      }
+      if ("arg" in word) {
+        return params[word.arg];
+      }
+      if ("fn" in word) {
+        return word.fn.out(repo);
+      }
+      throw new Error("No match found for code, brah! " + word);
+    });
+
+    const [head, ...args] = tokens;
+    return typeof head === "function" ? head(...args) : head;
+  };
+  if (!line.some(word => "arg" in word)) {
+    return func();
+  }
+  return func;
+};
 
 const Def = types
   .model("Def", {
@@ -248,28 +260,10 @@ const Def = types
               }
               const innerLine = lines.get(word.use);
               if (!innerLine) {
-                throw new Error("nononononono");
+                throw new Error("nononononono line");
               }
               if (!innerLine.some(ilWord => "use" in ilWord)) {
-                const func = (...innerParams) => {
-                  // TODO: hoist unchanging (non-param) slots
-                  const tokens = innerLine.map(code => {
-                    if ("val" in word || "op" in word) {
-                      return word.out;
-                    }
-                    if ("arg" in word) {
-                      return innerParams[word.arg];
-                    }
-                    if ("fn" in word) {
-                      return word.fn.out(repo);
-                    }
-                    throw new Error("No match found for code, brah! " + code);
-                  });
-
-                  const [head, ...args] = tokens;
-                  return typeof head === "function" ? head(...args) : head;
-                };
-                return func(...params);
+                return parseCallLine(repo, innerLine)(...params);
               }
               return parseLine(innerLine)(...params);
             }
@@ -288,7 +282,7 @@ const Def = types
 
 const Repo = types
   .model("Repo", {
-    lines: types.map(types.union(Call, Def))
+    lines: types.map(Dec)
   })
   .views(self => ({
     out(id) {
@@ -298,14 +292,39 @@ const Repo = types
 
 const test = {
   lines: {
-    a: { id: "a", ret: [{ val: 0 }] },
+    a: { id: "a", ret: [{ arg: 0 }] },
     b: { id: "b", ret: [{ op: add }, { arg: 0 }, { val: 1 }] },
-    ba: { id: "ba", line: [{ op: add }, { val: 1 }, { val: 2 }] }
+    b1: { id: "b1", ret: [{ op: minus }, { arg: 0 }, { val: 1 }] },
+    ba: { id: "ba", line: [{ op: add }, { val: 1 }, { val: 2 }] },
+    c: {
+      id: "c",
+      line: [
+        { op: switchOp },
+        { arg: 0 },
+        { val: "INCREMENT" },
+        { fn: "a" },
+        { val: "DECREMENT" },
+        { fn: "b1" },
+        { fn: "a" }
+      ]
+    },
+    d: { id: "d", line: [{ op: dot }, { arg: 0 }, { val: "type" }] },
+    e: {
+      id: "e",
+      lines: { a: [{ fn: "d" }, { arg: 0 }] },
+      ret: [{ fn: "c" }, { use: "a" }]
+    }
   }
 };
 
 const store = Repo.create(test);
 const a = store.out("a");
 const b = store.out("b");
-console.log(a(), 0);
+console.log(a(1), 1);
 console.log(store.out("ba"));
+
+const c = store.out("d");
+console.log(c({ type: "INCREMENT" }), "INCREMENT");
+
+const e = store.out("e");
+console.log(e({ type: "DECREMENT" })(5));
