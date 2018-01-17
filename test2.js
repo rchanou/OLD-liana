@@ -46,6 +46,9 @@ let hyp = (a, b) => {
 
 console.log(hyp5n12, hyp(5, 12), hyp(60, 11));
 
+global.out = {};
+const { out } = global;
+
 const test = {
   z: {
     R: [0] // identity
@@ -80,6 +83,8 @@ const parse = (repo, id) => {
     throw new Error("You done goofed! Could not find ID in repo: " + id);
   }
 
+  out[id] = {};
+
   const line = repo[id];
 
   if (Array.isArray(line)) {
@@ -96,6 +101,7 @@ const parse = (repo, id) => {
         }
 
         if (typeof code === "number") {
+          out[id][code] = params[code];
           return params[code];
         }
 
@@ -146,7 +152,9 @@ const parse = (repo, id) => {
 
           const refSubLine = sub[i];
 
-          return parseSubLine(refSubLine);
+          const refSubVal = parseSubLine(refSubLine);
+          out[id]["i" + i] = refSubVal;
+          return refSubVal;
         }
 
         if (code in repo) {
@@ -160,7 +168,9 @@ const parse = (repo, id) => {
       return typeof head === "function" ? head(...args) : head;
     };
 
-    return parseSubLine(subRet);
+    const subRetVal = parseSubLine(subRet);
+    out[id].R = subRetVal;
+    return subRetVal;
   };
 };
 
@@ -183,4 +193,5 @@ console.log(
 );
 
 const counter = parse(test, "h");
-// console.log(counter, counter(3, { type: "INCREMENT" }));
+console.log(counter(), 0);
+console.log(counter(3, { type: "INCREMENT" }));
