@@ -204,7 +204,7 @@ const Arg = types.model("Arg", {
 });
 // .views(self => ({}));
 
-const ScopeRef = repoModel("ScopeRef", {
+const ScopedRef = repoModel("ScopedRef", {
   sRef: types.string
 }).views(self => ({
   calc(lines, params) {
@@ -237,7 +237,7 @@ const Word = types.union(
   Op,
   Arg,
   types.late(() => GlobalRef),
-  ScopeRef,
+  ScopedRef,
   PkgRef
 );
 
@@ -274,7 +274,6 @@ const parseCallLine = (repo, line) => {
       return word.out;
       // throw new Error("No match found for word, brah! " + word);
     });
-
     const [head, ...args] = tokens;
     return typeof head === "function" ? head(...args) : head;
   };
@@ -308,11 +307,9 @@ const Def = repoModel("Def", {
             if ("arg" in word) {
               return params[word.arg];
             }
-
             if ("sRef" in word) {
               return word.calc(lines, params);
             }
-
             return word.out;
             throw new Error("No match found!");
           });
@@ -324,10 +321,29 @@ const Def = repoModel("Def", {
     }
   }));
 
+const LabelMap = types.map(types.string);
+
+const LabelSet = types.model("LabelSet", {
+  id: types.identifier(types.string),
+  decs: types.optional(
+    types.map(types.union(types.map(LabelMap), LabelMap)),
+    {}
+  )
+});
+
+const usLocale = "en-US";
+const User = types.model("User", {
+  labelSets: types.optional(types.map(LabelSet), {
+    [usLocale]: { id: usLocale }
+  }),
+  currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
+});
+
 export const Repo = types
   .model("Repo", {
     _id: types.optional(types.identifier(types.number), 0),
-    decs: types.map(Declaration)
+    decs: types.map(Declaration),
+    user: types.optional(User, {})
   })
   .preProcessSnapshot(snapshot => {
     if (snapshot.d) {

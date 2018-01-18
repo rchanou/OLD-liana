@@ -22,13 +22,13 @@ const packDeclaration = full => {
     return full.line.map(packWord);
   }
   const packed = {};
-  packed.r = full.ret.map(packWord);
   if (full.lines) {
     packed.l = {};
     for (const id in full.lines) {
       packed.l[id] = full.lines[id].map(packWord);
     }
   }
+  packed.r = full.ret.map(packWord);
   return packed;
 };
 
