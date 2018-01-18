@@ -1,7 +1,8 @@
 import { types, flow } from "mobx-state-tree";
 
-import { makeContext } from "./context";
+import { ContextUser } from "./user";
 import { pack, unpack } from "./pack";
+import * as Color from "./color";
 
 const gRef = "g";
 const dot = ".";
@@ -159,6 +160,31 @@ const Pkg = types
         return system.get(self.path);
       }
       return Pkg;
+    },
+    equivalent(other) {
+      return other === self || other.pkg === self;
+    },
+    get label() {
+      return self.path.replace("https://unpkg.com/", "").split("/")[0];
+    },
+    get color() {
+      return Color.dep;
+    }
+  }));
+
+const PkgRef = types
+  .model("PkgRef", {
+    pkg: types.reference(Pkg)
+  })
+  .views(self => ({
+    get out() {
+      return self.pkg.out;
+    },
+    get label() {
+      return self.pkg.label;
+    },
+    get color() {
+      return self.pkg.color;
     }
   }));
 
@@ -169,6 +195,33 @@ const Val = types
   .views(self => ({
     get out() {
       return self.val;
+    },
+    get label() {
+      const { val } = self;
+      if (typeof val === "string") {
+        return `"${val}"`;
+      } else {
+        return String(val);
+      }
+    },
+    get color() {
+      return Color.val;
+    }
+  }))
+  .actions(self => ({
+    select(val) {
+      if (typeof self.val === "number") {
+        const numVal = Number(val);
+
+        if (isNaN(numVal)) {
+          return;
+        }
+
+        self.val = numVal;
+        return;
+      }
+
+      self.val = val;
     }
   }));
 
@@ -183,31 +236,30 @@ const Op = types
         throw new Error(self.op + " op not yet implemented!");
       }
       return opFunc;
+    },
+    get label() {
+      // TODO: look up from context user
+      return self.op;
+    },
+    get color() {
+      return Color.op;
     }
   }));
 
-const LabelSet = types.model("LabelSet", {
-  id: types.identifier(types.string),
-  decs: types.optional(
-    types.map(types.union(types.map(types.string), types.string)),
-    {}
-  )
-});
-
-const usLocale = "en-US";
-const User = types.model("User", {
-  labelSets: types.optional(types.map(LabelSet), {
-    [usLocale]: { id: usLocale }
-  }),
-  currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
-});
-
-const ContextUser = makeContext(User);
-
-const Arg = types.model("Arg", {
-  arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
-});
-// .views(self => ({}));
+const Arg = types
+  .model("Arg", {
+    // TODO: type prop
+    arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
+  })
+  .views(self => ({
+    get label() {
+      // TODO: look up appropriate label based on user context
+      return `{${self.arg}}`;
+    },
+    get color() {
+      return Color.input;
+    }
+  }));
 
 const ScopedRef = ContextUser.refModel("ScopedRef", {
   sRef: types.string
@@ -224,17 +276,15 @@ const ScopedRef = ContextUser.refModel("ScopedRef", {
       return parseCallLine(innerLine)(...params);
     }
     return parseLine(innerLine)(...params);
+  },
+  get label() {
+    // TODO: look up from user
+    return `(${self.sRef})`;
+  },
+  get color() {
+    return Color.pending;
   }
 }));
-
-const PkgRef = types.model("PkgRef", {
-  pkg: types.reference(Pkg)
-});
-// .views(self => ({
-//   get out() {
-//     return;
-//   }
-// }));
 
 const GlobalRef = types
   .model("GlobalRef", {
@@ -243,6 +293,12 @@ const GlobalRef = types
   .views(self => ({
     get out() {
       return self.gRef.out;
+    },
+    get label() {
+      return self.gRef.label;
+    },
+    get color() {
+      return self.gRef.color;
     }
   }));
 
@@ -250,13 +306,7 @@ const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
-const Call = ContextUser.refModel("Call", {
-  id: types.identifier(types.string),
-  line: Line
-}).views(self => ({
-  get out() {
-    return parseCallLine(self.line);
-  },
+const getDecLabelViews = self => ({
   get label() {
     const { decs } = self[ContextUser.key].currentLabelSet;
     if (!decs) {
@@ -268,35 +318,54 @@ const Call = ContextUser.refModel("Call", {
     }
     return labelRecord.r || `{${self.id}}`;
   }
-}));
+});
+
+const Call = ContextUser.refModel("Call", {
+  id: types.identifier(types.string),
+  line: Line
+})
+  .views(self => ({
+    get out() {
+      return parseCallLine(self.line);
+    },
+    get color() {
+      return Color.reified;
+    }
+  }))
+  .views(getDecLabelViews);
 
 const Def = ContextUser.refModel("Def", {
   id: types.identifier(types.string),
   lines: types.maybe(types.map(Line)),
   ret: Line
-}).views(self => ({
-  get out() {
-    const { repo } = self;
-    const { lines } = self;
-    return (...params) => {
-      const parseLine = line => {
-        const tokens = line.map(word => {
-          if ("arg" in word) {
-            return params[word.arg];
-          }
-          if ("sRef" in word) {
-            return word.calc(lines, params);
-          }
-          return word.out;
-          throw new Error("No match found!");
-        });
-        const [head, ...args] = tokens;
-        return typeof head === "function" ? head(...args) : head;
+})
+  .views(self => ({
+    get out() {
+      const { repo } = self;
+      const { lines } = self;
+      return (...params) => {
+        const parseLine = line => {
+          const tokens = line.map(word => {
+            if ("arg" in word) {
+              return params[word.arg];
+            }
+            if ("sRef" in word) {
+              return word.calc(lines, params);
+            }
+            return word.out;
+            throw new Error("No match found!");
+          });
+          const [head, ...args] = tokens;
+          return typeof head === "function" ? head(...args) : head;
+        };
+        return parseLine(self.ret);
       };
-      return parseLine(self.ret);
-    };
-  }
-}));
+    },
+    get color() {
+      return Color.pending;
+    }
+  }))
+  .views(getDecLabelViews);
 
 const Declaration = types.union(Call, Def);
 

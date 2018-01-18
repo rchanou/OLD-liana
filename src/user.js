@@ -1,11 +1,21 @@
-// TODO: just merge this whole model into the editor model?
-
 import { types } from "mobx-state-tree";
 
-import { setupContext } from "./context";
+import { makeContext } from "./context";
 
-const User = types.model("User", {
-  labelSet: types.optional(types.string, "en-US")
+const LabelSet = types.model("LabelSet", {
+  id: types.identifier(types.string),
+  decs: types.optional(
+    types.map(types.union(types.map(types.string), types.string)),
+    {}
+  )
 });
 
-export const ContextUser = setupContext(types.optional(User, {}));
+const usLocale = "en-US";
+const User = types.model("User", {
+  labelSets: types.optional(types.map(LabelSet), {
+    [usLocale]: { id: usLocale }
+  }),
+  currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
+});
+
+export const ContextUser = makeContext(User);

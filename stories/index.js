@@ -76,7 +76,7 @@ storiesOf("Liana", module)
       editor={{
         ...context,
         repoList: {
-          tree: { rootLink: "g" },
+          // tree: { rootLink: "g" },
           selectedCellIndex: 75
         }
       }}
