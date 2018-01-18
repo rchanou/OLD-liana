@@ -72,3 +72,34 @@ export const setupContext = (Model, key) => {
 
   return { KEY, REFKEY, refModel, Ref, Mixin };
 };
+
+export const makeContext = Model => {
+  const Context = types.model(
+    `Context${Model.name}`,
+    {
+      _id: types.optional(types.identifier(types.number), 0)
+      // user: types.optional(Model, {})
+    },
+    Model
+  );
+
+  const contextRefKey = `context${Model.name}`;
+
+  const ContextRef = types
+    .model(`Context${Model.name}Child`, {
+      [contextRefKey]: types.optional(types.reference(Context), 0)
+    })
+    .actions(self => ({
+      postProcessSnapshot({ context, ...rest }) {
+        return rest;
+      }
+    }));
+
+  const refModel = (...args) => types.compose(ContextRef, types.model(...args));
+
+  return {
+    Type: Context,
+    key: contextRefKey,
+    refModel
+  };
+};

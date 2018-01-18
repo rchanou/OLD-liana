@@ -94,7 +94,7 @@ storiesOf("Liana", module)
     />
   ));
 
-const unpackTest = unpack({ ...main, context: { user } });
+const unpackTest = unpack({ ...main, user });
 const packTest = pack(unpackTest);
 
 const unpackLength = JSON.stringify(unpackTest).length;

@@ -1,5 +1,6 @@
 import { types, flow } from "mobx-state-tree";
 
+import { makeContext } from "./context";
 import { pack, unpack } from "./pack";
 
 const gRef = "g";
@@ -201,30 +202,14 @@ const User = types.model("User", {
   currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
 });
 
-const Context = types.model("Context", {
-  _id: types.optional(types.identifier(types.number), 0),
-  user: types.optional(User, {})
-});
-
-const ContextChild = types
-  .model("ContextChild", {
-    context: types.optional(types.reference(Context), 0)
-  })
-  .actions(self => ({
-    postProcessSnapshot({ context, ...rest }) {
-      return rest;
-    }
-  }));
-
-const contextChildModel = (...args) =>
-  types.compose(ContextChild, types.model(...args));
+const ContextUser = makeContext(User);
 
 const Arg = types.model("Arg", {
   arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
 });
 // .views(self => ({}));
 
-const ScopedRef = contextChildModel("ScopedRef", {
+const ScopedRef = ContextUser.refModel("ScopedRef", {
   sRef: types.string
 }).views(self => ({
   calc(lines, params) {
@@ -262,7 +247,7 @@ const Word = types.union(
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
-const Call = contextChildModel("Call", {
+const Call = ContextUser.refModel("Call", {
   id: types.identifier(types.string),
   line: Line
 }).views(self => ({
@@ -270,7 +255,7 @@ const Call = contextChildModel("Call", {
     return parseCallLine(self.line);
   },
   get label() {
-    const { decs } = self.context.user.currentLabelSet;
+    const { decs } = self[ContextUser.key].currentLabelSet;
     if (!decs) {
       return `{${self.id}}`;
     }
@@ -313,7 +298,7 @@ const parseCallLine = line => {
   return func;
 };
 
-const Def = contextChildModel("Def", {
+const Def = ContextUser.refModel("Def", {
   id: types.identifier(types.string),
   lines: types.maybe(types.map(Line)),
   ret: Line
@@ -344,7 +329,7 @@ const Def = contextChildModel("Def", {
 export const Repo = types
   .model("Repo", {
     decs: types.map(Declaration),
-    context: types.optional(Context, {})
+    user: ContextUser.Type
   })
   .preProcessSnapshot(snapshot => {
     if (snapshot.d) {
