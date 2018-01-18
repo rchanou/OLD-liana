@@ -1,4 +1,4 @@
-import { types } from "mobx-state-tree";
+import { types, flow } from "mobx-state-tree";
 
 import { pack, unpack } from "./pack";
 
@@ -139,10 +139,26 @@ const Pkg = types
     path: types.string,
     resolved: types.optional(types.boolean, false)
   })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      delete self.resolved;
-      return snapshot;
+  .actions(self => {
+    const { system } = getEnv(self);
+    return {
+      afterCreate: flow(function*() {
+        yield system.import(self.path);
+        // TODO: error handling (retry?)
+        self.resolved = true;
+      }),
+      postProcessSnapshot(snapshot) {
+        delete self.resolved;
+        return snapshot;
+      }
+    };
+  })
+  .views(self => ({
+    get out() {
+      if (resolved) {
+        return system.get(self.path);
+      }
+      return Pkg;
     }
   }));
 
@@ -262,34 +278,44 @@ const parseCallLine = (repo, line) => {
 };
 
 const Def = repoModel("Def", {
+  argLabels: types.optional(types.array(types.string), []),
   id: types.identifier(types.string),
   lines: types.maybe(types.map(Line)),
   ret: Line
-}).views(self => ({
-  get out() {
-    const { repo } = self;
-    const { lines } = self;
-    return (...params) => {
-      const parseLine = line => {
-        const tokens = line.map(word => {
-          if ("arg" in word) {
-            return params[word.arg];
-          }
+})
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      if (!snapshot.argLabels.length) {
+        delete snapshot.argLabels;
+      }
+      return snapshot;
+    }
+  }))
+  .views(self => ({
+    get out() {
+      const { repo } = self;
+      const { lines } = self;
+      return (...params) => {
+        const parseLine = line => {
+          const tokens = line.map(word => {
+            if ("arg" in word) {
+              return params[word.arg];
+            }
 
-          if ("use" in word) {
-            return word.calc(lines, params);
-          }
+            if ("use" in word) {
+              return word.calc(lines, params);
+            }
 
-          return word.out;
-          throw new Error("No match found!");
-        });
-        const [head, ...args] = tokens;
-        return typeof head === "function" ? head(...args) : head;
+            return word.out;
+            throw new Error("No match found!");
+          });
+          const [head, ...args] = tokens;
+          return typeof head === "function" ? head(...args) : head;
+        };
+        return parseLine(self.ret);
       };
-      return parseLine(self.ret);
-    };
-  }
-}));
+    }
+  }));
 
 export const Repo = types
   .model("Repo", {
