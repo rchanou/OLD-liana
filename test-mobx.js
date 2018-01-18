@@ -1,5 +1,4 @@
 const { types } = require("mobx-state-tree");
-const process = require("immer").default;
 const util = require("util");
 
 const global = "g";
@@ -244,20 +243,35 @@ const Def = types
     lines: types.maybe(types.map(Line)),
     ret: Line
   })
-  // .preProcessSnapshot(snapshot =>
-  //   process(snapshot, draft => {
-  //     const { i, l, r } = draft;
-  //     if (i) {
-  //       draft.id = i;
-  //     }
-  //     if (l) {
-  //       draft.lines = l;
-  //     }
-  //     if (r) {
-  //       draft.ret = r;
-  //     }
-  //   })
-  // )
+  .preProcessSnapshot(snapshot => {
+    const { line, ret, lines } = snapshot;
+    if (line) {
+      // HACK: apparently MST runs this preprocess even for Call types, most likely due to the union
+      // so detect Call instances and bail out on validation which doesn't apply to them
+      // TODO: should I continue with this sort of validation? Validate ID references for the whole repo too?
+      // To answer my own question, no, perhaps we should allow rendering of erroneous trees, but strongly warn the user
+      // or even better, make warn/error a configurable flag!
+      return snapshot;
+    }
+    for (const word of ret) {
+      if ("use" in word && !lines[word.use]) {
+        throw new Error(`Use ID ${word.use} is invalid.`);
+      }
+    }
+    if (!lines) {
+      return snapshot;
+    }
+    for (const id in lines) {
+      const line = lines[id];
+      for (const word of line) {
+        if ("use" in word && !lines[word.use]) {
+          throw new Error(`Use ID ${word.use} is invalid.`);
+        }
+        33;
+      }
+    }
+    return snapshot;
+  })
   .views(self => ({
     out(repo) {
       const { lines } = self;
