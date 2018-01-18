@@ -78,7 +78,6 @@ export const makeContext = Model => {
     `Context${Model.name}`,
     {
       _id: types.optional(types.identifier(types.number), 0)
-      // user: types.optional(Model, {})
     },
     Model
   );

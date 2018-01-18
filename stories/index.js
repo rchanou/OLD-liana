@@ -5,7 +5,7 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
-import { Editor } from "../src/editor";
+import { App } from "../src/app";
 import { ReactEditor } from "../src/react-editor";
 import defaultRepo from "./test-repo";
 
@@ -31,7 +31,7 @@ class Story extends React.Component {
 
   componentDidMount() {
     // const dom = findDOMNode(this);
-    window.s = Editor.create(this.props.editor, env);
+    window.s = App.create(this.props.editor, env);
     this.setState({ store: window.s });
   }
 
