@@ -18,16 +18,15 @@ const packWord = full => {
 };
 
 const packDeclaration = full => {
-  const packed = { i: full.id };
   if (full.line) {
-    packed.l = full.line.map(packWord);
-  } else {
-    packed.r = full.ret.map(packWord);
-    if (full.lines) {
-      packed.l = {};
-      for (const id in full.lines) {
-        packed.l[id] = full.lines[id].map(packWord);
-      }
+    return full.line.map(packWord);
+  }
+  const packed = {};
+  packed.r = full.ret.map(packWord);
+  if (full.lines) {
+    packed.l = {};
+    for (const id in full.lines) {
+      packed.l[id] = full.lines[id].map(packWord);
     }
   }
   return packed;
@@ -37,8 +36,7 @@ const packDecSet = full => {
   const packed = {};
   for (const id in full) {
     const packedDec = packDeclaration(full[id]);
-    const { i, ...rest } = packedDec;
-    packed[id] = rest;
+    packed[id] = packedDec;
   }
   return packed;
 };
@@ -64,7 +62,9 @@ const unpackWord = packed => {
 
 const unpackDeclaration = packed => {
   const full = {};
-  if (packed.r) {
+  if (Array.isArray(packed)) {
+    full.line = packed.map(unpackWord);
+  } else {
     full.ret = packed.r.map(unpackWord);
     if (packed.l) {
       full.lines = {};
@@ -72,8 +72,6 @@ const unpackDeclaration = packed => {
         full.lines[id] = packed.l[id].map(unpackWord);
       }
     }
-  } else {
-    full.line = packed.l.map(unpackWord);
   }
   return full;
 };

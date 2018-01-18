@@ -94,5 +94,11 @@ storiesOf("Liana", module)
     />
   ));
 
-const packTest = pack(unpack(main));
+const unpackTest = unpack(main);
+const packTest = pack(unpackTest);
+
+const unpackLength = JSON.stringify(unpackTest).length;
+const packLength = JSON.stringify(packTest).length;
+console.log(packLength, unpackLength, packLength / unpackLength);
+
 window.n = Repo.create(packTest);
