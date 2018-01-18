@@ -1,4 +1,6 @@
 const { types } = require("mobx-state-tree");
+const process = require("immer").default;
+const util = require("util");
 
 const global = "g";
 const dot = ".";
@@ -199,11 +201,11 @@ const Call = types
     }
   }));
 
-const Dec = types.union(types.late(() => Call), types.late(() => Def));
+const Declaration = types.union(types.late(() => Call), types.late(() => Def));
 
 const Fn = types
   .model("Fn", {
-    fn: types.reference(Dec)
+    fn: types.reference(Declaration)
   })
   .views(self => ({
     out(repo) {
@@ -242,6 +244,20 @@ const Def = types
     lines: types.maybe(types.map(Line)),
     ret: Line
   })
+  // .preProcessSnapshot(snapshot =>
+  //   process(snapshot, draft => {
+  //     const { i, l, r } = draft;
+  //     if (i) {
+  //       draft.id = i;
+  //     }
+  //     if (l) {
+  //       draft.lines = l;
+  //     }
+  //     if (r) {
+  //       draft.ret = r;
+  //     }
+  //   })
+  // )
   .views(self => ({
     out(repo) {
       const { lines } = self;
@@ -282,16 +298,16 @@ const Def = types
 
 const Repo = types
   .model("Repo", {
-    lines: types.map(Dec)
+    decs: types.map(Declaration)
   })
   .views(self => ({
     out(id) {
-      return self.lines.get(id).out(self);
+      return self.decs.get(id).out(self);
     }
   }));
 
 const test = {
-  lines: {
+  decs: {
     a: { id: "a", ret: [{ arg: 0 }] },
     b: { id: "b", ret: [{ op: add }, { arg: 0 }, { val: 1 }] },
     b1: { id: "b1", ret: [{ op: minus }, { arg: 0 }, { val: 1 }] },
@@ -316,6 +332,62 @@ const test = {
     }
   }
 };
+
+// const propKeys = ["val", "op", "arg", "fn", "use"];
+const packWord = full => {
+  // for (const key of propKeys) {
+  //   if (key in full) {
+  //     packed[key] = full[key];
+  //   }
+  // }
+  if ("val" in full) {
+    return [full.val];
+  }
+  if ("op" in full) {
+    return full.op;
+  }
+  if ("fn" in full) {
+    return { f: full.fn };
+  }
+  if ("arg" in full) {
+    return full.arg;
+  }
+  if ("use" in full) {
+    return { u: full.use };
+  }
+  throw new Error(`Could not pack word. Has no match: ${full}`);
+};
+
+const packDeclaration = full => {
+  const packed = { i: full.id };
+  if (full.line) {
+    packed.l = full.line.map(packWord);
+  } else {
+    packed.r = full.ret.map(packWord);
+    if (full.lines) {
+      packed.l = {};
+      for (const id in full.lines) {
+        packed.l[id] = full.lines[id].map(packWord);
+      }
+    }
+  }
+  return packed;
+};
+
+const packDecSet = full => {
+  const packed = [];
+  for (const id in full) {
+    const packedDec = packDeclaration(full[id]);
+    packed.push(packedDec);
+  }
+  return packed;
+};
+
+const packTest = packDecSet(test.decs);
+console.log(util.inspect(packTest, { depth: null }));
+const before = JSON.stringify(test.decs).length;
+const after = JSON.stringify(packTest).length;
+console.log(before, after, after / before * 100);
 
 const store = Repo.create(test);
 const a = store.out("a");
