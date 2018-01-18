@@ -10,7 +10,7 @@ import { ReactEditor } from "../src/react-editor";
 import defaultRepo from "./test-repo";
 
 import { Repo } from "../src/repo";
-import { main } from "./test-repos";
+import { main, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -94,7 +94,7 @@ storiesOf("Liana", module)
     />
   ));
 
-const unpackTest = unpack(main);
+const unpackTest = unpack({ ...main, context: { user } });
 const packTest = pack(unpackTest);
 
 const unpackLength = JSON.stringify(unpackTest).length;

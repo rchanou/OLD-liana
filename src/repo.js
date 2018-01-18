@@ -186,38 +186,63 @@ const Op = types
     }
   }));
 
-const RepoUser = types
-  .model("RepoUser", {
-    repo: types.optional(types.reference(types.late(() => Repo)), 0)
+const LabelSet = types.model("LabelSet", {
+  id: types.identifier(types.string),
+  decs: types.optional(
+    types.map(types.union(types.map(types.string), types.string)),
+    {}
+  )
+});
+
+const usLocale = "en-US";
+const User = types.model("User", {
+  labelSets: types.optional(types.map(LabelSet), {
+    [usLocale]: { id: usLocale }
+  }),
+  currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
+});
+// .views(self=>({
+// get currentLabelSet(){
+//   return self.labelSet
+//   }
+// }));
+
+const Context = types.model("Context", {
+  _id: types.optional(types.identifier(types.number), 0),
+  user: types.optional(User, {})
+});
+const ContextChild = types
+  .model("ContextChild", {
+    context: types.optional(types.reference(Context), 0)
   })
   .actions(self => ({
     postProcessSnapshot(snapshot) {
-      delete self.repo;
+      delete self.context;
       return snapshot;
     }
   }));
 
-const repoModel = (...args) => types.compose(RepoUser, types.model(...args));
+const contextChildModel = (...args) =>
+  types.compose(ContextChild, types.model(...args));
 
 const Arg = types.model("Arg", {
   arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
 });
 // .views(self => ({}));
 
-const ScopedRef = repoModel("ScopedRef", {
+const ScopedRef = contextChildModel("ScopedRef", {
   sRef: types.string
 }).views(self => ({
   calc(lines, params) {
     if (!lines) {
       throw new Error("No lines brah!");
     }
-    const { repo } = self;
     const innerLine = lines.get(self.sRef);
     if (!innerLine) {
       throw new Error("nononononono line");
     }
     if (!innerLine.some(ilWord => "sRef" in ilWord)) {
-      return parseCallLine(repo, innerLine)(...params);
+      return parseCallLine(innerLine)(...params);
     }
     return parseLine(innerLine)(...params);
   }
@@ -243,12 +268,23 @@ const Word = types.union(
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
-const Call = repoModel("Call", {
+const Call = contextChildModel("Call", {
   id: types.identifier(types.string),
   line: Line
 }).views(self => ({
   get out() {
-    return parseCallLine(self.repo, self.line);
+    return parseCallLine(self.line);
+  },
+  get label() {
+    const { currentLabelSet } = self.context.user;
+    if (!currentLabelSet) {
+      return `{${self.id}}`;
+    }
+    const labelRecord = currentLabelSet.get(self.id);
+    if (typeof labelRecord === "string") {
+      return labelRecord;
+    }
+    return labelRecord.r || `{${self.id}}`;
   }
 }));
 
@@ -264,7 +300,7 @@ const GlobalRef = types
     }
   }));
 
-const parseCallLine = (repo, line) => {
+const parseCallLine = line => {
   const func = (...params) => {
     // TODO: hoist unchanging (non-param) slots
     const tokens = line.map(word => {
@@ -283,7 +319,7 @@ const parseCallLine = (repo, line) => {
   return func;
 };
 
-const Def = repoModel("Def", {
+const Def = contextChildModel("Def", {
   argLabels: types.optional(types.array(types.string), []),
   id: types.identifier(types.string),
   lines: types.maybe(types.map(Line)),
@@ -321,29 +357,10 @@ const Def = repoModel("Def", {
     }
   }));
 
-// const LabelMap = types.map(types.string);
-
-const LabelSet = types.model("LabelSet", {
-  id: types.identifier(types.string),
-  decs: types.optional(
-    types.map(types.union(types.map(types.string), types.string)),
-    {}
-  )
-});
-
-const usLocale = "en-US";
-const User = types.model("User", {
-  labelSets: types.optional(types.map(LabelSet), {
-    [usLocale]: { id: usLocale }
-  }),
-  currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
-});
-
 export const Repo = types
   .model("Repo", {
-    _id: types.optional(types.identifier(types.number), 0),
     decs: types.map(Declaration),
-    user: types.optional(User, {})
+    context: types.optional(Context, {})
   })
   .preProcessSnapshot(snapshot => {
     if (snapshot.d) {

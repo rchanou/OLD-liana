@@ -88,5 +88,5 @@ const unpackDecSet = packed => {
   return full;
 };
 
-export const pack = full => ({ d: packDecSet(full.decs) });
-export const unpack = packed => ({ decs: unpackDecSet(packed.d) });
+export const pack = ({ decs, ...rest }) => ({ d: packDecSet(decs), ...rest });
+export const unpack = ({ d, ...rest }) => ({ decs: unpackDecSet(d), ...rest });

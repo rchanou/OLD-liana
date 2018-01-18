@@ -15,21 +15,28 @@ export const main = {
   }
 };
 
-const user = {
+export const user = {
   labelSets: {
     "en-US": {
-      a: "always zero",
-      a1: "inc constant",
-      a2: "dec constant",
-      b: { 0: "x", r: "increment" },
-      b1: { 0: "x", r: "decrement" },
-      ba: "test sum",
-      c: "get updater by action type",
-      d: {
-        0: "action",
-        r: "action type"
-      },
-      e: {}
+      id: "en-US",
+      decs: {
+        a: "always zero",
+        a1: "inc constant",
+        a2: "dec constant",
+        b: { 0: "x", r: "increment" },
+        b1: { 0: "x", r: "decrement" },
+        ba: "test sum",
+        c: "get updater by action type",
+        d: {
+          0: "action",
+          r: "action type"
+        },
+        e: {
+          0: "action",
+          a: "action type",
+          r: "updater from type"
+        }
+      }
     }
   }
 };
