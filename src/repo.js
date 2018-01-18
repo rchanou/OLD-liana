@@ -2,7 +2,7 @@ import { types, flow } from "mobx-state-tree";
 
 import { pack, unpack } from "./pack";
 
-const global = "g";
+const gRef = "g";
 const dot = ".";
 const array = "[";
 const object = "{";
@@ -37,7 +37,7 @@ const classOp = "c";
 const thisOp = "h";
 
 const opFuncs = {
-  [global]: typeof window !== "undefined" ? window : global,
+  [gRef]: typeof window !== "undefined" ? window : gRef,
   [dot](obj, key) {
     try {
       return obj[key];
@@ -103,7 +103,7 @@ const opFuncs = {
 };
 
 const ops = [
-  global,
+  gRef,
   dot,
   array,
   object,
@@ -204,26 +204,26 @@ const Arg = types.model("Arg", {
 });
 // .views(self => ({}));
 
-const Use = repoModel("Use", {
-  use: types.string
+const ScopeRef = repoModel("ScopeRef", {
+  sRef: types.string
 }).views(self => ({
   calc(lines, params) {
     if (!lines) {
       throw new Error("No lines brah!");
     }
     const { repo } = self;
-    const innerLine = lines.get(self.use);
+    const innerLine = lines.get(self.sRef);
     if (!innerLine) {
       throw new Error("nononononono line");
     }
-    if (!innerLine.some(ilWord => "use" in ilWord)) {
+    if (!innerLine.some(ilWord => "sRef" in ilWord)) {
       return parseCallLine(repo, innerLine)(...params);
     }
     return parseLine(innerLine)(...params);
   }
 }));
 
-const PkgUse = types.model("Use", {
+const PkgRef = types.model("PkgRef", {
   pkg: types.reference(Pkg)
 });
 // .views(self => ({
@@ -232,7 +232,14 @@ const PkgUse = types.model("Use", {
 //   }
 // }));
 
-const Word = types.union(Val, Op, Arg, types.late(() => Fn), Use, PkgUse);
+const Word = types.union(
+  Val,
+  Op,
+  Arg,
+  types.late(() => GlobalRef),
+  ScopeRef,
+  PkgRef
+);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
@@ -247,13 +254,13 @@ const Call = repoModel("Call", {
 
 const Declaration = types.union(types.late(() => Call), types.late(() => Def));
 
-const Fn = types
-  .model("Fn", {
-    fn: types.reference(Declaration)
+const GlobalRef = types
+  .model("GlobalRef", {
+    gRef: types.reference(Declaration)
   })
   .views(self => ({
     get out() {
-      return self.fn.out;
+      return self.gRef.out;
     }
   }));
 
@@ -302,7 +309,7 @@ const Def = repoModel("Def", {
               return params[word.arg];
             }
 
-            if ("use" in word) {
+            if ("sRef" in word) {
               return word.calc(lines, params);
             }
 

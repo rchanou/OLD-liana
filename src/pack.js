@@ -5,14 +5,14 @@ const packWord = full => {
   if ("op" in full) {
     return full.op;
   }
-  if ("fn" in full) {
-    return { f: full.fn };
+  if ("gRef" in full) {
+    return { g: full.gRef };
   }
   if ("arg" in full) {
     return full.arg;
   }
-  if ("use" in full) {
-    return { u: full.use };
+  if ("sRef" in full) {
+    return { s: full.sRef };
   }
   throw new Error(`Could not pack word. Has no match: ${full}`);
 };
@@ -51,11 +51,11 @@ const unpackWord = packed => {
   if (typeof packed === "number") {
     return { arg: packed };
   }
-  if ("f" in packed) {
-    return { fn: packed.f };
+  if ("g" in packed) {
+    return { gRef: packed.g };
   }
-  if ("u" in packed) {
-    return { use: packed.u };
+  if ("s" in packed) {
+    return { sRef: packed.s };
   }
   throw new Error(`Could not unpack word. Has no match: ${packed}`);
 };
