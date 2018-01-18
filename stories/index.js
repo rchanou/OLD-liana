@@ -5,11 +5,12 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
-import { App } from "../src/app";
 import { ReactEditor } from "../src/react-editor";
 import defaultRepo from "./test-repo";
 
 import { Repo } from "../src/repo";
+import { App } from "../src/app";
+import { Editor } from "../src/editor";
 import { main, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
 

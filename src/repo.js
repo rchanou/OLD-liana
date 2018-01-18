@@ -367,7 +367,7 @@ const Def = ContextUser.refModel("Def", {
   }))
   .views(getDecLabelViews);
 
-const Declaration = types.union(Call, Def);
+export const Declaration = types.union(Call, Def);
 
 const parseCallLine = line => {
   const func = (...params) => {
