@@ -147,9 +147,8 @@ const Pkg = types
         // TODO: error handling (retry?)
         self.resolved = true;
       }),
-      postProcessSnapshot(snapshot) {
-        delete self.resolved;
-        return snapshot;
+      postProcessSnapshot({ resolved, ...rest }) {
+        return rest;
       }
     };
   })
@@ -206,9 +205,16 @@ const Context = types.model("Context", {
   _id: types.optional(types.identifier(types.number), 0),
   user: types.optional(User, {})
 });
-const ContextChild = types.model("ContextChild", {
-  context: types.optional(types.reference(Context), 0)
-});
+
+const ContextChild = types
+  .model("ContextChild", {
+    context: types.optional(types.reference(Context), 0)
+  })
+  .actions(self => ({
+    postProcessSnapshot({ context, ...rest }) {
+      return rest;
+    }
+  }));
 
 const contextChildModel = (...args) =>
   types.compose(ContextChild, types.model(...args));
@@ -308,42 +314,32 @@ const parseCallLine = line => {
 };
 
 const Def = contextChildModel("Def", {
-  argLabels: types.optional(types.array(types.string), []),
   id: types.identifier(types.string),
   lines: types.maybe(types.map(Line)),
   ret: Line
-})
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      if (!snapshot.argLabels.length) {
-        delete snapshot.argLabels;
-      }
-      return snapshot;
-    }
-  }))
-  .views(self => ({
-    get out() {
-      const { repo } = self;
-      const { lines } = self;
-      return (...params) => {
-        const parseLine = line => {
-          const tokens = line.map(word => {
-            if ("arg" in word) {
-              return params[word.arg];
-            }
-            if ("sRef" in word) {
-              return word.calc(lines, params);
-            }
-            return word.out;
-            throw new Error("No match found!");
-          });
-          const [head, ...args] = tokens;
-          return typeof head === "function" ? head(...args) : head;
-        };
-        return parseLine(self.ret);
+}).views(self => ({
+  get out() {
+    const { repo } = self;
+    const { lines } = self;
+    return (...params) => {
+      const parseLine = line => {
+        const tokens = line.map(word => {
+          if ("arg" in word) {
+            return params[word.arg];
+          }
+          if ("sRef" in word) {
+            return word.calc(lines, params);
+          }
+          return word.out;
+          throw new Error("No match found!");
+        });
+        const [head, ...args] = tokens;
+        return typeof head === "function" ? head(...args) : head;
       };
-    }
-  }));
+      return parseLine(self.ret);
+    };
+  }
+}));
 
 export const Repo = types
   .model("Repo", {
