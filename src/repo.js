@@ -236,14 +236,17 @@ const PkgRef = types.model("PkgRef", {
 //   }
 // }));
 
-const Word = types.union(
-  Val,
-  Op,
-  Arg,
-  types.late(() => GlobalRef),
-  ScopedRef,
-  PkgRef
-);
+const GlobalRef = types
+  .model("GlobalRef", {
+    gRef: types.reference(types.late(() => Declaration))
+  })
+  .views(self => ({
+    get out() {
+      return self.gRef.out;
+    }
+  }));
+
+const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
@@ -266,37 +269,6 @@ const Call = ContextUser.refModel("Call", {
     return labelRecord.r || `{${self.id}}`;
   }
 }));
-
-const Declaration = types.union(types.late(() => Call), types.late(() => Def));
-
-const GlobalRef = types
-  .model("GlobalRef", {
-    gRef: types.reference(Declaration)
-  })
-  .views(self => ({
-    get out() {
-      return self.gRef.out;
-    }
-  }));
-
-const parseCallLine = line => {
-  const func = (...params) => {
-    // TODO: hoist unchanging (non-param) slots
-    const tokens = line.map(word => {
-      if ("arg" in word) {
-        return params[word.arg];
-      }
-      return word.out;
-      // throw new Error("No match found for word, brah! " + word);
-    });
-    const [head, ...args] = tokens;
-    return typeof head === "function" ? head(...args) : head;
-  };
-  if (!line.some(word => "arg" in word)) {
-    return func();
-  }
-  return func;
-};
 
 const Def = ContextUser.refModel("Def", {
   id: types.identifier(types.string),
@@ -325,6 +297,27 @@ const Def = ContextUser.refModel("Def", {
     };
   }
 }));
+
+const Declaration = types.union(Call, Def);
+
+const parseCallLine = line => {
+  const func = (...params) => {
+    // TODO: hoist unchanging (non-param) slots
+    const tokens = line.map(word => {
+      if ("arg" in word) {
+        return params[word.arg];
+      }
+      return word.out;
+      // throw new Error("No match found for word, brah! " + word);
+    });
+    const [head, ...args] = tokens;
+    return typeof head === "function" ? head(...args) : head;
+  };
+  if (!line.some(word => "arg" in word)) {
+    return func();
+  }
+  return func;
+};
 
 export const Repo = types
   .model("Repo", {
