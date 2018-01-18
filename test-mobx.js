@@ -21,16 +21,16 @@ const forOp = "f";
 
 const lessThan = "<";
 const greaterThan = ">";
-const lessThanOrEqual = "<=";
-const greaterThanOrEqual = ">=";
+const lessThanOrEqual = "v";
+const greaterThanOrEqual = "^";
 
-const equal = "==";
-const strictEqual = "===";
-const notEqual = "!=";
-const notStrictEqual = "!==";
+const equal = "=";
+const strictEqual = "e";
+const notEqual = "!";
+const notStrictEqual = "n";
 
 const importOp = "m";
-const newOp = "n";
+const newOp = "w";
 const typeofOp = "t";
 const instanceOfOp = "i";
 const classOp = "c";
@@ -332,6 +332,25 @@ const test = {
     }
   }
 };
+const pTest = {
+  a: { r: [0] },
+  b: { r: ["+", 0, [1]] },
+  b1: { r: ["-", 0, [1]] },
+  ba: { l: ["+", [1], [2]] },
+  c: {
+    l: [
+      "s",
+      0,
+      ["INCREMENT"],
+      { f: "a" },
+      ["DECREMENT"],
+      { f: "b1" },
+      { f: "a" }
+    ]
+  },
+  d: { l: [".", 0, ["type"]] },
+  e: { r: [{ f: "c" }, { u: "a" }], l: { a: [{ f: "d" }, 0] } }
+};
 
 const packWord = full => {
   if ("val" in full) {
@@ -369,10 +388,12 @@ const packDeclaration = full => {
 };
 
 const packDecSet = full => {
-  const packed = [];
+  const packed = {};
   for (const id in full) {
     const packedDec = packDeclaration(full[id]);
-    packed.push(packedDec);
+    const { i, ...rest } = packedDec;
+    packed[id] = rest;
+    // packed.push(packedDec);
   }
   return packed;
 };
@@ -397,7 +418,7 @@ const unpackWord = packed => {
 };
 
 const unpackDeclaration = packed => {
-  const full = { id: packed.i };
+  const full = {};
   if (packed.r) {
     full.ret = packed.r.map(unpackWord);
     if (packed.l) {
@@ -414,9 +435,11 @@ const unpackDeclaration = packed => {
 
 const unpackDecSet = packed => {
   const full = {};
-  for (const dec of packed) {
-    const fullDec = unpackDeclaration(dec);
-    full[fullDec.id] = fullDec;
+  for (const id in packed) {
+    const packedDec = packed[id];
+    const fullDec = unpackDeclaration(packedDec);
+    fullDec.id = id;
+    full[id] = fullDec;
   }
   return full;
 };
@@ -424,13 +447,13 @@ const unpackDecSet = packed => {
 const packTest = packDecSet(test.decs);
 const unpackTest = unpackDecSet(packTest);
 console.log(util.inspect(packTest, { depth: null }));
-console.log(util.inspect(unpackTest, { depth: null }));
+// console.log(util.inspect(unpackTest, { depth: null }));
 const before = JSON.stringify(test.decs).length;
 const after = JSON.stringify(packTest).length;
 const unpacked = JSON.stringify(unpackTest).length;
 console.log(before, after, unpacked, after / before * 100);
 
-const store = Repo.create(test);
+const store = Repo.create({ decs: unpackTest });
 const a = store.out("a");
 const b = store.out("b");
 console.log(a(1), 1);
