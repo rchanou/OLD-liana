@@ -201,26 +201,14 @@ const User = types.model("User", {
   }),
   currentLabelSet: types.optional(types.reference(LabelSet), usLocale)
 });
-// .views(self=>({
-// get currentLabelSet(){
-//   return self.labelSet
-//   }
-// }));
 
 const Context = types.model("Context", {
   _id: types.optional(types.identifier(types.number), 0),
   user: types.optional(User, {})
 });
-const ContextChild = types
-  .model("ContextChild", {
-    context: types.optional(types.reference(Context), 0)
-  })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      delete self.context;
-      return snapshot;
-    }
-  }));
+const ContextChild = types.model("ContextChild", {
+  context: types.optional(types.reference(Context), 0)
+});
 
 const contextChildModel = (...args) =>
   types.compose(ContextChild, types.model(...args));
@@ -276,11 +264,11 @@ const Call = contextChildModel("Call", {
     return parseCallLine(self.line);
   },
   get label() {
-    const { currentLabelSet } = self.context.user;
-    if (!currentLabelSet) {
+    const { decs } = self.context.user.currentLabelSet;
+    if (!decs) {
       return `{${self.id}}`;
     }
-    const labelRecord = currentLabelSet.get(self.id);
+    const labelRecord = decs.get(self.id);
     if (typeof labelRecord === "string") {
       return labelRecord;
     }
