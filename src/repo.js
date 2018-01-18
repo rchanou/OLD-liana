@@ -1,5 +1,6 @@
-const { types } = require("mobx-state-tree");
-const util = require("util");
+import { types } from "mobx-state-tree";
+
+import { unpack } from "./pack";
 
 const global = "g";
 const dot = ".";
@@ -281,10 +282,16 @@ const Def = types
     }
   }));
 
-const Repo = types
+export const Repo = types
   .model("Repo", {
     _id: types.optional(types.identifier(types.number), 0),
     decs: types.map(Declaration)
+  })
+  .preProcessSnapshot(snapshot => {
+    if (snapshot.d) {
+      return unpack(snapshot);
+    }
+    return snapshot;
   })
   .views(self => ({
     out(id) {
@@ -330,114 +337,23 @@ const pTest = {
   e: { r: [{ f: "c" }, { u: "a" }], l: { a: [{ f: "d" }, 0] } }
 };
 
-const packWord = full => {
-  if ("val" in full) {
-    return [full.val];
-  }
-  if ("op" in full) {
-    return full.op;
-  }
-  if ("fn" in full) {
-    return { f: full.fn };
-  }
-  if ("arg" in full) {
-    return full.arg;
-  }
-  if ("use" in full) {
-    return { u: full.use };
-  }
-  throw new Error(`Could not pack word. Has no match: ${full}`);
-};
+// const packTest = packDecSet(test.decs);
+// const unpackTest = unpackDecSet(packTest);
+// // console.log(util.inspect(packTest, { depth: null }));
+// // console.log(util.inspect(unpackTest, { depth: null }));
+// const before = JSON.stringify(test.decs).length;
+// const after = JSON.stringify(packTest).length;
+// const unpacked = JSON.stringify(unpackTest).length;
+// console.log(before, after, unpacked, after / before * 100);
 
-const packDeclaration = full => {
-  const packed = { i: full.id };
-  if (full.line) {
-    packed.l = full.line.map(packWord);
-  } else {
-    packed.r = full.ret.map(packWord);
-    if (full.lines) {
-      packed.l = {};
-      for (const id in full.lines) {
-        packed.l[id] = full.lines[id].map(packWord);
-      }
-    }
-  }
-  return packed;
-};
+// const store = Repo.create({ decs: unpackTest });
+// const a = store.out("a");
+// const b = store.out("b");
+// console.log(a(), 1);
+// console.log(store.out("ba"));
 
-const packDecSet = full => {
-  const packed = {};
-  for (const id in full) {
-    const packedDec = packDeclaration(full[id]);
-    const { i, ...rest } = packedDec;
-    packed[id] = rest;
-  }
-  return packed;
-};
+// const c = store.out("d");
+// console.log(c({ type: "INCREMENT" }), "INCREMENT");
 
-const unpackWord = packed => {
-  if (Array.isArray(packed)) {
-    return { val: packed[0] };
-  }
-  if (typeof packed === "string") {
-    return { op: packed };
-  }
-  if (typeof packed === "number") {
-    return { arg: packed };
-  }
-  if ("f" in packed) {
-    return { fn: packed.f };
-  }
-  if ("u" in packed) {
-    return { use: packed.u };
-  }
-  throw new Error(`Could not unpack word. Has no match: ${packed}`);
-};
-
-const unpackDeclaration = packed => {
-  const full = {};
-  if (packed.r) {
-    full.ret = packed.r.map(unpackWord);
-    if (packed.l) {
-      full.lines = {};
-      for (const id in packed.l) {
-        full.lines[id] = packed.l[id].map(unpackWord);
-      }
-    }
-  } else {
-    full.line = packed.l.map(unpackWord);
-  }
-  return full;
-};
-
-const unpackDecSet = packed => {
-  const full = {};
-  for (const id in packed) {
-    const packedDec = packed[id];
-    const fullDec = unpackDeclaration(packedDec);
-    fullDec.id = id;
-    full[id] = fullDec;
-  }
-  return full;
-};
-
-const packTest = packDecSet(test.decs);
-const unpackTest = unpackDecSet(packTest);
-console.log(util.inspect(packTest, { depth: null }));
-// console.log(util.inspect(unpackTest, { depth: null }));
-const before = JSON.stringify(test.decs).length;
-const after = JSON.stringify(packTest).length;
-const unpacked = JSON.stringify(unpackTest).length;
-console.log(before, after, unpacked, after / before * 100);
-
-const store = Repo.create({ decs: unpackTest });
-const a = store.out("a");
-const b = store.out("b");
-console.log(a(), 1);
-console.log(store.out("ba"));
-
-const c = store.out("d");
-console.log(c({ type: "INCREMENT" }), "INCREMENT");
-
-const e = store.out("e");
-console.log(e({ type: "DECREMENT" })(5), 4);
+// const e = store.out("e");
+// console.log(e({ type: "DECREMENT" })(5), 4);

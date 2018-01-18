@@ -9,6 +9,10 @@ import { Editor } from "../src/editor";
 import { ReactEditor } from "../src/react-editor";
 import defaultRepo from "./test-repo";
 
+import { Repo } from "../src/repo";
+import { main } from "./test-repos";
+import { pack, unpack } from "../src/pack";
+
 const LOCAL_STORAGE_KEY = "LIANA";
 
 const params = new Map(
@@ -89,3 +93,6 @@ storiesOf("Liana", module)
       }}
     />
   ));
+
+const packTest = pack(unpack(main));
+window.n = Repo.create(packTest);
