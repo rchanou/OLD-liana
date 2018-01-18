@@ -102,3 +102,5 @@ const packLength = JSON.stringify(packTest).length;
 console.log(packLength, unpackLength, packLength / unpackLength);
 
 window.n = Repo.create(packTest);
+
+console.log(window.n.decs.get("e").out({ type: "DECREMENT" })(5), 4);

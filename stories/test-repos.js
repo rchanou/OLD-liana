@@ -9,8 +9,27 @@ export const main = {
     c: ["s", 0, { g: "a1" }, { g: "a" }, { g: "a2" }, { g: "b1" }, { g: "a" }],
     d: [".", 0, ["type"]],
     e: {
-      l: { a: [{ g: "d" }, 0] },
+      a: [{ g: "d" }, 0],
       r: [{ g: "c" }, { s: "a" }]
+    }
+  }
+};
+
+const user = {
+  labelSets: {
+    "en-US": {
+      a: "always zero",
+      a1: "inc constant",
+      a2: "dec constant",
+      b: { 0: "x", r: "increment" },
+      b1: { 0: "x", r: "decrement" },
+      ba: "test sum",
+      c: "get updater by action type",
+      d: {
+        0: "action",
+        r: "action type"
+      },
+      e: {}
     }
   }
 };

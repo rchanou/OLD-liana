@@ -321,12 +321,12 @@ const Def = repoModel("Def", {
     }
   }));
 
-const LabelMap = types.map(types.string);
+// const LabelMap = types.map(types.string);
 
 const LabelSet = types.model("LabelSet", {
   id: types.identifier(types.string),
   decs: types.optional(
-    types.map(types.union(types.map(LabelMap), LabelMap)),
+    types.map(types.union(types.map(types.string), types.string)),
     {}
   )
 });

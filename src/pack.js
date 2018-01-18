@@ -23,9 +23,8 @@ const packDeclaration = full => {
   }
   const packed = {};
   if (full.lines) {
-    packed.l = {};
     for (const id in full.lines) {
-      packed.l[id] = full.lines[id].map(packWord);
+      packed[id] = full.lines[id].map(packWord);
     }
   }
   packed.r = full.ret.map(packWord);
@@ -65,11 +64,13 @@ const unpackDeclaration = packed => {
   if (Array.isArray(packed)) {
     full.line = packed.map(unpackWord);
   } else {
-    full.ret = packed.r.map(unpackWord);
-    if (packed.l) {
-      full.lines = {};
-      for (const id in packed.l) {
-        full.lines[id] = packed.l[id].map(unpackWord);
+    full.lines = {};
+    for (const id in packed) {
+      const fullLine = packed[id].map(unpackWord);
+      if (id === "r") {
+        full.ret = fullLine;
+      } else {
+        full.lines[id] = fullLine;
       }
     }
   }
