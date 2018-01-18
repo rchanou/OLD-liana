@@ -1,5 +1,4 @@
 const { types } = require("mobx-state-tree");
-const process = require("immer").default;
 const util = require("util");
 
 const global = "g";
@@ -242,22 +241,9 @@ const Def = types
   .model("Def", {
     id: types.identifier(types.string),
     lines: types.maybe(types.map(Line)),
-    ret: Line
+    ret: Line,
+    repo: types.optional(types.reference(types.late(() => Repo)), 0)
   })
-  // .preProcessSnapshot(snapshot =>
-  //   process(snapshot, draft => {
-  //     const { i, l, r } = draft;
-  //     if (i) {
-  //       draft.id = i;
-  //     }
-  //     if (l) {
-  //       draft.lines = l;
-  //     }
-  //     if (r) {
-  //       draft.ret = r;
-  //     }
-  //   })
-  // )
   .views(self => ({
     out(repo) {
       const { lines } = self;
@@ -298,6 +284,7 @@ const Def = types
 
 const Repo = types
   .model("Repo", {
+    _id: types.optional(types.identifier(types.number), 0),
     decs: types.map(Declaration)
   })
   .views(self => ({
@@ -338,15 +325,7 @@ const pTest = {
   b1: { r: ["-", 0, [1]] },
   ba: { l: ["+", [1], [2]] },
   c: {
-    l: [
-      "s",
-      0,
-      ["INCREMENT"],
-      { f: "a" },
-      ["DECREMENT"],
-      { f: "b1" },
-      { f: "a" }
-    ]
+    l: ["s", 0, ["INCREMENT"], { f: "a" }, ["DECREMENT"], { f: "b1" }, { f: "a" }]
   },
   d: { l: [".", 0, ["type"]] },
   e: { r: [{ f: "c" }, { u: "a" }], l: { a: [{ f: "d" }, 0] } }
