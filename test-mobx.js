@@ -162,19 +162,34 @@ const Op = types
     }
   }));
 
+const RepoRef = types.optional(types.reference(types.late(() => Repo)), 0);
+
 const Arg = types.model("Arg", {
   arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
 });
 // .views(self => ({}));
 
-const Use = types.model("Use", {
-  use: types.string
-});
-// .views(self => ({
-//   out(repo) {
-//     return;
-//   }
-// }));
+const Use = types
+  .model("Use", {
+    use: types.string,
+    repo: RepoRef
+  })
+  .views(self => ({
+    calc(lines, params) {
+      if (!lines) {
+        throw new Error("No lines brah!");
+      }
+      const { repo } = self;
+      const innerLine = lines.get(self.use);
+      if (!innerLine) {
+        throw new Error("nononononono line");
+      }
+      if (!innerLine.some(ilWord => "use" in ilWord)) {
+        return parseCallLine(repo, innerLine)(...params);
+      }
+      return parseLine(innerLine)(...params);
+    }
+  }));
 
 const PkgUse = types.model("Use", {
   pkg: types.reference(Pkg)
@@ -192,11 +207,12 @@ const Line = types.refinement(types.array(Word), l => l.length);
 const Call = types
   .model("Call", {
     id: types.identifier(types.string),
-    line: Line
+    line: Line,
+    repo: RepoRef
   })
   .views(self => ({
-    out(repo) {
-      return parseCallLine(repo, self.line);
+    get out() {
+      return parseCallLine(self.repo, self.line);
     }
   }));
 
@@ -207,8 +223,8 @@ const Fn = types
     fn: types.reference(Declaration)
   })
   .views(self => ({
-    out(repo) {
-      return self.fn.out(repo);
+    get out() {
+      return self.fn.out;
     }
   }));
 
@@ -216,16 +232,11 @@ const parseCallLine = (repo, line) => {
   const func = (...params) => {
     // TODO: hoist unchanging (non-param) slots
     const tokens = line.map(word => {
-      if ("val" in word || "op" in word) {
-        return word.out;
-      }
       if ("arg" in word) {
         return params[word.arg];
       }
-      if ("fn" in word) {
-        return word.fn.out(repo);
-      }
-      throw new Error("No match found for code, brah! " + word);
+      return word.out;
+      // throw new Error("No match found for word, brah! " + word);
     });
 
     const [head, ...args] = tokens;
@@ -242,36 +253,24 @@ const Def = types
     id: types.identifier(types.string),
     lines: types.maybe(types.map(Line)),
     ret: Line,
-    repo: types.optional(types.reference(types.late(() => Repo)), 0)
+    repo: RepoRef
   })
   .views(self => ({
-    out(repo) {
+    get out() {
+      const { repo } = self;
       const { lines } = self;
       return (...params) => {
         const parseLine = line => {
           const tokens = line.map(word => {
-            if ("val" in word || "op" in word) {
-              return word.out;
-            }
             if ("arg" in word) {
               return params[word.arg];
             }
+
             if ("use" in word) {
-              if (!lines) {
-                throw new Error("No lines brah!");
-              }
-              const innerLine = lines.get(word.use);
-              if (!innerLine) {
-                throw new Error("nononononono line");
-              }
-              if (!innerLine.some(ilWord => "use" in ilWord)) {
-                return parseCallLine(repo, innerLine)(...params);
-              }
-              return parseLine(innerLine)(...params);
+              return word.calc(lines, params);
             }
-            if ("fn" in word) {
-              return word.fn.out(repo);
-            }
+
+            return word.out;
             throw new Error("No match found!");
           });
           const [head, ...args] = tokens;
@@ -289,7 +288,7 @@ const Repo = types
   })
   .views(self => ({
     out(id) {
-      return self.decs.get(id).out(self);
+      return self.decs.get(id).out;
     }
   }));
 
@@ -372,7 +371,6 @@ const packDecSet = full => {
     const packedDec = packDeclaration(full[id]);
     const { i, ...rest } = packedDec;
     packed[id] = rest;
-    // packed.push(packedDec);
   }
   return packed;
 };
@@ -435,11 +433,11 @@ console.log(before, after, unpacked, after / before * 100);
 const store = Repo.create({ decs: unpackTest });
 const a = store.out("a");
 const b = store.out("b");
-console.log(a(1), 1);
+console.log(a(), 1);
 console.log(store.out("ba"));
 
 const c = store.out("d");
 console.log(c({ type: "INCREMENT" }), "INCREMENT");
 
 const e = store.out("e");
-console.log(e({ type: "DECREMENT" })(5));
+console.log(e({ type: "DECREMENT" })(5), 4);
