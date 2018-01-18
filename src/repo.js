@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { unpack } from "./pack";
+import { pack, unpack } from "./pack";
 
 const global = "g";
 const dot = ".";
@@ -133,11 +133,18 @@ const ops = [
   identity
 ];
 
-const Pkg = types.model("Pkg", {
-  id: types.identifier(types.string),
-  path: types.string,
-  resolved: types.optional(types.boolean, false)
-});
+const Pkg = types
+  .model("Pkg", {
+    id: types.identifier(types.string),
+    path: types.string,
+    resolved: types.optional(types.boolean, false)
+  })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      delete self.resolved;
+      return snapshot;
+    }
+  }));
 
 const Val = types
   .model("Val", {
@@ -163,34 +170,42 @@ const Op = types
     }
   }));
 
-const RepoRef = types.optional(types.reference(types.late(() => Repo)), 0);
+const RepoUser = types
+  .model("RepoUser", {
+    repo: types.optional(types.reference(types.late(() => Repo)), 0)
+  })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      delete self.repo;
+      return snapshot;
+    }
+  }));
+
+const repoModel = (...args) => types.compose(RepoUser, types.model(...args));
 
 const Arg = types.model("Arg", {
   arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
 });
 // .views(self => ({}));
 
-const Use = types
-  .model("Use", {
-    use: types.string,
-    repo: RepoRef
-  })
-  .views(self => ({
-    calc(lines, params) {
-      if (!lines) {
-        throw new Error("No lines brah!");
-      }
-      const { repo } = self;
-      const innerLine = lines.get(self.use);
-      if (!innerLine) {
-        throw new Error("nononononono line");
-      }
-      if (!innerLine.some(ilWord => "use" in ilWord)) {
-        return parseCallLine(repo, innerLine)(...params);
-      }
-      return parseLine(innerLine)(...params);
+const Use = repoModel("Use", {
+  use: types.string
+}).views(self => ({
+  calc(lines, params) {
+    if (!lines) {
+      throw new Error("No lines brah!");
     }
-  }));
+    const { repo } = self;
+    const innerLine = lines.get(self.use);
+    if (!innerLine) {
+      throw new Error("nononononono line");
+    }
+    if (!innerLine.some(ilWord => "use" in ilWord)) {
+      return parseCallLine(repo, innerLine)(...params);
+    }
+    return parseLine(innerLine)(...params);
+  }
+}));
 
 const PkgUse = types.model("Use", {
   pkg: types.reference(Pkg)
@@ -205,17 +220,14 @@ const Word = types.union(Val, Op, Arg, types.late(() => Fn), Use, PkgUse);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
-const Call = types
-  .model("Call", {
-    id: types.identifier(types.string),
-    line: Line,
-    repo: RepoRef
-  })
-  .views(self => ({
-    get out() {
-      return parseCallLine(self.repo, self.line);
-    }
-  }));
+const Call = repoModel("Call", {
+  id: types.identifier(types.string),
+  line: Line
+}).views(self => ({
+  get out() {
+    return parseCallLine(self.repo, self.line);
+  }
+}));
 
 const Declaration = types.union(types.late(() => Call), types.late(() => Def));
 
@@ -249,38 +261,35 @@ const parseCallLine = (repo, line) => {
   return func;
 };
 
-const Def = types
-  .model("Def", {
-    id: types.identifier(types.string),
-    lines: types.maybe(types.map(Line)),
-    ret: Line,
-    repo: RepoRef
-  })
-  .views(self => ({
-    get out() {
-      const { repo } = self;
-      const { lines } = self;
-      return (...params) => {
-        const parseLine = line => {
-          const tokens = line.map(word => {
-            if ("arg" in word) {
-              return params[word.arg];
-            }
+const Def = repoModel("Def", {
+  id: types.identifier(types.string),
+  lines: types.maybe(types.map(Line)),
+  ret: Line
+}).views(self => ({
+  get out() {
+    const { repo } = self;
+    const { lines } = self;
+    return (...params) => {
+      const parseLine = line => {
+        const tokens = line.map(word => {
+          if ("arg" in word) {
+            return params[word.arg];
+          }
 
-            if ("use" in word) {
-              return word.calc(lines, params);
-            }
+          if ("use" in word) {
+            return word.calc(lines, params);
+          }
 
-            return word.out;
-            throw new Error("No match found!");
-          });
-          const [head, ...args] = tokens;
-          return typeof head === "function" ? head(...args) : head;
-        };
-        return parseLine(self.ret);
+          return word.out;
+          throw new Error("No match found!");
+        });
+        const [head, ...args] = tokens;
+        return typeof head === "function" ? head(...args) : head;
       };
-    }
-  }));
+      return parseLine(self.ret);
+    };
+  }
+}));
 
 export const Repo = types
   .model("Repo", {
@@ -293,67 +302,13 @@ export const Repo = types
     }
     return snapshot;
   })
+  .actions(self => ({
+    postProcessSnapshot(snapshot) {
+      return pack(snapshot);
+    }
+  }))
   .views(self => ({
     out(id) {
       return self.decs.get(id).out;
     }
   }));
-
-const test = {
-  decs: {
-    a: { id: "a", ret: [{ arg: 0 }] },
-    b: { id: "b", ret: [{ op: add }, { arg: 0 }, { val: 1 }] },
-    b1: { id: "b1", ret: [{ op: minus }, { arg: 0 }, { val: 1 }] },
-    ba: { id: "ba", line: [{ op: add }, { val: 1 }, { val: 2 }] },
-    c: {
-      id: "c",
-      line: [
-        { op: switchOp },
-        { arg: 0 },
-        { val: "INCREMENT" },
-        { fn: "a" },
-        { val: "DECREMENT" },
-        { fn: "b1" },
-        { fn: "a" }
-      ]
-    },
-    d: { id: "d", line: [{ op: dot }, { arg: 0 }, { val: "type" }] },
-    e: {
-      id: "e",
-      lines: { a: [{ fn: "d" }, { arg: 0 }] },
-      ret: [{ fn: "c" }, { use: "a" }]
-    }
-  }
-};
-const pTest = {
-  a: { r: [0] },
-  b: { r: ["+", 0, [1]] },
-  b1: { r: ["-", 0, [1]] },
-  ba: { l: ["+", [1], [2]] },
-  c: {
-    l: ["s", 0, ["INCREMENT"], { f: "a" }, ["DECREMENT"], { f: "b1" }, { f: "a" }]
-  },
-  d: { l: [".", 0, ["type"]] },
-  e: { r: [{ f: "c" }, { u: "a" }], l: { a: [{ f: "d" }, 0] } }
-};
-
-// const packTest = packDecSet(test.decs);
-// const unpackTest = unpackDecSet(packTest);
-// // console.log(util.inspect(packTest, { depth: null }));
-// // console.log(util.inspect(unpackTest, { depth: null }));
-// const before = JSON.stringify(test.decs).length;
-// const after = JSON.stringify(packTest).length;
-// const unpacked = JSON.stringify(unpackTest).length;
-// console.log(before, after, unpacked, after / before * 100);
-
-// const store = Repo.create({ decs: unpackTest });
-// const a = store.out("a");
-// const b = store.out("b");
-// console.log(a(), 1);
-// console.log(store.out("ba"));
-
-// const c = store.out("d");
-// console.log(c({ type: "INCREMENT" }), "INCREMENT");
-
-// const e = store.out("e");
-// console.log(e({ type: "DECREMENT" })(5), 4);
