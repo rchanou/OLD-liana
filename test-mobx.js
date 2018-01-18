@@ -333,13 +333,7 @@ const test = {
   }
 };
 
-// const propKeys = ["val", "op", "arg", "fn", "use"];
 const packWord = full => {
-  // for (const key of propKeys) {
-  //   if (key in full) {
-  //     packed[key] = full[key];
-  //   }
-  // }
   if ("val" in full) {
     return [full.val];
   }
@@ -383,11 +377,58 @@ const packDecSet = full => {
   return packed;
 };
 
+const unpackWord = packed => {
+  if (Array.isArray(packed)) {
+    return { val: packed[0] };
+  }
+  if (typeof packed === "string") {
+    return { op: packed };
+  }
+  if (typeof packed === "number") {
+    return { arg: packed };
+  }
+  if ("f" in packed) {
+    return { fn: packed.f };
+  }
+  if ("u" in packed) {
+    return { use: packed.u };
+  }
+  throw new Error(`Could not unpack word. Has no match: ${packed}`);
+};
+
+const unpackDeclaration = packed => {
+  const full = { id: packed.i };
+  if (packed.r) {
+    full.ret = packed.r.map(unpackWord);
+    if (packed.l) {
+      full.lines = {};
+      for (const id in packed.l) {
+        full.lines[id] = packed.l[id].map(unpackWord);
+      }
+    }
+  } else {
+    full.line = packed.l.map(unpackWord);
+  }
+  return full;
+};
+
+const unpackDecSet = packed => {
+  const full = {};
+  for (const dec of packed) {
+    const fullDec = unpackDeclaration(dec);
+    full[fullDec.id] = fullDec;
+  }
+  return full;
+};
+
 const packTest = packDecSet(test.decs);
+const unpackTest = unpackDecSet(packTest);
 console.log(util.inspect(packTest, { depth: null }));
+console.log(util.inspect(unpackTest, { depth: null }));
 const before = JSON.stringify(test.decs).length;
 const after = JSON.stringify(packTest).length;
-console.log(before, after, after / before * 100);
+const unpacked = JSON.stringify(unpackTest).length;
+console.log(before, after, unpacked, after / before * 100);
 
 const store = Repo.create(test);
 const a = store.out("a");
