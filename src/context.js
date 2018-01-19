@@ -89,7 +89,7 @@ export const makeContext = Model => {
 
   const Ref = types.optional(types.union(Type, types.reference(Type)), 0);
 
-  const RefModel = types
+  const RefType = types
     .model(`Context${Model.name}Child`, {
       [contextRefKey]: Ref
     })
@@ -99,12 +99,15 @@ export const makeContext = Model => {
       }
     }));
 
-  const refModel = (...args) => types.compose(RefModel, types.model(...args));
+  const refModel = (...args) => types.compose(RefType, types.model(...args));
 
   return {
     Type,
     defKey,
     key: contextRefKey,
+    RefType,
     refModel
   };
 };
+
+export const mixinModel = (...Models) => (...args) => types.compose(...Models, types.model(...args));

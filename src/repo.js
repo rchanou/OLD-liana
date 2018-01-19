@@ -1,7 +1,7 @@
 import { types, flow } from "mobx-state-tree";
 
 import { ContextUser } from "./user";
-import { makeContext } from "./context";
+import { makeContext, mixinModel } from "./context";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
 
@@ -226,43 +226,47 @@ const Val = types
     }
   }));
 
-const Op = types
-  .model("Op", {
-    op: types.enumeration(ops)
-  })
-  .views(self => ({
-    get out() {
-      const opFunc = opFuncs[self.op];
-      if (!opFunc) {
-        throw new Error(self.op + " op not yet implemented!");
-      }
-      return opFunc;
-    },
-    get name() {
-      // TODO: look up from context user
-      return self.op;
-    },
-    get color() {
-      return Color.op;
-    }
-  }));
+const LocaleNameSet = types.map(types.string);
+const NameSet = types.optional(types.map(LocaleNameSet), {});
+const Named = types.model({
+  names: NameSet
+});
 
-const Arg = types
-  .model("Arg", {
-    // TODO: type prop
-    arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
-  })
-  .views(self => ({
-    get name() {
-      // TODO: look up appropriate name based on user context
-      return `{${self.arg}}`;
-    },
-    get color() {
-      return Color.input;
+const Op = mixinModel(Named)("Op", {
+  op: types.enumeration(ops)
+}).views(self => ({
+  get out() {
+    const opFunc = opFuncs[self.op];
+    if (!opFunc) {
+      throw new Error(self.op + " op not yet implemented!");
     }
-  }));
+    return opFunc;
+  },
+  get name() {
+    // TODO: look up from context user
+    return self.op;
+  },
+  get color() {
+    return Color.op;
+  }
+}));
 
-const ScopedRef = ContextUser.refModel("ScopedRef", {
+const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
+  // TODO: type prop
+  arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
+  // names: NameSet
+}).views(self => ({
+  get name() {
+    return `{${self.arg}}`;
+    // TODO: look up appropriate name based on user context
+    return self[ContextUser.key] || `{${self.arg}}`;
+  },
+  get color() {
+    return Color.input;
+  }
+}));
+
+const ScopedRef = mixinModel(ContextUser.RefType, Named)("ScopedRef", {
   sRef: types.string
 }).views(self => ({
   calc(lines, params) {
@@ -322,7 +326,7 @@ const getDecNameViews = self => ({
   }
 });
 
-const Call = ContextUser.refModel("Call", {
+const Call = mixinModel(ContextUser.RefType, Named)("Call", {
   id: types.identifier(types.string),
   line: Line
 })
@@ -336,7 +340,7 @@ const Call = ContextUser.refModel("Call", {
   }))
   .views(getDecNameViews);
 
-const Def = ContextUser.refModel("Def", {
+const Def = mixinModel(ContextUser.RefType, Named)("Def", {
   id: types.identifier(types.string),
   lines: types.maybe(types.map(Line)),
   ret: Line
