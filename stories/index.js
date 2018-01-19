@@ -12,7 +12,7 @@ import defaultRepo from "./test-repo";
 
 import { Repo, ContextRepo as NewContextRepo } from "../src/repo";
 import { App } from "../src/app";
-import { Editor } from "../src/editor";
+import { RepoEditor } from "../src/editor";
 import { main, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
 
@@ -106,9 +106,12 @@ storiesOf("Liana", module)
         }
       }}
     />
-  ));
-// .add("new repo test", () => {
-//   const store = { repo: packTest };
+  ))
+  .add("new repo test", () => {
+    const store = RepoEditor.create({
+      [NewContextRepo.key]: packTest
+    });
+    window.m = store;
 
-//   return <View store={store} />;
-// });
+    return <ReactView store={store} />;
+  });

@@ -15,7 +15,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
   let currentY = y - 1;
 
   repo.decs.forEach(dec => {
-    const { id, words, out, label } = dec;
+    const { id, line, ret, lines, out, label } = dec;
 
     currentX = x;
     currentY++;
@@ -32,10 +32,10 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       labelForDec: dec
     });
 
-    if (words) {
-      for (let i = 0; i < words.length; i++) {
+    const renderLine = line => {
+      for (let i = 0; i < line.length; i++) {
         currentX += 2;
-        const word = words[i];
+        const word = line[i];
         const key = `CL-${id}-${i}`;
 
         const newCell = {
@@ -56,6 +56,13 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
 
         cells.push(newCell);
       }
+    };
+
+    if (line) {
+      renderLine(line);
+    } else {
+      lines.forEach(renderLine);
+      renderLine(ret);
     }
 
     currentX += 2;
@@ -99,6 +106,9 @@ export const RepoEditor = viewModel("RepoLister", {
   .views(self => ({
     get baseCells() {
       return makeRepoCells(self.repo);
+    },
+    get cells() {
+      return self.activeCells;
     },
     get activeCells() {
       if (self.chooser) {
