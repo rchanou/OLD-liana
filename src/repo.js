@@ -1,6 +1,7 @@
 import { types, flow } from "mobx-state-tree";
 
 import { ContextUser } from "./user";
+import { makeContext } from "./context";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
 
@@ -135,7 +136,7 @@ const ops = [
   identity
 ];
 
-const Pkg = types
+export const Pkg = types
   .model("Pkg", {
     id: types.identifier(types.string),
     path: types.string,
@@ -409,3 +410,5 @@ export const Repo = types
       return self.decs.get(id).out;
     }
   }));
+
+export const ContextRepo = makeContext(Repo);

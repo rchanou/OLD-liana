@@ -6,6 +6,8 @@ import { action } from "@storybook/addon-actions";
 
 import { ContextRepo } from "../src/core";
 import { ReactEditor } from "../src/react-editor";
+import { ReactView } from "../src/react-box";
+
 import defaultRepo from "./test-repo";
 
 import { Repo } from "../src/repo";

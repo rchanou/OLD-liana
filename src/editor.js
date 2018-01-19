@@ -3,7 +3,7 @@ import { types, destroy, getSnapshot } from "mobx-state-tree";
 import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
-import { uiModel, cursorify, formatOut } from "./user-interface";
+import { viewModel, cursorify, formatOut } from "./view";
 import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -15,7 +15,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
   let currentY = y - 1;
 
   repo.decs.forEach(dec => {
-    const { id, nodes, fun, params, out, label } = dec;
+    const { id, words, out, label } = dec;
 
     currentX = x;
     currentY++;
@@ -32,32 +32,10 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       labelForDec: dec
     });
 
-    if (params) {
-      for (let i = 0; i < params.length; i++) {
+    if (words) {
+      for (let i = 0; i < words.length; i++) {
         currentX += 2;
-        const param = params[i];
-        const key = `CLP-${id}-${i}`;
-
-        const newCell = {
-          key,
-          x: currentX,
-          y: currentY,
-          width: 2,
-          selectable: true,
-          forDec: dec,
-          nodeIndex: i,
-          text: param.label,
-          fill: param.color
-        };
-
-        cells.push(newCell);
-      }
-    }
-
-    if (nodes) {
-      for (let i = 0; i < nodes.length; i++) {
-        currentX += 2;
-        const node = nodes[i];
+        const word = words[i];
         const key = `CL-${id}-${i}`;
 
         const newCell = {
@@ -68,12 +46,12 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
           selectable: true,
           forDec: dec,
           nodeIndex: i,
-          text: node.label,
-          fill: node.color
+          text: word.label,
+          fill: word.color
         };
 
-        if (node.gRef) {
-          newCell.gotoCellKey = `CL-${node.gRef.id}-0`;
+        if (word.gRef) {
+          newCell.gotoCellKey = `CL-${word.gRef.id}-0`;
         }
 
         cells.push(newCell);
@@ -108,7 +86,7 @@ const NodeRef = types
     }
   }));
 
-export const RepoEditor = uiModel("RepoLister", {
+export const RepoEditor = viewModel("RepoLister", {
   changeCellMode: optionalBoolean,
   changeOpMode: optionalBoolean,
   addNodeMode: optionalBoolean,
