@@ -10,7 +10,7 @@ import { ReactView } from "../src/react-box";
 
 import defaultRepo from "./test-repo";
 
-import { Repo } from "../src/repo";
+import { Repo, ContextRepo as NewContextRepo } from "../src/repo";
 import { App } from "../src/app";
 import { Editor } from "../src/editor";
 import { main, user } from "./test-repos";
@@ -73,6 +73,17 @@ const context = {
   [ContextRepo.KEY]: defaultRepo
 };
 
+const unpackTest = unpack({ ...main, user });
+const packTest = pack(unpackTest);
+
+const unpackLength = JSON.stringify(unpackTest).length;
+const packLength = JSON.stringify(packTest).length;
+console.log(packLength, unpackLength, packLength / unpackLength);
+
+window.n = Repo.create(packTest);
+
+console.log(window.n.decs.get("e").out({ type: "DECREMENT" })(5), 4);
+
 storiesOf("Liana", module)
   .add("editor", () => (
     <Story
@@ -96,14 +107,8 @@ storiesOf("Liana", module)
       }}
     />
   ));
+// .add("new repo test", () => {
+//   const store = { repo: packTest };
 
-const unpackTest = unpack({ ...main, user });
-const packTest = pack(unpackTest);
-
-const unpackLength = JSON.stringify(unpackTest).length;
-const packLength = JSON.stringify(packTest).length;
-console.log(packLength, unpackLength, packLength / unpackLength);
-
-window.n = Repo.create(packTest);
-
-console.log(window.n.decs.get("e").out({ type: "DECREMENT" })(5), 4);
+//   return <View store={store} />;
+// });

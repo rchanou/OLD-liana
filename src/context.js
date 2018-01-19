@@ -74,6 +74,11 @@ export const setupContext = (Model, key) => {
 };
 
 export const makeContext = Model => {
+  if (typeof Model.name !== "string") {
+    throw new Error("Name required for context model type!");
+  }
+
+  const defKey = `def${Model.name}`;
   const contextRefKey = `context${Model.name}`;
 
   const Context = types.model(`Context${Model.name}`, {
@@ -82,9 +87,11 @@ export const makeContext = Model => {
 
   const Type = types.compose(Model, Context);
 
-  const ContextRef = types
+  const Ref = types.optional(types.union(Type, types.reference(Type)), 0);
+
+  const RefModel = types
     .model(`Context${Model.name}Child`, {
-      [contextRefKey]: types.optional(types.reference(Type), 0)
+      [contextRefKey]: Ref
     })
     .actions(self => ({
       postProcessSnapshot({ context, ...rest }) {
@@ -92,10 +99,11 @@ export const makeContext = Model => {
       }
     }));
 
-  const refModel = (...args) => types.compose(ContextRef, types.model(...args));
+  const refModel = (...args) => types.compose(RefModel, types.model(...args));
 
   return {
     Type,
+    defKey,
     key: contextRefKey,
     refModel
   };
