@@ -74,19 +74,17 @@ export const setupContext = (Model, key) => {
 };
 
 export const makeContext = Model => {
-  const Context = types.model(
-    `Context${Model.name}`,
-    {
-      _id: types.optional(types.identifier(types.number), 0)
-    },
-    Model
-  );
-
   const contextRefKey = `context${Model.name}`;
+
+  const Context = types.model(`Context${Model.name}`, {
+    _id: types.optional(types.identifier(types.number), 0)
+  });
+
+  const Type = types.compose(Model, Context);
 
   const ContextRef = types
     .model(`Context${Model.name}Child`, {
-      [contextRefKey]: types.optional(types.reference(Context), 0)
+      [contextRefKey]: types.optional(types.reference(Type), 0)
     })
     .actions(self => ({
       postProcessSnapshot({ context, ...rest }) {
@@ -97,7 +95,7 @@ export const makeContext = Model => {
   const refModel = (...args) => types.compose(ContextRef, types.model(...args));
 
   return {
-    Type: Context,
+    Type,
     key: contextRefKey,
     refModel
   };
