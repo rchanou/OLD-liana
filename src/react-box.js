@@ -111,7 +111,7 @@ class Cursor extends React.Component {
   }
 }
 
-const ReactBox = observer(({ box, onInput, editor }) => {
+const ReactBox = observer(({ box, onInput, store }) => {
   if (!box) {
     return null;
   }
@@ -138,7 +138,14 @@ const ReactBox = observer(({ box, onInput, editor }) => {
   let element;
   if (input != null) {
     style.background = "#eee";
-    element = <Input key={key} value={input} style={style} onChange={editor.handleInput} />;
+    element = (
+      <Input
+        key={key}
+        value={input}
+        style={style}
+        onChange={store.handleInput}
+      />
+    );
   } else {
     const Tag = cursor ? Cursor : "div";
     element = (
@@ -165,12 +172,18 @@ const ReactBox = observer(({ box, onInput, editor }) => {
   return [connector, element];
 });
 
-export const ReactTree = observer(({ editor }) => {
-  const { cells, onInput } = editor;
+// TODO: better name
+export const ReactView = observer(({ store }) => {
+  const { cells, onInput } = store;
   let throwawayIdCounter = 0;
 
   const cellBoxes = cells.map(cell => (
-    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} editor={editor} />
+    <ReactBox
+      key={cell ? cell.key : throwawayIdCounter++}
+      box={cell}
+      onInput={onInput}
+      store={store}
+    />
   ));
 
   return <div style={containerStyle}>{cellBoxes}</div>;
