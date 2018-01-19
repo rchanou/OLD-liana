@@ -16,7 +16,7 @@ export const main = {
 };
 
 export const user = {
-  labelSets: {
+  nameSets: {
     "en-US": {
       id: "en-US",
       decs: {

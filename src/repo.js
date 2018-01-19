@@ -165,7 +165,7 @@ export const Pkg = types
     equivalent(other) {
       return other === self || other.pkg === self;
     },
-    get label() {
+    get name() {
       return self.path.replace("https://unpkg.com/", "").split("/")[0];
     },
     get color() {
@@ -181,8 +181,8 @@ const PkgRef = types
     get out() {
       return self.pkg.out;
     },
-    get label() {
-      return self.pkg.label;
+    get name() {
+      return self.pkg.name;
     },
     get color() {
       return self.pkg.color;
@@ -197,7 +197,7 @@ const Val = types
     get out() {
       return self.val;
     },
-    get label() {
+    get name() {
       const { val } = self;
       if (typeof val === "string") {
         return `"${val}"`;
@@ -238,7 +238,7 @@ const Op = types
       }
       return opFunc;
     },
-    get label() {
+    get name() {
       // TODO: look up from context user
       return self.op;
     },
@@ -253,8 +253,8 @@ const Arg = types
     arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
   })
   .views(self => ({
-    get label() {
-      // TODO: look up appropriate label based on user context
+    get name() {
+      // TODO: look up appropriate name based on user context
       return `{${self.arg}}`;
     },
     get color() {
@@ -278,7 +278,7 @@ const ScopedRef = ContextUser.refModel("ScopedRef", {
     }
     return parseLine(innerLine)(...params);
   },
-  get label() {
+  get name() {
     // TODO: look up from user
     return `(${self.sRef})`;
   },
@@ -295,8 +295,8 @@ const GlobalRef = types
     get out() {
       return self.gRef.out;
     },
-    get label() {
-      return self.gRef.label;
+    get name() {
+      return self.gRef.name;
     },
     get color() {
       return self.gRef.color;
@@ -307,17 +307,17 @@ const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
-const getDecLabelViews = self => ({
-  get label() {
-    const { decs } = self[ContextUser.key].currentLabelSet;
+const getDecNameViews = self => ({
+  get name() {
+    const { decs } = self[ContextUser.key].currentNameSet;
     if (!decs) {
       return `{${self.id}}`;
     }
-    const labelRecord = decs.get(self.id);
-    if (typeof labelRecord === "string") {
-      return labelRecord;
+    const nameRecord = decs.get(self.id);
+    if (typeof nameRecord === "string") {
+      return nameRecord;
     }
-    return labelRecord.r || `{${self.id}}`;
+    return nameRecord.r || `{${self.id}}`;
   }
 });
 
@@ -333,7 +333,7 @@ const Call = ContextUser.refModel("Call", {
       return Color.reified;
     }
   }))
-  .views(getDecLabelViews);
+  .views(getDecNameViews);
 
 const Def = ContextUser.refModel("Def", {
   id: types.identifier(types.string),
@@ -366,7 +366,7 @@ const Def = ContextUser.refModel("Def", {
       return Color.pending;
     }
   }))
-  .views(getDecLabelViews);
+  .views(getDecNameViews);
 
 export const Declaration = types.union(Call, Def);
 
