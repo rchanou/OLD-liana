@@ -40,3 +40,13 @@ export const user = {
     }
   }
 };
+
+export const hof = {
+  a: {
+    r: {
+      r: {
+        r: ["+", { a: 0 }, { u: 1, a: 0 }, { u: 2, a: 0 }]
+      }
+    }
+  }
+};

@@ -17,3 +17,7 @@ const a = A.create({
 });
 
 console.log(a.b.ref.name);
+
+const test = x => y => z => x + y + z;
+
+console.log(test(1)(5)(7));
