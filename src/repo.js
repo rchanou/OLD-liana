@@ -367,6 +367,7 @@ const Def = ContextUser.refModel("Def", {
       return Color.pending;
     },
     lineName(lineId) {
+      // TODO: this isn't getting hit and it feels dirty
       const { decs } = self[ContextUser.key].currentNameSet;
       if (!decs) {
         return `{${self.id}}`;
