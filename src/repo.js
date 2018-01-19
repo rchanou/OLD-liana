@@ -283,7 +283,7 @@ const ScopedRef = ContextUser.refModel("ScopedRef", {
     return `(${self.sRef})`;
   },
   get color() {
-    return Color.pending;
+    return Color.reified;
   }
 }));
 
@@ -299,7 +299,8 @@ const GlobalRef = types
       return self.gRef.name;
     },
     get color() {
-      return self.gRef.color;
+      return Color.pending;
+      // return self.gRef.color;
     }
   }));
 
@@ -317,7 +318,7 @@ const getDecNameViews = self => ({
     if (typeof nameRecord === "string") {
       return nameRecord;
     }
-    return nameRecord.r || `{${self.id}}`;
+    return nameRecord.get("r") || `{${self.id}}`;
   }
 });
 
@@ -364,6 +365,15 @@ const Def = ContextUser.refModel("Def", {
     },
     get color() {
       return Color.pending;
+    },
+    lineName(lineId) {
+      const { decs } = self[ContextUser.key].currentNameSet;
+      if (!decs) {
+        return `{${self.id}}`;
+      }
+      const nameRecord = decs.get(self.id);
+      const name = nameRecord.get(lineId);
+      return name;
     }
   }))
   .views(getDecNameViews);

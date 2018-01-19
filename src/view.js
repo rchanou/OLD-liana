@@ -45,8 +45,11 @@ const UI = ContextRepo.refModel("UI", {
           key: cursorId
         };
       },
-      get allCells() {
+      get cells() {
         return self.baseCells.concat(self.cursorCell || []);
+      },
+      get activeCells() {
+        return self.cells;
       },
       get baseKeyMap() {
         return {

@@ -17,6 +17,32 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
   repo.decs.forEach(dec => {
     const { id, line, ret, lines, out, name } = dec;
 
+    const renderLine = (line, subKey, lineId) => {
+      for (let i = 0; i < line.length; i++) {
+        currentX += 2;
+        const word = line[i];
+        const key = `CL-${subKey}-${i}`;
+
+        const newCell = {
+          key,
+          x: currentX,
+          y: currentY,
+          width: 2,
+          selectable: true,
+          forDec: dec,
+          nodeIndex: i,
+          text: lineId ? dec.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
+          fill: word.color
+        };
+
+        if (word.gRef) {
+          newCell.gotoCellKey = `CL-${word.gRef.id}-0`;
+        }
+
+        cells.push(newCell);
+      }
+    };
+
     currentX = x;
     currentY++;
 
@@ -32,37 +58,15 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       labelForDec: dec
     });
 
-    const renderLine = line => {
-      for (let i = 0; i < line.length; i++) {
-        currentX += 2;
-        const word = line[i];
-        const key = `CL-${id}-${i}`;
-
-        const newCell = {
-          key,
-          x: currentX,
-          y: currentY,
-          width: 2,
-          selectable: true,
-          forDec: dec,
-          nodeIndex: i,
-          text: word.name,
-          fill: word.color
-        };
-
-        if (word.gRef) {
-          newCell.gotoCellKey = `CL-${word.gRef.id}-0`;
-        }
-
-        cells.push(newCell);
-      }
-    };
-
     if (line) {
-      renderLine(line);
+      renderLine(line, id);
     } else {
-      lines.forEach(renderLine);
-      renderLine(ret);
+      lines.forEach((line, lineId) => {
+        renderLine(line, `${id}-${lineId}`, lineId);
+        currentX = 0;
+        currentY++;
+      });
+      renderLine(ret, `${id}-r`);
     }
 
     currentX += 2;
@@ -107,20 +111,20 @@ export const RepoEditor = viewModel("RepoLister", {
     get baseCells() {
       return makeRepoCells(self.repo);
     },
-    get cells() {
-      return self.activeCells;
-    },
-    get activeCells() {
-      if (self.chooser) {
-        return self.chooser.allCells;
-      }
+    // get cells() {
+    //   return self.activeCells;
+    // },
+    // get activeCells() {
+    //   if (self.chooser) {
+    //     return self.chooser.allCells;
+    //   }
 
-      if (self.tree) {
-        return self.tree.allCells;
-      }
+    //   if (self.tree) {
+    //     return self.tree.allCells;
+    //   }
 
-      return self.allCells;
-    },
+    //   return self.allCells;
+    // },
     get input() {
       if (self.editingNode) {
         return self.editingNode.node.out;

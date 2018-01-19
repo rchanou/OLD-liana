@@ -138,14 +138,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
   let element;
   if (input != null) {
     style.background = "#eee";
-    element = (
-      <Input
-        key={key}
-        value={input}
-        style={style}
-        onChange={store.handleInput}
-      />
-    );
+    element = <Input key={key} value={input} style={style} onChange={store.handleInput} />;
   } else {
     const Tag = cursor ? Cursor : "div";
     element = (
@@ -174,16 +167,11 @@ const ReactBox = observer(({ box, onInput, store }) => {
 
 // TODO: better name
 export const ReactView = observer(({ store }) => {
-  const { cells, onInput } = store;
+  const { activeCells, onInput } = store;
   let throwawayIdCounter = 0;
 
-  const cellBoxes = cells.map(cell => (
-    <ReactBox
-      key={cell ? cell.key : throwawayIdCounter++}
-      box={cell}
-      onInput={onInput}
-      store={store}
-    />
+  const cellBoxes = activeCells.map(cell => (
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} store={store} />
   ));
 
   return <div style={containerStyle}>{cellBoxes}</div>;
