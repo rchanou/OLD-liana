@@ -84,8 +84,6 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
   return cells;
 };
 
-const optionalBoolean = types.optional(types.boolean, false);
-
 const NodeRef = types
   .model("NodeRef", {
     forDec: types.reference(Declaration),
@@ -98,10 +96,10 @@ const NodeRef = types
   }));
 
 export const RepoEditor = viewModel("RepoLister", {
-  changeCellMode: optionalBoolean,
-  changeOpMode: optionalBoolean,
-  addNodeMode: optionalBoolean,
-  addOpMode: optionalBoolean,
+  changeCellMode: false,
+  changeOpMode: false,
+  addNodeMode: false,
+  addOpMode: false,
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef),
   editingLabelForDec: types.maybe(types.reference(Declaration)),

@@ -140,7 +140,7 @@ export const Pkg = types
   .model("Pkg", {
     id: types.identifier(types.string),
     path: types.string,
-    resolved: types.optional(types.boolean, false)
+    resolved: false
   })
   .actions(self => {
     const { system } = getEnv(self);

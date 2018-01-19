@@ -20,7 +20,7 @@ export const formatOut = out => {
 let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
 const UI = ContextRepo.refModel("UI", {
-  selectedCellIndex: types.optional(types.number, 0)
+  selectedCellIndex: 0
 })
   .views(self => {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
