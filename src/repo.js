@@ -200,7 +200,7 @@ const Val = types
     get name() {
       const { val } = self;
       if (typeof val === "string") {
-        return `"${val}"`;
+        return `'${val}'`;
       } else {
         return String(val);
       }
