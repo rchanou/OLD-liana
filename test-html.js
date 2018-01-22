@@ -1,3 +1,5 @@
+const p = obj => JSON.stringify(obj, true, 2);
+
 const ops = {
   dot: (o, k) => o[k],
   add: (x, y) => x + y,
@@ -117,8 +119,6 @@ const getVar = (root, path) => {
   return getVar(root[key], subPath);
 };
 
-const ret = "r";
-const op = "%";
 const gen = (root, path = [], out = {}, args = {}) => {
   // const getVar = (root, path) => {
   //   const pathType = typeof path;
@@ -147,7 +147,7 @@ const gen = (root, path = [], out = {}, args = {}) => {
     // TODO: work on this
     if (params.length) {
       if (!path.length) {
-        args.R = params;
+        args.S = params;
       } else {
         let scopeArgs = args;
         let i = 0;
@@ -179,6 +179,9 @@ const gen = (root, path = [], out = {}, args = {}) => {
             return params[word.A];
           } else {
             const argPath = word.A;
+            // if (!argPath.length) {
+            //   return;
+            // }
             let subArgs = args;
             let i = 0;
             for (i; i < argPath.length - 1; i++) {
@@ -200,16 +203,20 @@ const gen = (root, path = [], out = {}, args = {}) => {
     };
     for (const id in scope) {
       const line = scope[id];
-      if (Array.isArray(line)) {
+      if (typeof line === "string") {
+        out[id] = out[line];
+      } else if (Array.isArray(line)) {
         out[id] = call(line);
       } else if (typeof line === "object") {
-        out[id] = gen(line, [...path, id], out);
+        out[id] = gen(line, [...path, id], out, args);
       } else {
         out[id] = line;
       }
     }
-    console.log("out", out, args);
+    // console.log("out", out, args);
+    console.log(path, p(args), "args");
     window.o = out;
+    window.a = args;
     return out.R;
   };
   // const dec = getVar(repo, path);
@@ -234,9 +241,12 @@ const t2 = {
     R: [{ O: "minus" }, { A: 0 }, { V: 1 }]
   },
   f: {
-    R: {
-      R: [{ A: ["f", 0] }]
-    }
+    a: {
+      b: [{ O: "add" }, { A: ["S", 0] }, { A: 0 }],
+      // a: [{ A: ["R", 0] }],
+      R: "b"
+    },
+    R: "a"
   },
   g: [["f"], { V: 8 }],
   h: [["g"], { V: 9 }],
@@ -245,7 +255,9 @@ const t2 = {
 };
 
 const cTest = gen(t2);
-console.log(cTest(1, 2, 3));
+// console.log(cTest(1, 2, 3));
+const dTest = gen(t2.f);
+console.log("hmm", dTest(3)(5));
 
 const parse = (repo, id) => {
   if (!(id in repo)) {
@@ -318,11 +330,6 @@ const parse = (repo, id) => {
         }
 
         if (typeof code === "object") {
-          // const { i } = code;
-          // if (!(scopeId in ))
-          // if (!(i in sub)) {
-          //   throw new Error("Sub-line not found dawg! " + code);
-          // }
           const scopePath = Object.keys(code);
 
           const refSubLine = sub[i];
