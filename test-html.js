@@ -28,26 +28,6 @@ const ops = {
   mutate: (obj, key, value) => (obj[key] = value)
 };
 
-const { dot, add } = ops;
-
-let math = dot(window, "Math");
-let pow = dot(math, "pow");
-let sqrt = dot(math, "sqrt");
-let sq5 = pow(5, 2);
-let sq12 = pow(12, 2);
-let sumsq5n12 = add(sq5, sq12);
-let hyp5n12 = sqrt(sumsq5n12);
-let hyp = (a, b) => {
-  let sqA = pow(a, 2);
-  let sqB = pow(b, 2);
-  let sumsq = add(sqA, sqB);
-  return sqrt(sumsq);
-};
-
-console.log(hyp5n12, hyp(5, 12), hyp(60, 11));
-
-const out = {};
-
 const test = {
   z: {
     R: [0] // identity
@@ -120,28 +100,6 @@ const getVar = (root, path) => {
 };
 
 const gen = (root, path = [], out = {}, args = {}) => {
-  // const getVar = (root, path) => {
-  //   const pathType = typeof path;
-  //   if (pathType === "string") {
-  //     return root[path];
-  //   }
-  //   if (Array.isArray(path)) {
-  //     if (!path.length) {
-  //       return root;
-  //     }
-  //     const [key, ...subPath] = path;
-  //     if (!subPath.length) {
-  //       return root[key];
-  //     }
-  //     return getVar(root[key], subPath);
-  //   }
-  //   if (pathType !== "object") {
-  //     throw new Error("Invalid path type: " + JSON.stringify(path));
-  //   }
-  //   const [[key, subPath]] = Object.entries(path);
-  //   return getVar(root[key], subPath);
-  // };
-
   const scope = root;
   return (...params) => {
     // TODO: work on this
@@ -186,9 +144,6 @@ const gen = (root, path = [], out = {}, args = {}) => {
                 finalPath.push(token);
               }
             }
-            // if (!argPath.length) {
-            //   return;
-            // }
             let subArgs = args;
             let i = 0;
             for (i; i < finalPath.length - 1; i++) {
@@ -220,19 +175,11 @@ const gen = (root, path = [], out = {}, args = {}) => {
         out[id] = line;
       }
     }
-    // console.log("out", out, args);
     console.log(path, p(args), "args");
     window.o = out;
     window.a = args;
     return out.R;
   };
-  // const dec = getVar(repo, path);
-  // if (Array.isArray(dec)) {
-  //   const argWords = dec.filter(word => typeof word === "number");
-  //   if (!argWords.length) {
-  //   }
-  //   let genCode = "function(";
-  // }
 };
 
 const t2 = {
@@ -340,9 +287,7 @@ const parse = (repo, id) => {
           const scopePath = Object.keys(code);
 
           const refSubLine = sub[i];
-          if (
-            !refSubLine.some(code => typeof code === "object" && "i" in code)
-          ) {
+          if (!refSubLine.some(code => typeof code === "object" && "i" in code)) {
             return parseLambda(refSubLine)(...params);
           }
           const refSubVal = parseSubLine(refSubLine)(...params);
