@@ -77,28 +77,6 @@ const test = {
   // }
 };
 
-const getVar = (root, path) => {
-  const pathType = typeof path;
-  if (pathType === "string") {
-    return root[path];
-  }
-  if (Array.isArray(path)) {
-    if (!path.length) {
-      return root;
-    }
-    const [key, ...subPath] = path;
-    if (!subPath.length) {
-      return root[key];
-    }
-    return getVar(root[key], subPath);
-  }
-  if (pathType !== "object") {
-    throw new Error("Invalid path type: " + JSON.stringify(path));
-  }
-  const [[key, subPath]] = Object.entries(path);
-  return getVar(root[key], subPath);
-};
-
 const gen = (root, path = [], out = {}, args = {}) => {
   const scope = root;
   return (...params) => {
@@ -212,105 +190,6 @@ const cTest = gen(t2);
 // console.log(cTest(1, 2, 3));
 const dTest = gen(t2.f);
 console.log("hmm", dTest(3)(5));
-
-const parse = (repo, id) => {
-  if (!(id in repo)) {
-    throw new Error("You done goofed! Could not find ID in repo: " + id);
-  }
-
-  out[id] = {};
-
-  const parseLambda = lambda => {
-    const func = (...params) => {
-      // TODO: hoist unchanging (non-param) slots
-      const tokens = lambda.map(code => {
-        if (Array.isArray(code)) {
-          return code[0];
-        }
-
-        const op = ops[code];
-        if (op) {
-          return op;
-        }
-
-        if (typeof code === "number") {
-          out[id][code] = params[code];
-          return params[code];
-        }
-
-        if (code in repo) {
-          return parse(repo, code);
-        }
-
-        throw new Error("No match found for code, brah! " + code);
-      });
-
-      const [head, ...args] = tokens;
-      return typeof head === "function" ? head(...args) : head;
-    };
-
-    out[id].R = func;
-    return func;
-  };
-
-  const line = repo[id];
-
-  if (Array.isArray(line)) {
-    const func = parseLambda(line);
-    if (line.some(code => typeof code === "number")) {
-      return func;
-    }
-    return func();
-  }
-
-  const sub = line;
-  const subRet = sub.R;
-
-  return (...params) => {
-    const parseSubLine = subLine => {
-      const tokens = subLine.map(code => {
-        if (Array.isArray(code)) {
-          return code[0];
-        }
-
-        const op = ops[code];
-        if (op) {
-          return op;
-        }
-
-        if (typeof code === "number") {
-          out[id][code] = params[code];
-          return params[code];
-        }
-
-        if (typeof code === "object") {
-          const scopePath = Object.keys(code);
-
-          const refSubLine = sub[i];
-          if (!refSubLine.some(code => typeof code === "object" && "i" in code)) {
-            return parseLambda(refSubLine)(...params);
-          }
-          const refSubVal = parseSubLine(refSubLine)(...params);
-          out[id]["i" + i] = refSubVal;
-          return refSubVal;
-        }
-
-        if (code in repo) {
-          return parse(repo, code);
-        }
-
-        throw new Error("No match found for code, brah! " + code);
-      });
-
-      const [head, ...args] = tokens;
-      return typeof head === "function" ? head(...args) : head;
-    };
-
-    const subRetVal = parseSubLine(subRet);
-    out[id].R = subRetVal;
-    return subRetVal;
-  };
-};
 
 // console.log(parse(test, "a")(3), 4);
 
