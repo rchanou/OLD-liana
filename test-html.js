@@ -2,7 +2,17 @@ const p = obj => JSON.stringify(obj, true, 2);
 
 const ops = {
   dot: (o, k) => o[k],
-  add: (x, y) => x + y,
+  add(...nums) {
+    let sum;
+    for (let i = 0; i < nums.length; i++) {
+      if (i === 0) {
+        sum = nums[i];
+      } else {
+        sum += nums[i];
+      }
+    }
+    return sum;
+  },
   minus: (x, y) => x - y,
   sw: (switcher, ...casePairs) => {
     const { length } = casePairs;
@@ -77,10 +87,20 @@ const test = {
   // }
 };
 
-const gen = (root, path = [], out = {}, args = {}) => {
-  const scope = root;
+const mergePaths = (base, walk) => {
+  const finalPath = [...base];
+  for (const token of walk) {
+    if (token === "..") {
+      finalPath.pop();
+    } else {
+      finalPath.push(token);
+    }
+  }
+  return finalPath;
+};
+
+const gen = (program, path = [], out = {}, args = {}) => {
   return (...params) => {
-    // TODO: work on this
     if (params.length) {
       if (!path.length) {
         args.S = params;
@@ -113,34 +133,36 @@ const gen = (root, path = [], out = {}, args = {}) => {
           if (typeof word.A === "number") {
             return params[word.A];
           } else {
-            const argPath = word.A;
-            const finalPath = [...path];
-            for (const token of argPath) {
-              if (token === "..") {
-                finalPath.pop();
-              } else {
-                finalPath.push(token);
-              }
-            }
+            const argPath = mergePaths(path, word.A);
             let subArgs = args;
             let i = 0;
-            for (i; i < finalPath.length - 1; i++) {
-              subArgs = args[finalPath[i]];
+            for (i; i < argPath.length - 1; i++) {
+              subArgs = args[argPath[i]];
             }
-            return subArgs.S[finalPath[i]];
+            return subArgs.S[argPath[i]];
           }
         }
         if (Array.isArray(word)) {
+          const outPath = mergePaths(path, ["..", ...word]);
           let subOut = out;
-          for (let i = 0; i < word.length; i++) {
-            subOut = subOut[word[i]];
+          for (let i = 0; i < outPath.length; i++) {
+            subOut = subOut[outPath[i]];
           }
+          console.log(path, word, outPath, subOut, out);
           return subOut;
         }
       });
       const [head, ...tail] = tokens;
       return typeof head === "function" ? head(...tail) : head;
     };
+    let scope;
+    if (!path.length) {
+      scope = program;
+    } else {
+      for (const id of path) {
+        scope = program[id];
+      }
+    }
     for (const id in scope) {
       const line = scope[id];
       if (typeof line === "string") {
@@ -148,7 +170,7 @@ const gen = (root, path = [], out = {}, args = {}) => {
       } else if (Array.isArray(line)) {
         out[id] = call(line);
       } else if (typeof line === "object") {
-        out[id] = gen(line, [...path, id], out, args);
+        out[id] = gen(scope, [...path, id], out, args);
       } else {
         out[id] = line;
       }
@@ -163,7 +185,7 @@ const gen = (root, path = [], out = {}, args = {}) => {
 const t2 = {
   a: [{ O: "add" }, { V: 1 }, { V: 2 }],
   b: {
-    R: "fu"
+    R: [{ V: "fu" }]
   },
   c: [["b"]],
   d: {
@@ -173,8 +195,9 @@ const t2 = {
     R: [{ O: "minus" }, { A: 0 }, { V: 1 }]
   },
   f: {
+    b: [{ V: 7 }],
     a: {
-      b: [{ O: "add" }, { A: ["..", 0] }, { A: 0 }],
+      b: [{ O: "add" }, { A: ["..", 0] }, { A: 0 }, ["..", "b"]],
       R: "b"
     },
     R: "a"
@@ -183,7 +206,7 @@ const t2 = {
   h: [["g"], { V: 9 }],
   i: [["d"], { V: 4 }],
   j: { R: [{ O: "dot" }, { A: 0 }, { V: "type" }] },
-  R: "foo"
+  R: [{ v: "foo" }]
 };
 
 const cTest = gen(t2);
