@@ -99,8 +99,19 @@ const mergePaths = (base, walk) => {
   return finalPath;
 };
 
+const walkPath = (base, up, walk) => {
+  const finalPath = [...base];
+  while (up--) {
+    finalPath.pop();
+  }
+  for (const token of walk) {
+    finalPath.push(token);
+  }
+  return finalPath;
+};
+
 const gen = (program, path = [], out = {}, args = {}) => {
-  return (...params) => {
+  return function(...params) {
     if (params.length) {
       if (!path.length) {
         args.S = params;
@@ -133,7 +144,8 @@ const gen = (program, path = [], out = {}, args = {}) => {
           if (typeof word.A === "number") {
             return params[word.A];
           } else {
-            const argPath = mergePaths(path, word.A);
+            const [scopeLevel, ...argWalk] = word.A;
+            const argPath = walkPath(path, scopeLevel, argWalk);
             let subArgs = args;
             let i = 0;
             for (i; i < argPath.length - 1; i++) {
@@ -143,7 +155,8 @@ const gen = (program, path = [], out = {}, args = {}) => {
           }
         }
         if (Array.isArray(word)) {
-          const outPath = mergePaths(path, ["..", ...word]);
+          const [scopeLevel, ...refWalk] = word;
+          const outPath = walkPath(path, scopeLevel, refWalk);
           let subOut = out;
           for (let i = 0; i < outPath.length; i++) {
             subOut = subOut[outPath[i]];
@@ -197,7 +210,7 @@ const t2 = {
   f: {
     b: [{ V: 7 }],
     a: {
-      b: [{ O: "add" }, { A: ["..", 0] }, { A: 0 }, ["..", "b"]],
+      b: [{ O: "add" }, { A: [1, 0] }, { A: 0 }, [1, "b"]],
       R: "b"
     },
     R: "a"
