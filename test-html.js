@@ -153,7 +153,7 @@ const gen = (root, path = [], out = {}, args = {}) => {
         out[id] = line;
       }
     }
-    console.log(path, p(args), "args");
+    // console.log(path, p(args), "args");
     window.o = out;
     window.a = args;
     return out.R;
@@ -175,7 +175,6 @@ const t2 = {
   f: {
     a: {
       b: [{ O: "add" }, { A: ["..", 0] }, { A: 0 }],
-      // a: [{ A: ["R", 0] }],
       R: "b"
     },
     R: "a"
@@ -183,6 +182,7 @@ const t2 = {
   g: [["f"], { V: 8 }],
   h: [["g"], { V: 9 }],
   i: [["d"], { V: 4 }],
+  j: { R: [{ O: "dot" }, { A: 0 }, { V: "type" }] },
   R: "foo"
 };
 
@@ -190,6 +190,7 @@ const cTest = gen(t2);
 // console.log(cTest(1, 2, 3));
 const dTest = gen(t2.f);
 console.log("hmm", dTest(3)(5));
+console.log(gen(t2.j)({ type: "WUT" }));
 
 // console.log(parse(test, "a")(3), 4);
 
