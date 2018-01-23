@@ -174,20 +174,27 @@ const gen = (root, path = [], out = {}, args = {}) => {
           return op;
         }
         if ("A" in word) {
-          // console.log("a", args);
           if (typeof word.A === "number") {
             return params[word.A];
           } else {
             const argPath = word.A;
+            const finalPath = [...path];
+            for (const token of argPath) {
+              if (token === "..") {
+                finalPath.pop();
+              } else {
+                finalPath.push(token);
+              }
+            }
             // if (!argPath.length) {
             //   return;
             // }
             let subArgs = args;
             let i = 0;
-            for (i; i < argPath.length - 1; i++) {
-              subArgs = args[argPath[i]];
+            for (i; i < finalPath.length - 1; i++) {
+              subArgs = args[finalPath[i]];
             }
-            return subArgs[argPath[i]];
+            return subArgs.S[finalPath[i]];
           }
         }
         if (Array.isArray(word)) {
@@ -242,7 +249,7 @@ const t2 = {
   },
   f: {
     a: {
-      b: [{ O: "add" }, { A: ["S", 0] }, { A: 0 }],
+      b: [{ O: "add" }, { A: ["..", 0] }, { A: 0 }],
       // a: [{ A: ["R", 0] }],
       R: "b"
     },
