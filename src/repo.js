@@ -429,17 +429,17 @@ export const Engine = types
       const args = {};
       const gen = path => {
         return function(...params) {
-          if (params.length) {
-            let scopeArgs = args;
-            for (let i = 0; i < path.length; i++) {
-              const key = path[i];
-              if (!scopeArgs[key]) {
-                scopeArgs[key] = {};
-              }
-              scopeArgs = scopeArgs[key];
+          // if (params.length) {
+          let scopeArgs = args;
+          for (let i = 0; i < path.length; i++) {
+            const key = path[i];
+            if (!scopeArgs[key]) {
+              scopeArgs[key] = {};
             }
-            scopeArgs.S = params;
+            scopeArgs = scopeArgs[key];
           }
+          scopeArgs.S = params;
+          // }
           const call = line => {
             const tokens = line.map(word => {
               if ("out" in word) {
@@ -454,9 +454,8 @@ export const Engine = types
                   const argPath = walkPath(path, scopeLevel, argWalk);
                   let subArgs = args;
                   let i = 0;
-                  console.log(path, subArgs, argPath);
                   for (i; i < argPath.length - 1; i++) {
-                    subArgs = args[argPath[i]];
+                    subArgs = subArgs[argPath[i]];
                   }
                   return subArgs.S[argPath[i]];
                 }
@@ -522,8 +521,13 @@ const t2 = {
     c: [{ op: add }, { arg: 0 }, { val: 2 }],
     d: {
       R: {
+        R: [{ op: add }, { arg: [1, 0] }, { arg: 0 }]
+      }
+    },
+    e: {
+      R: {
         R: {
-          R: [{ op: add }, { arg: [1, 0] }, { arg: 0 }]
+          R: [{ op: add }, { arg: [2, 0] }, { arg: [1, 0] }, { arg: 0 }]
         }
       }
     },
@@ -536,7 +540,8 @@ const t2 = {
 const T = Engine.create(t2);
 window.T = T;
 console.log(T.out()(3), T.run("b")(), T.run("a")(), T.run("c")(5));
-window.d = T.run("d");
+console.log(T.run("d")(7)(11));
+console.log(T.run("e")(7)(8)(9));
 
 export const Repo = types
   .model("Repo", {
