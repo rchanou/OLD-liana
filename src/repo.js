@@ -420,11 +420,11 @@ const walkPath = (base, up, walk) => {
 const Proc = types.map(types.union(Line, types.late(() => Proc)));
 export const Engine = types
   .model("Engine", {
-    procs: Proc
+    main: Proc
   })
   .views(self => ({
-    run(initialPath = []) {
-      const { procs } = self;
+    run(...initialPath) {
+      const { main } = self;
       const out = {};
       const args = {};
       const gen = path => {
@@ -478,7 +478,7 @@ export const Engine = types
             const [head, ...tail] = tokens;
             return typeof head === "function" ? head(...tail) : head;
           };
-          let scope = procs;
+          let scope = main;
           let scopeOut = out;
           if (path.length) {
             let i = 0;
@@ -518,7 +518,7 @@ export const Engine = types
   }));
 
 const t2 = {
-  procs: {
+  main: {
     a: [{ op: add }, { val: 1 }, { val: 2 }],
     b: {
       R: [{ val: "fu" }]
@@ -532,7 +532,7 @@ const t2 = {
 
 const T = Engine.create(t2);
 window.T = T;
-console.log(T.out()(3), T.run(["b"])(), T.run(["a"])(), T.run(["d"])(5));
+console.log(T.out()(3), T.run("b")(), T.run("a")(), T.run("d")(5));
 
 export const Repo = types
   .model("Repo", {
