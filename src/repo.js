@@ -430,20 +430,15 @@ export const Engine = types
       const gen = path => {
         return function(...params) {
           if (params.length) {
-            if (!path.length) {
-              args.S = params;
-            } else {
-              let scopeArgs = args;
-              let i = 0;
-              for (i; i < path.length - 1; i++) {
-                const key = path[i];
-                if (!scopeArgs[key]) {
-                  scopeArgs[key] = {};
-                }
-                scopeArgs = scopeArgs[key];
+            let scopeArgs = args;
+            for (let i = 0; i < path.length; i++) {
+              const key = path[i];
+              if (!scopeArgs[key]) {
+                scopeArgs[key] = {};
               }
-              scopeArgs[path[i]] = params;
+              scopeArgs = scopeArgs[key];
             }
+            scopeArgs.S = params;
           }
           const call = line => {
             const tokens = line.map(word => {
@@ -459,6 +454,7 @@ export const Engine = types
                   const argPath = walkPath(path, scopeLevel, argWalk);
                   let subArgs = args;
                   let i = 0;
+                  console.log(path, subArgs, argPath);
                   for (i; i < argPath.length - 1; i++) {
                     subArgs = args[argPath[i]];
                   }
@@ -523,8 +519,15 @@ const t2 = {
     b: {
       R: [{ val: "fu" }]
     },
-    d: [{ op: add }, { arg: 0 }, { val: 2 }],
-    c: {
+    c: [{ op: add }, { arg: 0 }, { val: 2 }],
+    d: {
+      R: {
+        R: {
+          R: [{ op: add }, { arg: [1, 0] }, { arg: 0 }]
+        }
+      }
+    },
+    R: {
       R: [{ arg: 0 }]
     }
   }
@@ -532,7 +535,8 @@ const t2 = {
 
 const T = Engine.create(t2);
 window.T = T;
-console.log(T.out()(3), T.run("b")(), T.run("a")(), T.run("d")(5));
+console.log(T.out()(3), T.run("b")(), T.run("a")(), T.run("c")(5));
+window.d = T.run("d");
 
 export const Repo = types
   .model("Repo", {
