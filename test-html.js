@@ -110,95 +110,100 @@ const walkPath = (base, up, walk) => {
   return finalPath;
 };
 
-const gen = (program, path = [], out = {}, args = {}) => {
-  return function(...params) {
-    if (params.length) {
-      if (!path.length) {
-        args.S = params;
-      } else {
-        let scopeArgs = args;
+const gen = program => {
+  const out = {};
+  const args = {};
+  const subGen = (path = []) => {
+    return function(...params) {
+      if (params.length) {
+        if (!path.length) {
+          args.S = params;
+        } else {
+          let scopeArgs = args;
+          let i = 0;
+          for (i; i < path.length - 1; i++) {
+            const key = path[i];
+            if (!scopeArgs[key]) {
+              scopeArgs[key] = {};
+            }
+            scopeArgs = scopeArgs[key];
+          }
+          scopeArgs[path[i]] = params;
+        }
+      }
+      const call = line => {
+        const tokens = line.map(word => {
+          if ("V" in word) {
+            return word.V;
+          }
+          if ("O" in word) {
+            const op = ops[word.O];
+            if (!op) {
+              throw new Error("invalid op");
+            }
+            return op;
+          }
+          if ("A" in word) {
+            if (typeof word.A === "number") {
+              return params[word.A];
+            } else {
+              const [scopeLevel, ...argWalk] = word.A;
+              const argPath = walkPath(path, scopeLevel, argWalk);
+              let subArgs = args;
+              let i = 0;
+              for (i; i < argPath.length - 1; i++) {
+                subArgs = args[argPath[i]];
+              }
+              return subArgs.S[argPath[i]];
+            }
+          }
+          if (Array.isArray(word)) {
+            const [scopeLevel, ...refWalk] = word;
+            const outPath = walkPath(path, scopeLevel, refWalk);
+            let subOut = out;
+            for (let i = 0; i < outPath.length; i++) {
+              subOut = subOut[outPath[i]];
+            }
+            // console.log(path, word, outPath, subOut, out);
+            return subOut;
+          }
+        });
+        const [head, ...tail] = tokens;
+        return typeof head === "function" ? head(...tail) : head;
+      };
+      let scope = program;
+      let scopeOut = out;
+      if (path.length) {
         let i = 0;
         for (i; i < path.length - 1; i++) {
-          const key = path[i];
-          if (!scopeArgs[key]) {
-            scopeArgs[key] = {};
-          }
-          scopeArgs = scopeArgs[key];
+          const id = path[i];
+          scope = scope[id];
+          scopeOut = scopeOut[id];
         }
-        scopeArgs[path[i]] = params;
+        const scopeId = path[i];
+        scopeOut[scopeId] = {};
+        scope = scope[scopeId];
+        scopeOut = scopeOut[scopeId];
       }
-    }
-    const call = line => {
-      const tokens = line.map(word => {
-        if ("V" in word) {
-          return word.V;
+      for (const id in scope) {
+        const line = scope[id];
+        if (typeof line === "string") {
+          scopeOut[id] = scopeOut[line];
+        } else if (Array.isArray(line)) {
+          scopeOut[id] = call(line);
+        } else if (typeof line === "object") {
+          scopeOut[id] = subGen([...path, id]);
+        } else {
+          scopeOut[id] = line;
         }
-        if ("O" in word) {
-          const op = ops[word.O];
-          if (!op) {
-            throw new Error("invalid op");
-          }
-          return op;
-        }
-        if ("A" in word) {
-          if (typeof word.A === "number") {
-            return params[word.A];
-          } else {
-            const [scopeLevel, ...argWalk] = word.A;
-            const argPath = walkPath(path, scopeLevel, argWalk);
-            let subArgs = args;
-            let i = 0;
-            for (i; i < argPath.length - 1; i++) {
-              subArgs = args[argPath[i]];
-            }
-            return subArgs.S[argPath[i]];
-          }
-        }
-        if (Array.isArray(word)) {
-          const [scopeLevel, ...refWalk] = word;
-          const outPath = walkPath(path, scopeLevel, refWalk);
-          let subOut = out;
-          for (let i = 0; i < outPath.length; i++) {
-            subOut = subOut[outPath[i]];
-          }
-          console.log(path, word, outPath, subOut, out);
-          return subOut;
-        }
-      });
-      const [head, ...tail] = tokens;
-      return typeof head === "function" ? head(...tail) : head;
+      }
+      // console.log(out, scopeOut, path, p(args), "args");
+      window.o = out;
+      window.a = args;
+      return scopeOut.R;
     };
-    let scope = program;
-    let scopeOut = out;
-    if (path.length) {
-      let i = 0;
-      for (i; i < path.length - 1; i++) {
-        const id = path[i];
-        scope = scope[id];
-        scopeOut = scopeOut[id];
-      }
-      const scopeId = path[i];
-      scopeOut[scopeId] = {};
-      scope = scope[scopeId];
-      scopeOut = scopeOut[scopeId];
-    }
-    for (const id in scope) {
-      const line = scope[id];
-      if (typeof line === "string") {
-        scopeOut[id] = scopeOut[line];
-      } else if (Array.isArray(line)) {
-        scopeOut[id] = call(line);
-      } else if (typeof line === "object") {
-        scopeOut[id] = gen(program, [...path, id], out, args);
-      } else {
-        scopeOut[id] = line;
-      }
-    }
-    console.log(out, scopeOut, path, p(args), "args");
-    window.o = out;
-    window.a = args;
-    return scopeOut.R;
   };
+  return subGen();
 };
 
 const t2 = {
