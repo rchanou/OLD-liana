@@ -417,13 +417,14 @@ const walkPath = (base, up, walk) => {
   return finalPath;
 };
 
-export const Proc = types
-  .model("Proc", {
-    lines: types.map(types.union(Line, types.late(() => Proc)))
+const Proc = types.map(types.union(Line, types.late(() => Proc)));
+export const Engine = types
+  .model("Engine", {
+    procs: Proc
   })
   .views(self => ({
     get out() {
-      const { lines } = self;
+      const { procs } = self;
       const out = {};
       const args = {};
       const gen = (path = []) => {
@@ -477,22 +478,22 @@ export const Proc = types
             const [head, ...tail] = tokens;
             return typeof head === "function" ? head(...tail) : head;
           };
-          let scope = self;
+          let scope = procs;
           let scopeOut = out;
           if (path.length) {
             let i = 0;
             for (i; i < path.length - 1; i++) {
               const id = path[i];
-              scope = scope.lines.get(id);
+              scope = scope.get(id);
               scopeOut = scopeOut[id];
             }
             const scopeId = path[i];
             scopeOut[scopeId] = {};
-            scope = scope.lines.get(scopeId);
+            scope = scope.get(scopeId);
             scopeOut = scopeOut[scopeId];
           }
           let lastScopeOut;
-          scope.lines.forEach((line, id) => {
+          scope.forEach((line, id) => {
             if (isObservableArray(line)) {
               scopeOut[id] = call(line);
             } else if (typeof line === "object") {
@@ -502,7 +503,7 @@ export const Proc = types
             }
             lastScopeOut = scopeOut[id];
           });
-          console.log(path, scopeOut, args);
+          // console.log(path, scopeOut, args);
           return lastScopeOut;
         };
       };
@@ -511,24 +512,20 @@ export const Proc = types
   }));
 
 const t2 = {
-  lines: {
+  procs: {
     a: [{ op: add }, { val: 1 }, { val: 2 }],
     b: {
-      lines: {
-        R: [{ val: "fu" }]
-      }
+      R: [{ val: "fu" }]
     },
     c: {
-      lines: {
-        R: [{ arg: 0 }]
-      }
+      R: [{ arg: 0 }]
     }
   }
 };
 
-const T = Proc.create(t2);
+const T = Engine.create(t2);
 window.T = T;
-console.log(T.out()(3), T.lines.get("b").out());
+console.log(T.out()(3));
 
 export const Repo = types
   .model("Repo", {
