@@ -168,13 +168,11 @@ const gen = (program, path = [], out = {}, args = {}) => {
       const [head, ...tail] = tokens;
       return typeof head === "function" ? head(...tail) : head;
     };
-    let scope;
-    if (!path.length) {
-      scope = program;
-    } else {
-      for (const id of path) {
-        scope = program[id];
-      }
+    let scope = program;
+    let scopeOut = out;
+    for (const id of path) {
+      scope = program[id];
+      scopeOut = scopeOut[id];
     }
     for (const id in scope) {
       const line = scope[id];
@@ -183,12 +181,12 @@ const gen = (program, path = [], out = {}, args = {}) => {
       } else if (Array.isArray(line)) {
         out[id] = call(line);
       } else if (typeof line === "object") {
-        out[id] = gen(scope, [...path, id], out, args);
+        out[id] = gen(program, [...path, id], out, args);
       } else {
         out[id] = line;
       }
     }
-    // console.log(path, p(args), "args");
+    console.log(out, scopeOut, path, p(args), "args");
     window.o = out;
     window.a = args;
     return out.R;
