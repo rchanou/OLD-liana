@@ -185,22 +185,22 @@ const gen = program => {
         scope = scope[scopeId];
         scopeOut = scopeOut[scopeId];
       }
+      let lastScopeOut;
       for (const id in scope) {
         const line = scope[id];
-        if (typeof line === "string") {
-          scopeOut[id] = scopeOut[line];
-        } else if (Array.isArray(line)) {
+        if (Array.isArray(line)) {
           scopeOut[id] = call(line);
         } else if (typeof line === "object") {
           scopeOut[id] = subGen([...path, id]);
         } else {
           scopeOut[id] = line;
         }
+        lastScopeOut = scopeOut[id];
       }
       // console.log(out, scopeOut, path, p(args), "args");
       window.o = out;
       window.a = args;
-      return scopeOut.R;
+      return lastScopeOut;
     };
   };
   return subGen();
@@ -221,10 +221,8 @@ const t2 = {
   f: {
     b: [{ V: 7 }],
     a: {
-      b: [{ O: "add" }, { A: [1, 0] }, { A: 0 }, [1, "b"]],
-      R: "b"
-    },
-    R: "a"
+      R: [{ O: "add" }, { A: [1, 0] }, { A: 0 }, [1, "b"]]
+    }
   },
   g: [["f"], { V: 8 }],
   h: [["g"], { V: 9 }],
