@@ -1,4 +1,5 @@
 import { types, flow } from "mobx-state-tree";
+import { isObservableArray } from "mobx";
 
 import { ContextUser } from "./user";
 import { makeContext, mixinModel } from "./context";
@@ -251,9 +252,10 @@ const Op = mixinModel(Named)("Op", {
   }
 }));
 
+const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // TODO: type prop
-  arg: types.refinement(types.number, n => n >= 0 && !(n % 1))
+  arg: types.union(integerType, types.array(integerType))
   // names: NameSet
 }).views(self => ({
   get name() {
@@ -403,6 +405,130 @@ const parseCallLine = line => {
   }
   return func;
 };
+
+const walkPath = (base, up, walk) => {
+  const finalPath = [...base];
+  while (up--) {
+    finalPath.pop();
+  }
+  for (const token of walk) {
+    finalPath.push(token);
+  }
+  return finalPath;
+};
+
+export const Proc = types
+  .model("Proc", {
+    lines: types.map(types.union(Line, types.late(() => Proc)))
+  })
+  .views(self => ({
+    get out() {
+      const { lines } = self;
+      const out = {};
+      const args = {};
+      const gen = (path = []) => {
+        return function(...params) {
+          if (params.length) {
+            if (!path.length) {
+              args.S = params;
+            } else {
+              let scopeArgs = args;
+              let i = 0;
+              for (i; i < path.length - 1; i++) {
+                const key = path[i];
+                if (!scopeArgs[key]) {
+                  scopeArgs[key] = {};
+                }
+                scopeArgs = scopeArgs[key];
+              }
+              scopeArgs[path[i]] = params;
+            }
+          }
+          const call = line => {
+            const tokens = line.map(word => {
+              if ("out" in word) {
+                return word.out;
+              }
+              if ("arg" in word) {
+                const { arg } = word;
+                if (typeof arg === "number") {
+                  return params[arg];
+                } else {
+                  const [scopeLevel, ...argWalk] = arg;
+                  const argPath = walkPath(path, scopeLevel, argWalk);
+                  let subArgs = args;
+                  let i = 0;
+                  for (i; i < argPath.length - 1; i++) {
+                    subArgs = args[argPath[i]];
+                  }
+                  return subArgs.S[argPath[i]];
+                }
+              }
+              if (isObservableArray(word)) {
+                const [scopeLevel, ...refWalk] = word;
+                const outPath = walkPath(path, scopeLevel, refWalk);
+                let subOut = out;
+                for (let i = 0; i < outPath.length; i++) {
+                  subOut = subOut[outPath[i]];
+                }
+                return subOut;
+              }
+            });
+            const [head, ...tail] = tokens;
+            return typeof head === "function" ? head(...tail) : head;
+          };
+          let scope = self;
+          let scopeOut = out;
+          if (path.length) {
+            let i = 0;
+            for (i; i < path.length - 1; i++) {
+              const id = path[i];
+              scope = scope.lines.get(id);
+              scopeOut = scopeOut[id];
+            }
+            const scopeId = path[i];
+            scopeOut[scopeId] = {};
+            scope = scope.lines.get(scopeId);
+            scopeOut = scopeOut[scopeId];
+          }
+          let lastScopeOut;
+          scope.lines.forEach((line, id) => {
+            if (isObservableArray(line)) {
+              scopeOut[id] = call(line);
+            } else if (typeof line === "object") {
+              scopeOut[id] = gen([...path, id]);
+            } else {
+              throw new Error("Naw man");
+            }
+            lastScopeOut = scopeOut[id];
+          });
+          console.log(path, scopeOut, args);
+          return lastScopeOut;
+        };
+      };
+      return gen();
+    }
+  }));
+
+const t2 = {
+  lines: {
+    a: [{ op: add }, { val: 1 }, { val: 2 }],
+    b: {
+      lines: {
+        R: [{ val: "fu" }]
+      }
+    },
+    c: {
+      lines: {
+        R: [{ arg: 0 }]
+      }
+    }
+  }
+};
+
+const T = Proc.create(t2);
+window.T = T;
+console.log(T.out()(3), T.lines.get("b").out());
 
 export const Repo = types
   .model("Repo", {

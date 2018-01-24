@@ -192,8 +192,6 @@ const gen = program => {
           scopeOut[id] = call(line);
         } else if (typeof line === "object") {
           scopeOut[id] = subGen([...path, id]);
-        } else {
-          scopeOut[id] = line;
         }
         lastScopeOut = scopeOut[id];
       }
