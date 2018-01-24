@@ -170,26 +170,34 @@ const gen = (program, path = [], out = {}, args = {}) => {
     };
     let scope = program;
     let scopeOut = out;
-    for (const id of path) {
-      scope = program[id];
-      scopeOut = scopeOut[id];
+    if (path.length) {
+      let i = 0;
+      for (i; i < path.length - 1; i++) {
+        const id = path[i];
+        scope = scope[id];
+        scopeOut = scopeOut[id];
+      }
+      const scopeId = path[i];
+      scopeOut[scopeId] = {};
+      scope = scope[scopeId];
+      scopeOut = scopeOut[scopeId];
     }
     for (const id in scope) {
       const line = scope[id];
       if (typeof line === "string") {
-        out[id] = out[line];
+        scopeOut[id] = scopeOut[line];
       } else if (Array.isArray(line)) {
-        out[id] = call(line);
+        scopeOut[id] = call(line);
       } else if (typeof line === "object") {
-        out[id] = gen(program, [...path, id], out, args);
+        scopeOut[id] = gen(program, [...path, id], out, args);
       } else {
-        out[id] = line;
+        scopeOut[id] = line;
       }
     }
     console.log(out, scopeOut, path, p(args), "args");
     window.o = out;
     window.a = args;
-    return out.R;
+    return scopeOut.R;
   };
 };
 
@@ -220,10 +228,10 @@ const t2 = {
   R: [{ v: "foo" }]
 };
 
-const cTest = gen(t2);
+// const cTest = gen(t2);
 // console.log(cTest(1, 2, 3));
-const dTest = gen(t2.f);
-console.log("hmm", dTest(3)(5));
+const fTest = gen(t2.f);
+console.log("hmm", fTest(3)(5));
 console.log(gen(t2.j)({ type: "WUT" }));
 
 // console.log(parse(test, "a")(3), 4);
