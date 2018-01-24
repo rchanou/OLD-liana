@@ -423,11 +423,11 @@ export const Engine = types
     procs: Proc
   })
   .views(self => ({
-    get out() {
+    run(initialPath = []) {
       const { procs } = self;
       const out = {};
       const args = {};
-      const gen = (path = []) => {
+      const gen = path => {
         return function(...params) {
           if (params.length) {
             if (!path.length) {
@@ -507,7 +507,10 @@ export const Engine = types
           return lastScopeOut;
         };
       };
-      return gen();
+      return gen(initialPath);
+    },
+    get out() {
+      return self.run();
     }
   }));
 
@@ -525,7 +528,7 @@ const t2 = {
 
 const T = Engine.create(t2);
 window.T = T;
-console.log(T.out()(3));
+console.log(T.out()(3), T.run(["b"])());
 
 export const Repo = types
   .model("Repo", {
