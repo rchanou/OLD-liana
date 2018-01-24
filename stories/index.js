@@ -1,3 +1,4 @@
+import { strictEqual } from "assert";
 import React from "react";
 import { destroy, getSnapshot } from "mobx-state-tree";
 
@@ -10,20 +11,46 @@ import { ReactView } from "../src/react-box";
 
 import defaultRepo from "./test-repo";
 
-import { Repo, ContextRepo as NewContextRepo } from "../src/repo";
+import { Repo, Engine, ContextRepo as NewContextRepo } from "../src/repo";
 import { App } from "../src/app";
 import { RepoEditor } from "../src/editor";
 import { main, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
 
-const LOCAL_STORAGE_KEY = "LIANA";
+const t2 = {
+  main: {
+    a: [{ op: "+" }, { val: 1 }, { val: 2 }],
+    b: {
+      R: [{ val: "fu" }]
+    },
+    c: [{ op: "+" }, { arg: 0 }, { val: 2 }],
+    d: {
+      R: {
+        R: [{ op: "+" }, { arg: [1, 0] }, { arg: 0 }]
+      }
+    },
+    e: {
+      R: {
+        R: {
+          R: [{ op: "+" }, { arg: [2, 0] }, { arg: [1, 0] }, { arg: 0 }]
+        }
+      }
+    },
+    R: {
+      R: [{ arg: 0 }]
+    }
+  }
+};
 
-const params = new Map(
-  Object.entries({
-    0: 4,
-    1: { type: "INCREMENT" }
-  })
-);
+const T = Engine.create(t2);
+strictEqual(T.out()(3), 3);
+strictEqual(T.run("b")(), "fu");
+strictEqual(T.run("a")(), 3);
+strictEqual(T.run("c")(5), 7);
+strictEqual(T.run("d")(7)(11), 18);
+strictEqual(T.run("e")(7)(8)(9), 24);
+
+const LOCAL_STORAGE_KEY = "LIANA";
 
 window.g = store => getSnapshot(store);
 

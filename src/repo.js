@@ -512,37 +512,6 @@ export const Engine = types
     }
   }));
 
-const t2 = {
-  main: {
-    a: [{ op: add }, { val: 1 }, { val: 2 }],
-    b: {
-      R: [{ val: "fu" }]
-    },
-    c: [{ op: add }, { arg: 0 }, { val: 2 }],
-    d: {
-      R: {
-        R: [{ op: add }, { arg: [1, 0] }, { arg: 0 }]
-      }
-    },
-    e: {
-      R: {
-        R: {
-          R: [{ op: add }, { arg: [2, 0] }, { arg: [1, 0] }, { arg: 0 }]
-        }
-      }
-    },
-    R: {
-      R: [{ arg: 0 }]
-    }
-  }
-};
-
-const T = Engine.create(t2);
-window.T = T;
-console.log(T.out()(3), T.run("b")(), T.run("a")(), T.run("c")(5));
-console.log(T.run("d")(7)(11));
-console.log(T.run("e")(7)(8)(9));
-
 export const Repo = types
   .model("Repo", {
     decs: types.map(Declaration),
