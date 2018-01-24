@@ -488,9 +488,12 @@ export const Engine = types
               scopeOut = scopeOut[id];
             }
             const scopeId = path[i];
-            scopeOut[scopeId] = {};
             scope = scope.get(scopeId);
+            scopeOut[scopeId] = {};
             scopeOut = scopeOut[scopeId];
+          }
+          if (isObservableArray(scope)) {
+            return call(scope);
           }
           let lastScopeOut;
           scope.forEach((line, id) => {
@@ -520,6 +523,7 @@ const t2 = {
     b: {
       R: [{ val: "fu" }]
     },
+    d: [{ op: add }, { arg: 0 }, { val: 2 }],
     c: {
       R: [{ arg: 0 }]
     }
@@ -528,7 +532,7 @@ const t2 = {
 
 const T = Engine.create(t2);
 window.T = T;
-console.log(T.out()(3), T.run(["b"])());
+console.log(T.out()(3), T.run(["b"])(), T.run(["a"])(), T.run(["d"])(5));
 
 export const Repo = types
   .model("Repo", {
