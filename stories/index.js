@@ -23,7 +23,9 @@ const t2 = {
     b: {
       R: [{ val: "fu" }]
     },
-    c: [{ op: "+" }, { arg: 0 }, { val: 2 }],
+    c: {
+      R: [{ op: "+" }, { arg: 0 }, { val: 2 }]
+    },
     d: {
       R: {
         R: [{ op: "+" }, { arg: [1, 0] }, { arg: 0 }]
@@ -36,19 +38,22 @@ const t2 = {
         }
       }
     },
-    R: {
-      R: [{ arg: 0 }]
-    }
+    f: {
+      R: [{ ref: [1, "a"] }]
+    },
+    R: [{ arg: 0 }]
   }
 };
 
 const T = Engine.create(t2);
-strictEqual(T.out()(3), 3);
+window.T = T;
+strictEqual(T.out(3), 3);
 strictEqual(T.run("b")(), "fu");
-strictEqual(T.run("a")(), 3);
+strictEqual(T.run("a"), 3);
 strictEqual(T.run("c")(5), 7);
 strictEqual(T.run("d")(7)(11), 18);
 strictEqual(T.run("e")(7)(8)(9), 24);
+strictEqual(T.run("f")(), 3);
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -109,7 +114,7 @@ console.log(packLength, unpackLength, packLength / unpackLength);
 
 window.n = Repo.create(packTest);
 
-console.log(window.n.decs.get("e").out({ type: "DECREMENT" })(5), 4);
+// console.log(window.n.decs.get("e").out({ type: "DECREMENT" })(5), 4);
 
 storiesOf("Liana", module)
   .add("editor", () => (

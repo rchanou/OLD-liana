@@ -255,7 +255,7 @@ const Op = mixinModel(Named)("Op", {
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // TODO: type prop
-  arg: types.union(integerType, types.array(integerType))
+  arg: types.union(integerType, types.refinement(types.array(integerType), path => path.length === 2))
   // names: NameSet
 }).views(self => ({
   get name() {
@@ -310,7 +310,17 @@ const GlobalRef = types
     }
   }));
 
-const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef);
+const Ref = types.model("Ref", {
+  ref: types.union(
+    types.string,
+    types.refinement(
+      types.array(types.union(integerType, types.string)),
+      ref => ref.length === 2 && typeof ref[0] === "number" && typeof ref[1] === "string"
+    )
+  )
+});
+
+const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef, Ref);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
@@ -423,7 +433,7 @@ export const Engine = types
     main: Proc
   })
   .views(self => ({
-    run(...initialPath) {
+    run(...returnPath) {
       const { main } = self;
       const out = {};
       const args = {};
@@ -460,14 +470,19 @@ export const Engine = types
                   return subArgs.S[argPath[i]];
                 }
               }
-              if (isObservableArray(word)) {
-                const [scopeLevel, ...refWalk] = word;
-                const outPath = walkPath(path, scopeLevel, refWalk);
-                let subOut = out;
-                for (let i = 0; i < outPath.length; i++) {
-                  subOut = subOut[outPath[i]];
+              if ("ref" in word || isObservableArray(word)) {
+                if (typeof word.ref === "number") {
+                } else {
+                  const [scopeLevel = 0, ...refWalk] = word.ref || word;
+                  // console.log(path, scopeLevel, refWalk,out);
+                  const outPath = walkPath(path, 1, refWalk);
+                  let subOut = out;
+                  for (let i = 0; i < outPath.length; i++) {
+                    subOut = subOut[outPath[i]];
+                  }
+                  // debugger;
+                  return subOut;
                 }
-                return subOut;
               }
             });
             const [head, ...tail] = tokens;
@@ -505,7 +520,19 @@ export const Engine = types
           return lastScopeOut;
         };
       };
-      return gen(initialPath);
+      const full = gen([]);
+      if (returnPath.length) {
+        full();
+        let subOut = out;
+        for (const id of returnPath) {
+          subOut = subOut[id];
+          // if (id === "c") debugger;
+        }
+        return subOut;
+        // console.log(returnPath, out);
+        // debugger;
+      }
+      return full;
     },
     get out() {
       return self.run();
