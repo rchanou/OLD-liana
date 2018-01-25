@@ -2,52 +2,52 @@
 {
   'fu'
 }
-foo {
+{ foo |
   + foo 2
 }
-bar {
-  foo {
+{ bar |
+  { foo |
     + foo bar
   }
 }
 
-counter = state action {
+counter = { state action |
   <- if (== state undefined) 0 nextState;
   nextState =
-    switch (. action 'type')
+    switch (. action 'type)
       'INCREMENT' (+ state 1)
       'DECREMENT' (- state 1)
       state
 }
 
-store = (. Redux 'createStore') counter;
-valueEl = @ document 'getElementById' 'value';
+store = (. Redux 'createStore) counter;
+valueEl = @ document 'getElementById 'value;
 
 render = {
-  set! valueEl 'innerHTML' (@ store 'getState' -> @ # 'toString')
+  set! valueEl 'innerHTML (@ store 'getState -> @ # 'toString)
 }
 
 @ store 'subscribe' render;
 
-@ document 'getElementById' 'increment'
-  -> @ # 'addEventListener' 'click' {
-    @ store 'dispatch' ({} 'type' 'INCREMENT')
+@ document 'getElementById 'increment
+  -> @ # 'addEventListener' 'click {
+    @ store 'dispatch ({} 'type 'INCREMENT)
   }
 
-@ document 'getElementById' 'decrement'
-  -> @ # 'addEventListener' 'click' {
-    @ store 'dispatch' ({} 'type' 'DECREMENT')
+@ document 'getElementById 'decrement
+  -> @ # 'addEventListener 'click {
+    @ store 'dispatch ({} 'type 'DECREMENT)
   }
 
-@ document 'getElementById' 'incrementIfOdd'
-  -> @ # 'addEventListener' 'click' {
-    if (@ store 'getState' -> % # 2 -> !== # 0)
-      @ store 'dispatch' ({} 'type' increment');
+@ document 'getElementById 'incrementIfOdd
+  -> @ # 'addEventListener 'click {
+    if (@ store 'getState -> % # 2 -> !== # 0)
+      @ store 'dispatch ({} 'type increment);
   }
 
-@ document 'getElementById' 'incrementAsync'
-  -> @ 'addEventListener' 'click' {
+@ document 'getElementById 'incrementAsync
+  -> @ 'addEventListener 'click {
     setTimeout! {
-      @ store 'dispatch' ({} 'type' 'INCREMENT')
+      @ store 'dispatch ({} 'type' 'INCREMENT)
     } 1000
   }
