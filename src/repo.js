@@ -428,6 +428,7 @@ const walkPath = (base, up, walk) => {
 };
 
 const Proc = types.map(types.union(Line, types.late(() => Proc)));
+
 export const Engine = types
   .model("Engine", {
     main: Proc
@@ -538,6 +539,8 @@ export const Engine = types
       return self.run();
     }
   }));
+
+export const ContextEngine = makeContext(Engine);
 
 export const Repo = types
   .model("Repo", {

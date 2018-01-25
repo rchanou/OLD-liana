@@ -110,4 +110,10 @@ export const makeContext = Model => {
   };
 };
 
-export const mixinModel = (...Models) => (...args) => types.compose(...Models, types.model(...args));
+export const mixinModel = (...Models) => (...args) => {
+  const modelsToCompose = Models;
+  if (args.length) {
+    modelsToCompose.push(types.model(...args));
+  }
+  return types.compose(...modelsToCompose);
+};

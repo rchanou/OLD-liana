@@ -4,7 +4,7 @@ import { isObservableArray } from "mobx";
 import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
-import { viewModel, cursorify, formatOut } from "./view";
+import { newViewModel, cursorify, formatOut } from "./view";
 import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -14,9 +14,9 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
   let currentX = x;
   let currentY = y - 1;
   const renderProc = (parent, id, path = []) => {
-    let scope = parent;
+    let proc = parent;
     if (id !== undefined) {
-      scope = parent[id];
+      proc = parent.get(id);
     }
     // const { id, line, ret, lines, out, name } = proc;
     // const renderLine = (line, lineId) => {};
@@ -30,13 +30,13 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       width: 2,
       selectable: true,
       text: `${id}: ${name}`,
-      labelForDec: proc
+      labelForDec: path
     });
     if (isObservableArray(proc)) {
-      for (let i = 0; i < line.length; i++) {
+      for (let i = 0; i < proc.length; i++) {
         currentX += 2;
-        const word = line[i];
-        const key = `CL-${subKey}-${i}`;
+        const word = proc[i];
+        const key = `CL-${path}-${i}`;
         const newCell = {
           key,
           x: currentX,
@@ -45,7 +45,8 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
           selectable: true,
           forDec: proc,
           nodeIndex: i,
-          text: lineId ? proc.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
+          text: `${path}-${i}`,
+          // text: lineId ? proc.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
           fill: word.color
         };
         // if (word.gRef) {
@@ -55,7 +56,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       }
     } else {
       proc.forEach((_, procId) => {
-        renderProc(scope, procId, [...path, procId]);
+        renderProc(proc, procId, [...path, procId]);
         currentX = 0;
         currentY++;
       });
@@ -67,11 +68,11 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       x: currentX,
       y: currentY,
       width: 2,
-      selectable: false,
-      text: formatOut(out)
+      selectable: false
+      // text: formatOut(out)
     });
   };
-  renderProc(repo.main);
+  renderProc(repo);
   return cells;
 };
 
@@ -86,7 +87,7 @@ const NodeRef = types
     }
   }));
 
-export const RepoEditor = viewModel("RepoLister", {
+export const MainEditor = newViewModel("RepoLister", {
   changeCellMode: false,
   changeOpMode: false,
   addNodeMode: false,
@@ -98,7 +99,7 @@ export const RepoEditor = viewModel("RepoLister", {
 })
   .views(self => ({
     get baseCells() {
-      return makeRepoCells(self.repo);
+      return makeRepoCells(self.engine.main);
     },
     // get cells() {
     //   return self.activeCells;

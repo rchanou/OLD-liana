@@ -11,11 +11,13 @@ import { ReactView } from "../src/react-box";
 
 import defaultRepo from "./test-repo";
 
-import { Repo, Engine, ContextRepo as NewContextRepo } from "../src/repo";
+import { Repo, Engine, ContextEngine, ContextRepo as NewContextRepo } from "../src/repo";
 import { App } from "../src/app";
 import { RepoEditor } from "../src/editor";
 import { main, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
+
+import { MainEditor } from "../src/new-editor";
 
 const t2 = {
   main: {
@@ -139,9 +141,16 @@ storiesOf("Liana", module)
       }}
     />
   ))
-  .add("new repo test", () => {
+  .add("OLD new repo test", () => {
     const store = RepoEditor.create({
       [NewContextRepo.key]: packTest
+    });
+    // window.m = store;
+    return <ReactView store={store} />;
+  })
+  .add("new repo test", () => {
+    const store = MainEditor.create({
+      [ContextEngine.key]: t2
     });
     window.m = store;
 

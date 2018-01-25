@@ -1,6 +1,7 @@
 import { types } from "mobx-state-tree";
 // import { Dependency, Input, Hole, ContextRepo } from "./core";
-import { Declaration, Pkg, ContextRepo } from "./repo";
+import { Declaration, Pkg, ContextEngine, ContextRepo } from "./repo";
+import { mixinModel } from "./context";
 
 export const formatOut = out => {
   if (out instanceof Error) {
@@ -19,15 +20,19 @@ export const formatOut = out => {
 
 let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
-const UI = ContextRepo.refModel("UI", {
-  selectedCellIndex: 0
-})
+const BaseUI = types
+  .model("BaseUI", {
+    selectedCellIndex: 0
+  })
   .views(self => {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
 
     return {
       get repo() {
         return self[ContextRepo.key];
+      },
+      get engine() {
+        return self[ContextEngine.key];
       },
       get selectedCell() {
         return self.baseCells[self.selectedCellIndex];
@@ -177,7 +182,11 @@ const UI = ContextRepo.refModel("UI", {
     }
   }));
 
+const UI = types.compose(ContextRepo.RefType, BaseUI);
 export const viewModel = (...args) => types.compose(types.model(...args), UI);
+
+const NewUI = types.compose(ContextEngine.RefType, BaseUI);
+export const newViewModel = (...args) => types.compose(types.model(...args), NewUI);
 
 export const cursorify = (baseCell, key, input) => {
   const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;
