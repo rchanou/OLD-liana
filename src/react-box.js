@@ -14,7 +14,7 @@ const unit = 40;
 const spacer = 0.1 * unit;
 const darkGray = "#888";
 
-const nodeStyle = {
+const boxStyle = {
   transition: "0.1s",
   position: "absolute",
   height: unit - 3 * spacer,
@@ -119,7 +119,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
   const { x, y, width, fill, key, text, category, input, cursor } = box;
 
   const style = {
-    ...nodeStyle,
+    ...boxStyle,
     top: y * unit,
     left: x * unit,
     width: width * unit,

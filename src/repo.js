@@ -259,7 +259,11 @@ const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // names: NameSet
 }).views(self => ({
   get name() {
-    return `{${self.arg}}`;
+    const { arg } = self;
+    if (isObservableArray(arg)) {
+      return `{${arg.join(",")}}`;
+    }
+    return `{${arg}}`;
     // TODO: look up appropriate name based on user context
     return self[ContextUser.key] || `{${self.arg}}`;
   },

@@ -45,7 +45,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
           selectable: true,
           forDec: proc,
           nodeIndex: i,
-          text: `${path}-${i}`,
+          text: word.name || `${path}-${i}`,
           // text: lineId ? proc.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
           fill: word.color
         };
