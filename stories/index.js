@@ -1,6 +1,6 @@
 import { strictEqual } from "assert";
 import React from "react";
-import { destroy, getSnapshot } from "mobx-state-tree";
+import { destroy, getSnapshot, types } from "mobx-state-tree";
 
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
@@ -11,7 +11,12 @@ import { ReactView } from "../src/react-box";
 
 import defaultRepo from "./test-repo";
 
-import { Repo, Engine, ContextEngine, ContextRepo as NewContextRepo } from "../src/repo";
+import {
+  Repo,
+  Engine,
+  ContextEngine,
+  ContextRepo as NewContextRepo
+} from "../src/repo";
 import { App } from "../src/app";
 import { RepoEditor } from "../src/editor";
 import { main, user } from "./test-repos";
@@ -43,7 +48,8 @@ const t2 = {
     f: {
       R: [{ ref: [1, "a"] }]
     },
-    R: [{ arg: 0 }]
+    g: [{ arg: 0 }]
+    // R: "g"S
   }
 };
 
@@ -156,3 +162,9 @@ storiesOf("Liana", module)
 
     return <ReactView store={store} />;
   });
+
+const TestM = types.refinement(
+  types.model("TestM", { name: types.string }),
+  l => l.name.length > 3
+);
+const fullTest = TestM.create({ name: "avaa" });

@@ -255,7 +255,10 @@ const Op = mixinModel(Named)("Op", {
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // TODO: type prop
-  arg: types.union(integerType, types.refinement(types.array(integerType), path => path.length === 2))
+  arg: types.union(
+    integerType,
+    types.refinement(types.array(integerType), path => path.length === 2)
+  )
   // names: NameSet
 }).views(self => ({
   get name() {
@@ -319,7 +322,10 @@ const Ref = types.model("Ref", {
     types.string,
     types.refinement(
       types.array(types.union(integerType, types.string)),
-      ref => ref.length === 2 && typeof ref[0] === "number" && typeof ref[1] === "string"
+      ref =>
+        ref.length === 2 &&
+        typeof ref[0] === "number" &&
+        typeof ref[1] === "string"
     )
   )
 });
@@ -431,7 +437,7 @@ const walkPath = (base, up, walk) => {
   return finalPath;
 };
 
-const Proc = types.map(types.union(Line, types.late(() => Proc)));
+const Proc = types.map(types.union(types.string, Line, types.late(() => Proc)));
 
 export const Engine = types
   .model("Engine", {
@@ -516,8 +522,10 @@ export const Engine = types
               scopeOut[id] = call(line);
             } else if (typeof line === "object") {
               scopeOut[id] = gen([...path, id]);
+            } else if (typeof line === "string") {
+              scopeOut[id] = scopeOut[line];
             } else {
-              throw new Error("Naw man");
+              throw new Error(`Naw fam: ${id}`);
             }
             lastScopeOut = scopeOut[id];
           });

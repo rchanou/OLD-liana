@@ -9,70 +9,33 @@ import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
-const makeMainCells = (repo, x = 0, y = 0) => {
+const makeProcCells = (parent, id, path = [], x = 0, y = 0) => {
+  let proc = parent;
+  if (id !== undefined) {
+    proc = parent.get(id);
+  }
   const cells = [];
-  let currentX = x;
-  let currentY = y - 1;
-  const makeProcCells = (parent, id, path = []) => {
-    let proc = parent;
-    if (id !== undefined) {
-      proc = parent.get(id);
-    }
-    // const { id, line, ret, lines, out, name } = proc;
-    // const renderLine = (line, lineId) => {};
-    currentX = x;
-    currentY++;
-    const key = `CL-${path}-label`;
-    cells.push({
-      key,
-      x: currentX,
-      y: currentY,
-      width: 2,
-      selectable: true,
-      text: id === undefined ? "Main" : `${id}: ${name}`,
-      labelForDec: path
-    });
-    if (isObservableArray(proc)) {
-      for (let i = 0; i < proc.length; i++) {
-        currentX += 2;
-        const word = proc[i];
-        const key = `CL-${path}-${i}`;
-        const newCell = {
-          key,
-          x: currentX,
-          y: currentY,
-          width: 2,
-          selectable: true,
-          forDec: proc,
-          nodeIndex: i,
-          text: word.name || `${path}-${i}`,
-          // text: lineId ? proc.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
-          fill: word.color
-        };
-        // if (word.gRef) {
-        //   newCell.gotoCellKey = `CL-${word.gRef.id}-0`;
-        // }
-        cells.push(newCell);
-      }
-    } else {
-      proc.forEach((_, procId) => {
-        makeProcCells(proc, procId, [...path, procId]);
-        currentX = 0;
-        currentY++;
+  if (isObservableArray(proc)) {
+    proc.forEach((word, i) => {
+      cells.push({
+        key: `CL-${path}-${i}`,
+        x,
+        y,
+        width: 2,
+        selectable: true,
+        fill: word.color,
+        text: word.name || word.out
       });
-      // renderLine(ret, `${id}-r`);
-    }
-    currentX += 2;
-    cells.push({
-      key: `${key}-V`,
-      x: currentX,
-      y: currentY,
-      width: 2,
-      selectable: false
-      // text: formatOut(out)
+      x += 2;
     });
-  };
-  makeProcCells(repo);
+    return cells;
+  }
+  proc.forEach((_, subId) => {
+    const subProcCells = makeProcCells(proc, subId, [...path, subId], x + 1, y);
+    cells.push(...subProcCells);
+    y++;
+  });
+  y++;
   return cells;
 };
 
@@ -99,7 +62,7 @@ export const MainEditor = newViewModel("RepoLister", {
 })
   .views(self => ({
     get baseCells() {
-      return makeMainCells(self.engine.main);
+      return makeProcCells(self.engine.main);
     },
     // get cells() {
     //   return self.activeCells;
@@ -194,7 +157,13 @@ export const MainEditor = newViewModel("RepoLister", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -423,7 +392,9 @@ export const MainEditor = newViewModel("RepoLister", {
         keyMap[2][7] = {
           name: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.baseCells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

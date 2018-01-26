@@ -9,21 +9,19 @@ const containerStyle = {
   position: "absolute",
   textAlign: "center"
 };
-
-const unit = 40;
+const unit = 25;
 const spacer = 0.1 * unit;
 const darkGray = "#888";
-
 const boxStyle = {
   transition: "0.1s",
   position: "absolute",
-  height: unit - 3 * spacer,
+  // height: unit - 3 * spacer,
+  height: unit,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
   textOverflow: "clip"
 };
-
 const lineStyle = {
   position: "absolute",
   background: darkGray,
@@ -33,15 +31,12 @@ const lineStyle = {
   borderLeft: "thin solid #333",
   borderRight: "thin solid #333"
 };
-
 const cursorStyle = {
   border: "3px solid yellow",
   background: "none"
 };
-
 // const boxBorder = "1px solid rgba(0,0,0,0.3)";
 const boxBorder = "1px solid #eee";
-
 const emptyObj = {};
 
 class Input extends React.Component {
@@ -50,7 +45,6 @@ class Input extends React.Component {
     me.focus();
     me.select();
   }
-
   render() {
     return <input {...this.props} />;
   }
@@ -74,25 +68,19 @@ class Cursor extends React.Component {
     window.scrollTo(0, 0);
     this.me.scrollIntoView();
   }
-
   componentDidUpdate() {
     const { me } = this;
-
     // TODO: much room for improvement here
     const scroll = () => {
       me.removeEventListener("transitionend", scroll);
-
       let lastY;
       const step = () =>
         requestAnimationFrame(() => {
           const { y } = me.getBoundingClientRect();
-
           if (y === lastY) {
             return;
           }
-
           lastY = y;
-
           if (y < 50) {
             window.scrollTo(0, window.scrollY - 9);
             step();
@@ -103,10 +91,8 @@ class Cursor extends React.Component {
         });
       step();
     };
-
     me.addEventListener("transitionend", scroll);
   }
-
   render() {
     return <div {...this.props} />;
   }
@@ -139,7 +125,14 @@ const ReactBox = observer(({ box, onInput, store }) => {
   let element;
   if (input != null) {
     style.background = "#eee";
-    element = <Input key={key} value={input} style={style} onChange={store.handleInput} />;
+    element = (
+      <Input
+        key={key}
+        value={input}
+        style={style}
+        onChange={store.handleInput}
+      />
+    );
   } else {
     const Tag = cursor ? Cursor : "div";
     element = (
@@ -172,7 +165,12 @@ export const ReactView = observer(({ store }) => {
   let throwawayIdCounter = 0;
 
   const cellBoxes = activeCells.map(cell => (
-    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} store={store} />
+    <ReactBox
+      key={cell ? cell.key : throwawayIdCounter++}
+      box={cell}
+      onInput={onInput}
+      store={store}
+    />
   ));
 
   return <div style={containerStyle}>{cellBoxes}</div>;
