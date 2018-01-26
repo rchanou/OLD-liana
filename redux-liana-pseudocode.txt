@@ -46,7 +46,7 @@ render = {
   }
 
 @ document 'getElementById 'incrementAsync
-  -> @ 'addEventListener 'click {
+  -> @ # 'addEventListener 'click {
     setTimeout! {
       @ store 'dispatch ({} 'type' 'INCREMENT)
     } 1000
