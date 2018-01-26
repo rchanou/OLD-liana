@@ -9,11 +9,11 @@ import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
-export const makeRepoCells = (repo, x = 0, y = 0) => {
+const makeMainCells = (repo, x = 0, y = 0) => {
   const cells = [];
   let currentX = x;
   let currentY = y - 1;
-  const renderProc = (parent, id, path = []) => {
+  const makeProcCells = (parent, id, path = []) => {
     let proc = parent;
     if (id !== undefined) {
       proc = parent.get(id);
@@ -29,7 +29,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       y: currentY,
       width: 2,
       selectable: true,
-      text: `${id}: ${name}`,
+      text: id === undefined ? "Main" : `${id}: ${name}`,
       labelForDec: path
     });
     if (isObservableArray(proc)) {
@@ -56,7 +56,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       }
     } else {
       proc.forEach((_, procId) => {
-        renderProc(proc, procId, [...path, procId]);
+        makeProcCells(proc, procId, [...path, procId]);
         currentX = 0;
         currentY++;
       });
@@ -72,7 +72,7 @@ export const makeRepoCells = (repo, x = 0, y = 0) => {
       // text: formatOut(out)
     });
   };
-  renderProc(repo);
+  makeProcCells(repo);
   return cells;
 };
 
@@ -99,7 +99,7 @@ export const MainEditor = newViewModel("RepoLister", {
 })
   .views(self => ({
     get baseCells() {
-      return makeRepoCells(self.engine.main);
+      return makeMainCells(self.engine.main);
     },
     // get cells() {
     //   return self.activeCells;
