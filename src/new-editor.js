@@ -14,8 +14,17 @@ const makeProcCells = (parent, id, path = [], x = 0, y = 0) => {
   if (id !== undefined) {
     proc = parent.get(id);
   }
-  const cells = [];
+  const cells = [
+    {
+      key: `CL-${path}`,
+      x,
+      y,
+      width: 2,
+      text: id
+    }
+  ];
   if (isObservableArray(proc)) {
+    x += 2;
     proc.forEach((word, i) => {
       cells.push({
         key: `CL-${path}-${i}`,
@@ -28,14 +37,18 @@ const makeProcCells = (parent, id, path = [], x = 0, y = 0) => {
       });
       x += 2;
     });
+    y++;
     return cells;
   }
-  proc.forEach((_, subId) => {
-    const subProcCells = makeProcCells(proc, subId, [...path, subId], x + 1, y);
-    cells.push(...subProcCells);
+  if (id !== undefined) {
     y++;
+  }
+  proc.forEach((_, subId) => {
+    const subX = id === undefined ? x : x + 1;
+    const subProcCells = makeProcCells(proc, subId, [...path, subId], subX, y);
+    cells.push(...subProcCells);
+    y = subProcCells[subProcCells.length - 1].y + 2;
   });
-  y++;
   return cells;
 };
 
