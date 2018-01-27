@@ -317,18 +317,28 @@ const GlobalRef = types
     }
   }));
 
-const Ref = types.model("Ref", {
-  ref: types.union(
-    types.string,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      ref =>
-        ref.length === 2 &&
-        typeof ref[0] === "number" &&
-        typeof ref[1] === "string"
+const Ref = types
+  .model("Ref", {
+    ref: types.union(
+      types.string,
+      types.refinement(
+        types.array(types.union(integerType, types.string)),
+        ref =>
+          ref.length === 2 &&
+          typeof ref[0] === "number" &&
+          typeof ref[1] === "string"
+      )
     )
-  )
-});
+  })
+  .views(self => ({
+    get name() {
+      const { ref } = self;
+      return typeof ref === "string" ? ref : `${ref.slice()}`;
+    },
+    get color() {
+      return Color.pending;
+    }
+  }));
 
 const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef, Ref);
 

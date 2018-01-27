@@ -54,6 +54,7 @@ const t2 = {
       R: [{ ref: [1, "i"] }, { arg: 0 }, { val: 2 }]
     },
     k: [{ ref: [1, "j"] }, { val: 5 }],
+    l: [{ op: "." }, { ref: "h" }, { val: "random" }],
     R: [{ arg: 0 }]
   }
 };
