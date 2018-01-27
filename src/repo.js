@@ -460,7 +460,6 @@ export const Engine = types
       const args = {};
       const gen = path => {
         return function(...params) {
-          // if (params.length) {
           let scopeArgs = args;
           for (let i = 0; i < path.length; i++) {
             const key = path[i];
@@ -470,7 +469,20 @@ export const Engine = types
             scopeArgs = scopeArgs[key];
           }
           scopeArgs.S = params;
-          // }
+          let scope = main;
+          let scopeOut = out;
+          if (path.length) {
+            let i = 0;
+            for (i; i < path.length - 1; i++) {
+              const id = path[i];
+              scope = scope.get(id);
+              scopeOut = scopeOut[id];
+            }
+            const scopeId = path[i];
+            scope = scope.get(scopeId);
+            scopeOut[scopeId] = {};
+            scopeOut = scopeOut[scopeId];
+          }
           const call = line => {
             const tokens = line.map(word => {
               if ("out" in word) {
@@ -493,34 +505,25 @@ export const Engine = types
               }
               if ("ref" in word || isObservableArray(word)) {
                 if (typeof word.ref === "string") {
-                  return out[word.ref];
+                  const refOut = out[word.ref];
+                  if (isObservableArray()) {
+                    return refOut;
+                  }
+                  return refOut;
                 }
-                const [scopeLevel, ...refWalk] = word.ref || word;
-                const outPath = walkPath(path, scopeLevel + 1, refWalk);
+                const [scopeLevel, ...refWalk] = word.ref.slice() || word;
+                const outPath = walkPath(path, scopeLevel, refWalk);
                 let subOut = out;
                 for (let i = 0; i < outPath.length; i++) {
                   subOut = subOut[outPath[i]];
                 }
+                // if (word.ref[1] === "m") debugger;
                 return subOut;
               }
             });
             const [head, ...tail] = tokens;
             return typeof head === "function" ? head(...tail) : head;
           };
-          let scope = main;
-          let scopeOut = out;
-          if (path.length) {
-            let i = 0;
-            for (i; i < path.length - 1; i++) {
-              const id = path[i];
-              scope = scope.get(id);
-              scopeOut = scopeOut[id];
-            }
-            const scopeId = path[i];
-            scope = scope.get(scopeId);
-            scopeOut[scopeId] = {};
-            scopeOut = scopeOut[scopeId];
-          }
           if (isObservableArray(scope)) {
             return call(scope);
           }
@@ -537,7 +540,6 @@ export const Engine = types
             }
             lastScopeOut = scopeOut[id];
           });
-          // console.log(path, scopeOut, args);
           return lastScopeOut;
         };
       };
@@ -547,16 +549,53 @@ export const Engine = types
         let subOut = out;
         for (const id of returnPath) {
           subOut = subOut[id];
-          // if (id === "c") debugger;
         }
         return subOut;
-        // console.log(returnPath, out);
-        // debugger;
       }
       return full;
     },
     get out() {
       return self.run();
+    },
+    run2(...initialPath) {
+      class Arg {}
+
+      const { main } = self;
+      const gen = (path = [], scopes = []) => {
+        let proc = main;
+        for (const id of path) {
+          proc = proc.get(id);
+        }
+        if (isObservableArray(proc)) {
+          const outs = proc.map(word => {
+            if ("out" in word) {
+              return word.out;
+            } else if ("ref" in word) {
+              return gen(word.ref);
+            } else if ("arg" in word) {
+              const { arg } = word;
+              if (typeof arg === "number") {
+                return scopes[scopes.length - 1][arg];
+              } else {
+                const [level, index] = arg;
+                return scopes[scopes.length - 1 - level][index];
+              }
+              // return new Arg();
+            }
+            // if (outs.some(out => out instanceof Arg)) {
+            //   return function(...params) {};
+            // }
+          });
+          const [head, ...args] = outs;
+          return typeof head === "function" ? head(...args) : head;
+        }
+        return function(...params) {
+          scopes.push(params);
+          const retLine = gen([...path, "R"], scopes);
+          return retLine;
+        };
+      };
+      return gen(initialPath);
     }
   }));
 

@@ -53,8 +53,17 @@ const t2 = {
     j: {
       R: [{ ref: [1, "i"] }, { arg: 0 }, { val: 2 }]
     },
-    k: [{ ref: [1, "j"] }, { val: 5 }],
+    k: [{ ref: "j" }, { val: 5 }],
+    k2: [{ ref: "j" }, { val: 12 }],
     l: [{ op: "." }, { ref: "h" }, { val: "random" }],
+    m: [{ op: "." }, { ref: "h" }, { val: "sqrt" }],
+    n: {
+      a: [{ ref: [1, "j"] }, { arg: 0 }],
+      b: [{ ref: [1, "j"] }, { arg: 1 }],
+      c: [{ op: "+" }, { ref: "a" }, { ref: "b" }],
+      R: [{ ref: [1, "m"] }, { ref: "c" }]
+    },
+    // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
     R: [{ arg: 0 }]
   }
 };
@@ -69,6 +78,10 @@ strictEqual(T.run("d")(7)(11), 18);
 strictEqual(T.run("e")(7)(8)(9), 24);
 strictEqual(T.run("f")(), 3);
 strictEqual(T.run("k"), 25);
+// strictEqual(T.run("k2"), 144);
+// strictEqual(T.run("o"), 13);
+strictEqual(T.run2("c")(3), 5);
+// strictEqual(T.run2("e"));\
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -169,9 +182,3 @@ storiesOf("Liana", module)
 
     return <ReactView store={store} />;
   });
-
-const TestM = types.refinement(
-  types.model("TestM", { name: types.string }),
-  l => l.name.length > 3
-);
-const fullTest = TestM.create({ name: "avaa" });
