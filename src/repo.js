@@ -41,7 +41,7 @@ const classOp = "c";
 const thisOp = "h";
 
 const opFuncs = {
-  [gRef]: typeof window !== "undefined" ? window : gRef,
+  [gRef]: typeof window !== "undefined" ? window : global,
   [dot](obj, key) {
     try {
       return obj[key];
@@ -482,18 +482,16 @@ export const Engine = types
                 }
               }
               if ("ref" in word || isObservableArray(word)) {
-                if (typeof word.ref === "number") {
-                } else {
-                  const [scopeLevel = 0, ...refWalk] = word.ref || word;
-                  // console.log(path, scopeLevel, refWalk,out);
-                  const outPath = walkPath(path, 1, refWalk);
-                  let subOut = out;
-                  for (let i = 0; i < outPath.length; i++) {
-                    subOut = subOut[outPath[i]];
-                  }
-                  // debugger;
-                  return subOut;
+                if (typeof word.ref === "string") {
+                  return out[word.ref];
                 }
+                const [scopeLevel, ...refWalk] = word.ref || word;
+                const outPath = walkPath(path, scopeLevel + 1, refWalk);
+                let subOut = out;
+                for (let i = 0; i < outPath.length; i++) {
+                  subOut = subOut[outPath[i]];
+                }
+                return subOut;
               }
             });
             const [head, ...tail] = tokens;

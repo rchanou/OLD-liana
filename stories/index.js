@@ -48,8 +48,13 @@ const t2 = {
     f: {
       R: [{ ref: [1, "a"] }]
     },
-    g: [{ arg: 0 }]
-    // R: "g"S
+    h: [{ op: "." }, { op: "g" }, { val: "Math" }],
+    i: [{ op: "." }, { ref: "h" }, { val: "pow" }],
+    j: {
+      R: [{ ref: [1, "i"] }, { arg: 0 }, { val: 2 }]
+    },
+    k: [{ ref: [1, "j"] }, { val: 5 }],
+    R: [{ arg: 0 }]
   }
 };
 
@@ -62,6 +67,7 @@ strictEqual(T.run("c")(5), 7);
 strictEqual(T.run("d")(7)(11), 18);
 strictEqual(T.run("e")(7)(8)(9), 24);
 strictEqual(T.run("f")(), 3);
+strictEqual(T.run("k"), 25);
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
