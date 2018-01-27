@@ -257,7 +257,7 @@ const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // TODO: type prop
   arg: types.union(
     integerType,
-    types.refinement(types.array(integerType), path => path.length === 2)
+    types.array(types.union(integerType, types.string))
   )
   // names: NameSet
 }).views(self => ({
@@ -325,7 +325,7 @@ const Ref = types
         types.array(types.union(integerType, types.string)),
         ref =>
           ref.length === 2 &&
-          typeof ref[0] === "number" &&
+          (typeof ref[0] === "number" || typeof ref[0] === "string") &&
           typeof ref[1] === "string"
       )
     )
@@ -558,10 +558,8 @@ export const Engine = types
       return self.run();
     },
     run2(...initialPath) {
-      class Arg {}
-
       const { main } = self;
-      const gen = (path = [], scopes = []) => {
+      const gen = (path = [], scopes = {}) => {
         let proc = main;
         for (const id of path) {
           proc = proc.get(id);
@@ -571,26 +569,23 @@ export const Engine = types
             if ("out" in word) {
               return word.out;
             } else if ("ref" in word) {
-              return gen(word.ref);
+              const { ref } = word;
+              if (typeof ref === "string") {
+                return gen([ref], scopes);
+              } else {
+                return gen(ref, scopes);
+              }
             } else if ("arg" in word) {
               const { arg } = word;
-              if (typeof arg === "number") {
-                return scopes[scopes.length - 1][arg];
-              } else {
-                const [level, index] = arg;
-                return scopes[scopes.length - 1 - level][index];
-              }
-              // return new Arg();
+              const [index, ...path] = arg;
+              return scopes[path][index];
             }
-            // if (outs.some(out => out instanceof Arg)) {
-            //   return function(...params) {};
-            // }
           });
           const [head, ...args] = outs;
           return typeof head === "function" ? head(...args) : head;
         }
         return function(...params) {
-          scopes.push(params);
+          scopes[path] = params;
           const retLine = gen([...path, "R"], scopes);
           return retLine;
         };

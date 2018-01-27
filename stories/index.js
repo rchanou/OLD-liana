@@ -31,7 +31,7 @@ const t2 = {
       R: [{ val: "fu" }]
     },
     c: {
-      R: [{ op: "+" }, { arg: 0 }, { val: 2 }]
+      R: [{ op: "+" }, { arg: [0, "c"] }, { val: 2 }]
     },
     d: {
       R: {
@@ -41,7 +41,12 @@ const t2 = {
     e: {
       R: {
         R: {
-          R: [{ op: "+" }, { arg: [2, 0] }, { arg: [1, 0] }, { arg: 0 }]
+          R: [
+            { op: "+" },
+            { arg: [0, "e"] },
+            { arg: [0, "e", "R"] },
+            { arg: [0, "e", "R", "R"] }
+          ]
         }
       }
     },
@@ -53,6 +58,9 @@ const t2 = {
     j: {
       R: [{ ref: [1, "i"] }, { arg: 0 }, { val: 2 }]
     },
+    j2: {
+      R: [{ ref: "i" }, { arg: [0, "j2"] }, { val: 2 }]
+    },
     k: [{ ref: "j" }, { val: 5 }],
     k2: [{ ref: "j" }, { val: 12 }],
     l: [{ op: "." }, { ref: "h" }, { val: "random" }],
@@ -63,6 +71,12 @@ const t2 = {
       c: [{ op: "+" }, { ref: "a" }, { ref: "b" }],
       R: [{ ref: [1, "m"] }, { ref: "c" }]
     },
+    o: {
+      a: [{ ref: "j2" }, { arg: [0, "o"] }],
+      b: [{ ref: "j2" }, { arg: [1, "o"] }],
+      c: [{ op: "+" }, { ref: ["o", "a"] }, { ref: ["o", "b"] }],
+      R: [{ ref: "m" }, { ref: ["o", "c"] }]
+    },
     // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
     R: [{ arg: 0 }]
   }
@@ -70,18 +84,18 @@ const t2 = {
 
 const T = Engine.create(t2);
 window.T = T;
-strictEqual(T.out(3), 3);
-strictEqual(T.run("b")(), "fu");
-strictEqual(T.run("a"), 3);
-strictEqual(T.run("c")(5), 7);
-strictEqual(T.run("d")(7)(11), 18);
-strictEqual(T.run("e")(7)(8)(9), 24);
-strictEqual(T.run("f")(), 3);
-strictEqual(T.run("k"), 25);
+// strictEqual(T.out(3), 3);
+// strictEqual(T.run("b")(), "fu");
+// strictEqual(T.run("a"), 3);
+// strictEqual(T.run("c")(5), 7);
+// strictEqual(T.run("d")(7)(11), 18);
+// strictEqual(T.run("e")(7)(8)(9), 24);
+// strictEqual(T.run("f")(), 3);
+// strictEqual(T.run("k"), 25);
 // strictEqual(T.run("k2"), 144);
 // strictEqual(T.run("o"), 13);
 strictEqual(T.run2("c")(3), 5);
-// strictEqual(T.run2("e"));\
+strictEqual(T.run2("e")(3)(5)(7), 15);
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
