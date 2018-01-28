@@ -56,27 +56,19 @@ const t2 = {
     h: [{ op: "." }, { op: "g" }, { val: "Math" }],
     i: [{ op: "." }, { ref: "h" }, { val: "pow" }],
     j: {
-      R: [{ ref: [1, "i"] }, { arg: 0 }, { val: 2 }]
-    },
-    j2: {
-      R: [{ ref: "i" }, { arg: [0, "j2"] }, { val: 2 }]
+      R: [{ ref: "i" }, { arg: [0, "j"] }, { val: 2 }]
     },
     k: [{ ref: "j" }, { val: 5 }],
     k2: [{ ref: "j" }, { val: 12 }],
     l: [{ op: "." }, { ref: "h" }, { val: "random" }],
     m: [{ op: "." }, { ref: "h" }, { val: "sqrt" }],
     n: {
-      a: [{ ref: [1, "j"] }, { arg: 0 }],
-      b: [{ ref: [1, "j"] }, { arg: 1 }],
-      c: [{ op: "+" }, { ref: "a" }, { ref: "b" }],
-      R: [{ ref: [1, "m"] }, { ref: "c" }]
+      a: [{ ref: "j" }, { arg: [0, "n"] }],
+      b: [{ ref: "j" }, { arg: [1, "n"] }],
+      c: [{ op: "+" }, { ref: ["n", "a"] }, { ref: ["n", "b"] }],
+      R: [{ ref: "m" }, { ref: ["n", "c"] }]
     },
-    o: {
-      a: [{ ref: "j2" }, { arg: [0, "o"] }],
-      b: [{ ref: "j2" }, { arg: [1, "o"] }],
-      c: [{ op: "+" }, { ref: ["o", "a"] }, { ref: ["o", "b"] }],
-      R: [{ ref: "m" }, { ref: ["o", "c"] }]
-    },
+    o: { R: [{ op: "?" }, { arg: 0 }] },
     // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
     R: [{ arg: 0 }]
   }
@@ -84,18 +76,9 @@ const t2 = {
 
 const T = Engine.create(t2);
 window.T = T;
-// strictEqual(T.out(3), 3);
-// strictEqual(T.run("b")(), "fu");
-// strictEqual(T.run("a"), 3);
-// strictEqual(T.run("c")(5), 7);
-// strictEqual(T.run("d")(7)(11), 18);
-// strictEqual(T.run("e")(7)(8)(9), 24);
-// strictEqual(T.run("f")(), 3);
-// strictEqual(T.run("k"), 25);
-// strictEqual(T.run("k2"), 144);
-// strictEqual(T.run("o"), 13);
-strictEqual(T.run2("c")(3), 5);
-strictEqual(T.run2("e")(3)(5)(7), 15);
+strictEqual(T.run("c")(3), 5);
+strictEqual(T.run("e")(3)(5)(7), 15);
+strictEqual(T.run("n")(11, 60), 61);
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -154,40 +137,40 @@ const unpackLength = JSON.stringify(unpackTest).length;
 const packLength = JSON.stringify(packTest).length;
 console.log(packLength, unpackLength, packLength / unpackLength);
 
-window.n = Repo.create(packTest);
+// window.n = Repo.create(packTest);
 
 // console.log(window.n.decs.get("e").out({ type: "DECREMENT" })(5), 4);
 
 storiesOf("Liana", module)
-  .add("editor", () => (
-    <Story
-      editor={{
-        ...context,
-        repoList: {
-          // tree: { rootLink: "g" },
-          selectedCellIndex: 75
-        }
-      }}
-    />
-  ))
-  .add("editor in chooser", () => (
-    <Story
-      editor={{
-        ...context,
-        repoList: {
-          selectedCellIndex: 75,
-          chooser: { forLink: "16", nodeIndex: 1 }
-        }
-      }}
-    />
-  ))
-  .add("OLD new repo test", () => {
-    const store = RepoEditor.create({
-      [NewContextRepo.key]: packTest
-    });
-    // window.m = store;
-    return <ReactView store={store} />;
-  })
+  // .add("editor", () => (
+  //   <Story
+  //     editor={{
+  //       ...context,
+  //       repoList: {
+  //         // tree: { rootLink: "g" },
+  //         selectedCellIndex: 75
+  //       }
+  //     }}
+  //   />
+  // ))
+  // .add("editor in chooser", () => (
+  //   <Story
+  //     editor={{
+  //       ...context,
+  //       repoList: {
+  //         selectedCellIndex: 75,
+  //         chooser: { forLink: "16", nodeIndex: 1 }
+  //       }
+  //     }}
+  //   />
+  // ))
+  // .add("OLD new repo test", () => {
+  //   const store = RepoEditor.create({
+  //     [NewContextRepo.key]: packTest
+  //   });
+  //   // window.m = store;
+  //   return <ReactView store={store} />;
+  // })
   .add("new repo test", () => {
     const store = MainEditor.create({
       [ContextEngine.key]: t2

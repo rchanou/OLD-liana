@@ -257,7 +257,24 @@ const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // TODO: type prop
   arg: types.union(
     integerType,
-    types.array(types.union(integerType, types.string))
+    types.refinement(
+      types.array(types.union(integerType, types.string)),
+      path => {
+        if (typeof path[0] !== "number") {
+          return false;
+        }
+        const { length } = path;
+        if (typeof path[1] === "number") {
+          return length === 2;
+        }
+        for (let i = 1; i < length; i++) {
+          if (typeof path[i] !== "string") {
+            return false;
+          }
+        }
+        return true;
+      }
+    )
   )
   // names: NameSet
 }).views(self => ({
@@ -275,58 +292,24 @@ const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   }
 }));
 
-const ScopedRef = mixinModel(ContextUser.RefType, Named)("ScopedRef", {
-  sRef: types.string
-}).views(self => ({
-  calc(lines, params) {
-    if (!lines) {
-      throw new Error("No lines brah!");
-    }
-    const innerLine = lines.get(self.sRef);
-    if (!innerLine) {
-      throw new Error("nononononono line");
-    }
-    if (!innerLine.some(ilWord => "sRef" in ilWord)) {
-      return parseCallLine(innerLine)(...params);
-    }
-    return parseLine(innerLine)(...params);
-  },
-  get name() {
-    // TODO: look up from user
-    return `(${self.sRef})`;
-  },
-  get color() {
-    return Color.reified;
-  }
-}));
-
-const GlobalRef = types
-  .model("GlobalRef", {
-    gRef: types.reference(types.late(() => Declaration))
-  })
-  .views(self => ({
-    get out() {
-      return self.gRef.out;
-    },
-    get name() {
-      return self.gRef.name;
-    },
-    get color() {
-      return Color.pending;
-      // return self.gRef.color;
-    }
-  }));
-
 const Ref = types
   .model("Ref", {
     ref: types.union(
       types.string,
       types.refinement(
         types.array(types.union(integerType, types.string)),
-        ref =>
-          ref.length === 2 &&
-          (typeof ref[0] === "number" || typeof ref[0] === "string") &&
-          typeof ref[1] === "string"
+        ref => {
+          const { length } = ref;
+          if (typeof ref[0] === "number") {
+            return length === 2 && typeof ref[1] === "string";
+          }
+          for (let i = 0; i < length; i++) {
+            if (typeof ref[i] !== "string") {
+              return false;
+            }
+          }
+          return true;
+        }
       )
     )
   })
@@ -340,7 +323,7 @@ const Ref = types
     }
   }));
 
-const Word = types.union(Val, Op, Arg, GlobalRef, ScopedRef, PkgRef, Ref);
+const Word = types.union(Val, Op, Arg, PkgRef, Ref);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
@@ -454,110 +437,10 @@ export const Engine = types
     main: Proc
   })
   .views(self => ({
-    run(...returnPath) {
-      const { main } = self;
-      const out = {};
-      const args = {};
-      const gen = path => {
-        return function(...params) {
-          let scopeArgs = args;
-          for (let i = 0; i < path.length; i++) {
-            const key = path[i];
-            if (!scopeArgs[key]) {
-              scopeArgs[key] = {};
-            }
-            scopeArgs = scopeArgs[key];
-          }
-          scopeArgs.S = params;
-          let scope = main;
-          let scopeOut = out;
-          if (path.length) {
-            let i = 0;
-            for (i; i < path.length - 1; i++) {
-              const id = path[i];
-              scope = scope.get(id);
-              scopeOut = scopeOut[id];
-            }
-            const scopeId = path[i];
-            scope = scope.get(scopeId);
-            scopeOut[scopeId] = {};
-            scopeOut = scopeOut[scopeId];
-          }
-          const call = line => {
-            const tokens = line.map(word => {
-              if ("out" in word) {
-                return word.out;
-              }
-              if ("arg" in word) {
-                const { arg } = word;
-                if (typeof arg === "number") {
-                  return params[arg];
-                } else {
-                  const [scopeLevel, ...argWalk] = arg;
-                  const argPath = walkPath(path, scopeLevel, argWalk);
-                  let subArgs = args;
-                  let i = 0;
-                  for (i; i < argPath.length - 1; i++) {
-                    subArgs = subArgs[argPath[i]];
-                  }
-                  return subArgs.S[argPath[i]];
-                }
-              }
-              if ("ref" in word || isObservableArray(word)) {
-                if (typeof word.ref === "string") {
-                  const refOut = out[word.ref];
-                  if (isObservableArray()) {
-                    return refOut;
-                  }
-                  return refOut;
-                }
-                const [scopeLevel, ...refWalk] = word.ref.slice() || word;
-                const outPath = walkPath(path, scopeLevel, refWalk);
-                let subOut = out;
-                for (let i = 0; i < outPath.length; i++) {
-                  subOut = subOut[outPath[i]];
-                }
-                // if (word.ref[1] === "m") debugger;
-                return subOut;
-              }
-            });
-            const [head, ...tail] = tokens;
-            return typeof head === "function" ? head(...tail) : head;
-          };
-          if (isObservableArray(scope)) {
-            return call(scope);
-          }
-          let lastScopeOut;
-          scope.forEach((line, id) => {
-            if (isObservableArray(line)) {
-              scopeOut[id] = call(line);
-            } else if (typeof line === "object") {
-              scopeOut[id] = gen([...path, id]);
-            } else if (typeof line === "string") {
-              scopeOut[id] = scopeOut[line];
-            } else {
-              throw new Error(`Naw fam: ${id}`);
-            }
-            lastScopeOut = scopeOut[id];
-          });
-          return lastScopeOut;
-        };
-      };
-      const full = gen([]);
-      if (returnPath.length) {
-        full();
-        let subOut = out;
-        for (const id of returnPath) {
-          subOut = subOut[id];
-        }
-        return subOut;
-      }
-      return full;
-    },
     get out() {
       return self.run();
     },
-    run2(...initialPath) {
+    run(...initialPath) {
       const { main } = self;
       const gen = (path = [], scopes = {}) => {
         let proc = main;
