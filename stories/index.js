@@ -68,7 +68,22 @@ const t2 = {
       c: [{ op: "+" }, { ref: ["n", "a"] }, { ref: ["n", "b"] }],
       R: [{ ref: "m" }, { ref: ["n", "c"] }]
     },
-    o: { R: [{ op: "?" }, { arg: 0 }] },
+    o: {
+      a: [{ op: "e" }, { arg: [0, "o"] }, { op: "u" }],
+      R: [{ op: "?" }, { ref: ["o", "a"] }, { val: 0 }, { ref: ["o", "b"] }],
+      b: [
+        { op: "s" },
+        { ref: ["o", "c"] },
+        { val: "INCREMENT" },
+        { ref: ["o", "d"] },
+        { val: "DECREMENT" },
+        { ref: ["o", "e"] },
+        { arg: [0, "o"] }
+      ],
+      c: [{ op: "." }, { arg: [1, "o"] }, { val: "type" }],
+      d: [{ op: "+" }, { arg: [0, "o"] }, { val: 1 }],
+      e: [{ op: "+" }, { arg: [0, "o"] }, { val: -1 }]
+    },
     // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
     R: [{ arg: 0 }]
   }

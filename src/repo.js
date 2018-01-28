@@ -39,9 +39,11 @@ const typeofOp = "t";
 const instanceOfOp = "i";
 const classOp = "c";
 const thisOp = "h";
+const undef = "u";
 
 const opFuncs = {
   [gRef]: typeof window !== "undefined" ? window : global,
+  [undef]: undefined,
   [dot](obj, key) {
     try {
       return obj[key];
@@ -103,6 +105,9 @@ const opFuncs = {
     return function() {
       return x;
     };
+  },
+  [strictEqual](a, b) {
+    return a === b;
   }
 };
 
@@ -134,7 +139,8 @@ const ops = [
   notEqual,
   notStrictEqual,
   mutate,
-  identity
+  identity,
+  undef
 ];
 
 export const Pkg = types
@@ -237,10 +243,11 @@ const Op = mixinModel(Named)("Op", {
   op: types.enumeration(ops)
 }).views(self => ({
   get out() {
-    const opFunc = opFuncs[self.op];
-    if (!opFunc) {
+    const { op } = self;
+    if (!(op in opFuncs)) {
       throw new Error(self.op + " op not yet implemented!");
     }
+    const opFunc = opFuncs[op];
     return opFunc;
   },
   get name() {
