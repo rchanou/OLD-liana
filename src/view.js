@@ -151,7 +151,7 @@ const BaseUI = types
         }
       }
 
-      // NOTE: Short-circuiting wraparound logic below  at the moment (allow param to set?)
+      // NOTE: Short-circuiting wraparound logic below at the moment (allow param to set?)
       return;
 
       if (axis === "y") {

@@ -1,7 +1,7 @@
 import { types, destroy, getSnapshot } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 
-import { Declaration } from "./repo";
+// import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
 import { viewModel, cursorify, formatOut } from "./view";

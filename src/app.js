@@ -1,5 +1,4 @@
 import { types, getEnv, destroy } from "mobx-state-tree";
-import EventEmitter from "eventemitter3";
 
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
