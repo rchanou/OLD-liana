@@ -9,49 +9,6 @@ import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
-const makeProcCells = (parent, id, path = [], x = 0, y = 0) => {
-  let proc = parent;
-  if (id !== undefined) {
-    proc = parent.get(id);
-  }
-  const cells = [
-    {
-      key: `CL-${path}`,
-      x,
-      y,
-      width: 2,
-      text: id
-    }
-  ];
-  if (isObservableArray(proc)) {
-    x += 2;
-    proc.forEach((word, i) => {
-      cells.push({
-        key: `CL-${path}-${i}`,
-        x,
-        y,
-        width: 2,
-        selectable: true,
-        fill: word.color,
-        text: word.name || word.out
-      });
-      x += 2;
-    });
-    y++;
-    return cells;
-  }
-  if (id !== undefined) {
-    y++;
-  }
-  proc.forEach((_, subId) => {
-    const subX = id === undefined ? x : x + 1;
-    const subProcCells = makeProcCells(proc, subId, [...path, subId], subX, y);
-    cells.push(...subProcCells);
-    y = subProcCells[subProcCells.length - 1].y + 2;
-  });
-  return cells;
-};
-
 const NodeRef = types
   .model("NodeRef", {
     // forDec: types.reference(Declaration),
@@ -75,7 +32,70 @@ export const MainEditor = viewModel("RepoLister", {
 })
   .views(self => ({
     get baseCells() {
-      return makeProcCells(self.engine.main);
+      const { engine, user } = self;
+      const makeProcCells = (parent, id, path = [], x = 0, y = 0) => {
+        let proc = parent;
+        if (id !== undefined) {
+          proc = parent.get(id);
+        }
+        const cells = [
+          {
+            key: `CL-${path}`,
+            x,
+            y,
+            width: 2,
+            text: id === "R" ? "<-" : id,
+            fill: "hsl(270,66%,92%)",
+            color: "#333"
+          }
+        ];
+        const argLabel = user.pathName([path, 0]);
+        if (argLabel) {
+          cells.push({
+            key: `CL-${path}-arg`,
+            x: x + 2,
+            y,
+            width: 2,
+            text: argLabel,
+            fill: "hsl(30,66%,92%)",
+            color: "#333"
+          });
+        }
+        if (isObservableArray(proc)) {
+          x += 2;
+          proc.forEach((word, i) => {
+            cells.push({
+              key: `CL-${path}-${i}`,
+              x,
+              y,
+              width: 2,
+              selectable: true,
+              fill: word.color,
+              text: word.name || word.out
+            });
+            x += 2;
+          });
+          y++;
+          return cells;
+        }
+        if (id !== undefined) {
+          y++;
+        }
+        proc.forEach((_, subId) => {
+          const subX = id === undefined ? x : x + 1;
+          const subProcCells = makeProcCells(
+            proc,
+            subId,
+            [...path, subId],
+            subX,
+            y
+          );
+          cells.push(...subProcCells);
+          y = subProcCells[subProcCells.length - 1].y + 2;
+        });
+        return cells;
+      };
+      return makeProcCells(engine.main);
     },
     // get cells() {
     //   return self.activeCells;
@@ -84,22 +104,18 @@ export const MainEditor = viewModel("RepoLister", {
     //   if (self.chooser) {
     //     return self.chooser.allCells;
     //   }
-
     //   if (self.tree) {
     //     return self.tree.allCells;
     //   }
-
     //   return self.allCells;
     // },
     get input() {
       if (self.editingNode) {
         return self.editingNode.node.out;
       }
-
       if (self.editingLabelForDec) {
         return self.editingLabelForDec.name;
       }
-
       return null;
     }
   }))

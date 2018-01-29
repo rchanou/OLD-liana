@@ -272,15 +272,3 @@ console.log(gen(t2.j)({ type: "WUT" }));
 // dispatchDec(store);
 // dispatchInc(store);
 // console.log(store.getState(), 6);
-
-var j = function(){
-  return 
-}
-var h = ops.dot(window, "Math");
-var m= ops.dot(h, "sqrt");
-var n = function() {
-  var n_a=
-  var n_c=ops.add()
-  var __ret= m();
-  return __ret
-};

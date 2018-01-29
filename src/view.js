@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
-// import { Dependency, Input, Hole, ContextRepo } from "./core";
 import { Pkg, ContextEngine } from "./repo";
+import { ContextUser } from "./user";
 import { mixinModel } from "./context";
 
 export const formatOut = out => {
@@ -33,6 +33,9 @@ const BaseUI = types
       // },
       get engine() {
         return self[ContextEngine.key];
+      },
+      get user() {
+        return self[ContextUser.key];
       },
       get selectedCell() {
         return self.baseCells[self.selectedCellIndex];
@@ -185,7 +188,7 @@ const BaseUI = types
 // const UI = types.compose(ContextRepo.RefType, BaseUI);
 // export const viewModel = (...args) => types.compose(types.model(...args), UI);
 
-const NewUI = types.compose(ContextEngine.RefType, BaseUI);
+const NewUI = types.compose(ContextEngine.RefType, ContextUser.RefType, BaseUI);
 export const viewModel = (...args) =>
   types.compose(types.model(...args), NewUI);
 

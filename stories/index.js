@@ -17,6 +17,7 @@ import {
   ContextEngine
   // ContextRepo as NewContextRepo
 } from "../src/repo";
+import { ContextUser } from "../src/user";
 // import { App } from "../src/app";
 // import { RepoEditor } from "../src/editor";
 import { main, user } from "./test-repos";
@@ -188,7 +189,17 @@ storiesOf("Liana", module)
   // })
   .add("new repo test", () => {
     const store = MainEditor.create({
-      [ContextEngine.key]: t2
+      [ContextEngine.key]: t2,
+      [ContextUser.key]: {
+        nameSets: {
+          "en-US": {
+            id: "en-US",
+            names: {
+              "b,0": "nuthin"
+            }
+          }
+        }
+      }
     });
     window.m = store;
 

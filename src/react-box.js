@@ -103,7 +103,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
     return null;
   }
 
-  const { x, y, width, fill, key, text, category, input, cursor } = box;
+  const { x, y, width, fill, color, key, text, category, input, cursor } = box;
 
   const style = {
     ...boxStyle,
@@ -111,7 +111,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
     left: x * unit,
     width: width * unit,
     background: fill,
-    color: fill ? "#eee" : "#333",
+    color: color || (fill ? "#eee" : "#333"),
     ...(cursor ? cursorStyle : emptyObj)
   };
   if (!cursor && fill) {
