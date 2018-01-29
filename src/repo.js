@@ -214,6 +214,9 @@ const Val = types
     },
     get color() {
       return Color.val;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
     }
   }))
   .actions(self => ({
@@ -236,6 +239,12 @@ const Named = types.model({
   names: NameSet
 });
 
+const defaultOpNames = {
+  [ifOp]: "IF",
+  [strictEqual]: "===",
+  [gRef]: "🌐"
+};
+
 const Op = mixinModel(Named)("Op", {
   op: types.enumeration(ops)
 }).views(self => ({
@@ -249,15 +258,19 @@ const Op = mixinModel(Named)("Op", {
   },
   get name() {
     // TODO: look up from context user
-    return self.op;
+    const { op } = self;
+    return defaultOpNames[op] || op;
   },
   get color() {
     return Color.op;
+  },
+  get width() {
+    return 1;
   }
 }));
 
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
-const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
+const Arg = mixinModel(ContextUser.RefType)("Arg", {
   // TODO: type prop
   arg: types.union(
     integerType,
@@ -283,49 +296,60 @@ const Arg = mixinModel(ContextUser.RefType, Named)("Arg", {
   // names: NameSet
 }).views(self => ({
   get name() {
+    // TODO: look up appropriate name based on user context
     const { arg } = self;
     if (isObservableArray(arg)) {
+      const [index, ...idPath] = arg.slice();
+      const realPath = [...idPath, index];
+      const pathName = self[ContextUser.key].pathName(realPath);
+      if (pathName) {
+        return pathName;
+      }
       return `{${arg.join(",")}}`;
     }
     return `{${arg}}`;
-    // TODO: look up appropriate name based on user context
-    return self[ContextUser.key] || `{${self.arg}}`;
   },
   get color() {
     return Color.input;
   }
 }));
 
-const Ref = types
-  .model("Ref", {
-    ref: types.union(
-      types.string,
-      types.refinement(
-        types.array(types.union(integerType, types.string)),
-        ref => {
-          const { length } = ref;
-          if (typeof ref[0] === "number") {
-            return length === 2 && typeof ref[1] === "string";
-          }
-          for (let i = 0; i < length; i++) {
-            if (typeof ref[i] !== "string") {
-              return false;
-            }
-          }
-          return true;
+const Ref = mixinModel(ContextUser.RefType)("Ref", {
+  ref: types.union(
+    types.string,
+    types.refinement(
+      types.array(types.union(integerType, types.string)),
+      ref => {
+        const { length } = ref;
+        if (typeof ref[0] === "number") {
+          return length === 2 && typeof ref[1] === "string";
         }
-      )
+        for (let i = 0; i < length; i++) {
+          if (typeof ref[i] !== "string") {
+            return false;
+          }
+        }
+        return true;
+      }
     )
-  })
-  .views(self => ({
-    get name() {
-      const { ref } = self;
-      return typeof ref === "string" ? ref : `${ref.slice()}`;
-    },
-    get color() {
-      return Color.pending;
+  )
+}).views(self => ({
+  get name() {
+    // TODO: look up appropriate name based on user context
+    const { ref } = self;
+    if (isObservableArray(ref)) {
+      const pathName = self[ContextUser.key].pathName(ref.slice());
+      if (pathName) {
+        return pathName;
+      }
+      return `{${ref.join(",")}}`;
     }
-  }));
+    return typeof ref === "string" ? ref : `${ref.slice()}`;
+  },
+  get color() {
+    return Color.pending;
+  }
+}));
 
 const Word = types.union(Val, Op, Arg, PkgRef, Ref);
 

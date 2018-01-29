@@ -116,7 +116,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
   };
   if (!cursor && fill) {
     style.borderRight = boxBorder;
-    style.borderBottom = boxBorder;
+    style.borderBottom = "4px solid #eee";
   } else {
     style.fontWeight = "550";
     style.color = "#333";

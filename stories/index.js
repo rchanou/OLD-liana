@@ -195,7 +195,11 @@ storiesOf("Liana", module)
           "en-US": {
             id: "en-US",
             names: {
-              "b,0": "nuthin"
+              "b,0": "nuthin",
+              "o,0": "state",
+              "o,1": "action",
+              "o,a": "state is undefined",
+              "o,b": "next state"
             }
           }
         }

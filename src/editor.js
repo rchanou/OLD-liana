@@ -44,38 +44,42 @@ export const MainEditor = viewModel("RepoLister", {
             x,
             y,
             width: 2,
-            text: id === "R" ? "<-" : id,
-            fill: "hsl(270,66%,92%)",
+            text: id === "R" ? "←" : id,
+            fill: "hsl(270,66%,88%)",
             color: "#333"
           }
         ];
-        const argLabel = user.pathName([path, 0]);
-        if (argLabel) {
-          cells.push({
-            key: `CL-${path}-arg`,
-            x: x + 2,
-            y,
-            width: 2,
-            text: argLabel,
-            fill: "hsl(30,66%,92%)",
-            color: "#333"
-          });
+        let argX = x + 2;
+        for (let i = 0; i < 2; i++) {
+          const argName = user.pathName([path, i]);
+          if (argName) {
+            cells.push({
+              key: `CL-${path}-arg-${i}`,
+              x: argX,
+              y,
+              width: 2,
+              text: argName,
+              fill: "hsl(30,66%,83%)",
+              color: "#333"
+            });
+            argX += 2;
+          }
         }
         if (isObservableArray(proc)) {
           x += 2;
           proc.forEach((word, i) => {
+            const { width = 2 } = word;
             cells.push({
               key: `CL-${path}-${i}`,
               x,
               y,
-              width: 2,
+              width,
               selectable: true,
               fill: word.color,
               text: word.name || word.out
             });
-            x += 2;
+            x += width;
           });
-          y++;
           return cells;
         }
         if (id !== undefined) {
@@ -91,7 +95,10 @@ export const MainEditor = viewModel("RepoLister", {
             y
           );
           cells.push(...subProcCells);
-          y = subProcCells[subProcCells.length - 1].y + 2;
+          y = subProcCells[subProcCells.length - 1].y + 1;
+          if (id === undefined) {
+            y++;
+          }
         });
         return cells;
       };
