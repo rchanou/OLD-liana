@@ -1,54 +1,86 @@
 import { types, destroy, getSnapshot } from "mobx-state-tree";
-import { isObservableArray } from "mobx";
 
 import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
-import { newViewModel, cursorify, formatOut } from "./view";
+import { viewModel, cursorify, formatOut } from "./view";
 import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
-const makeProcCells = (parent, id, path = [], x = 0, y = 0) => {
-  let proc = parent;
-  if (id !== undefined) {
-    proc = parent.get(id);
-  }
-  const cells = [
-    {
-      key: `CL-${path}`,
-      x,
-      y,
+export const makeRepoCells = (repo, x = 0, y = 0) => {
+  const cells = [];
+
+  let currentX = x;
+  let currentY = y - 1;
+
+  repo.decs.forEach(dec => {
+    const { id, line, ret, lines, out, name } = dec;
+
+    const renderLine = (line, subKey, lineId) => {
+      for (let i = 0; i < line.length; i++) {
+        currentX += 2;
+        const word = line[i];
+        const key = `CL-${subKey}-${i}`;
+
+        const newCell = {
+          key,
+          x: currentX,
+          y: currentY,
+          width: 2,
+          selectable: true,
+          forDec: dec,
+          nodeIndex: i,
+          text: lineId ? dec.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
+          fill: word.color
+        };
+
+        if (word.gRef) {
+          newCell.gotoCellKey = `CL-${word.gRef.id}-0`;
+        }
+
+        cells.push(newCell);
+      }
+    };
+
+    currentX = x;
+    currentY++;
+
+    const key = `CL-${id}`;
+
+    cells.push({
+      key,
+      x: currentX,
+      y: currentY,
       width: 2,
-      text: id
-    }
-  ];
-  if (isObservableArray(proc)) {
-    x += 2;
-    proc.forEach((word, i) => {
-      cells.push({
-        key: `CL-${path}-${i}`,
-        x,
-        y,
-        width: 2,
-        selectable: true,
-        fill: word.color,
-        text: word.name || word.out
-      });
-      x += 2;
+      selectable: true,
+      text: `${id}: ${name}`,
+      labelForDec: dec
     });
-    y++;
-    return cells;
-  }
-  if (id !== undefined) {
-    y++;
-  }
-  proc.forEach((_, subId) => {
-    const subX = id === undefined ? x : x + 1;
-    const subProcCells = makeProcCells(proc, subId, [...path, subId], subX, y);
-    cells.push(...subProcCells);
-    y = subProcCells[subProcCells.length - 1].y + 2;
+
+    if (line) {
+      renderLine(line, id);
+    } else {
+      lines.forEach((line, lineId) => {
+        renderLine(line, `${id}-${lineId}`, lineId);
+        currentX = 0;
+        currentY++;
+      });
+      renderLine(ret, `${id}-r`);
+    }
+
+    currentX += 2;
+
+    cells.push({
+      key: `${key}-V`,
+      x: currentX,
+      y: currentY,
+      width: 2,
+      selectable: false,
+      text: formatOut(out)
+    });
   });
+
   return cells;
 };
 
@@ -63,7 +95,7 @@ const NodeRef = types
     }
   }));
 
-export const MainEditor = newViewModel("RepoLister", {
+export const RepoEditor = viewModel("RepoLister", {
   changeCellMode: false,
   changeOpMode: false,
   addNodeMode: false,
@@ -75,7 +107,7 @@ export const MainEditor = newViewModel("RepoLister", {
 })
   .views(self => ({
     get baseCells() {
-      return makeProcCells(self.engine.main);
+      return makeRepoCells(self.repo);
     },
     // get cells() {
     //   return self.activeCells;
@@ -170,13 +202,7 @@ export const MainEditor = newViewModel("RepoLister", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const {
-        selectedCell,
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -405,9 +431,7 @@ export const MainEditor = newViewModel("RepoLister", {
         keyMap[2][7] = {
           name: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

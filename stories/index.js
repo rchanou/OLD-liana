@@ -5,24 +5,24 @@ import { destroy, getSnapshot, types } from "mobx-state-tree";
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
-import { ContextRepo } from "../src/core";
-import { ReactEditor } from "../src/react-editor";
+// import { ContextRepo } from "../src/core";ƒ
+// import { ReactEditor } from "../src/react-editor";
 import { ReactView } from "../src/react-box";
 
 import defaultRepo from "./test-repo";
 
 import {
-  Repo,
+  // Repo,
   Engine,
-  ContextEngine,
-  ContextRepo as NewContextRepo
+  ContextEngine
+  // ContextRepo as NewContextRepo
 } from "../src/repo";
-import { App } from "../src/app";
-import { RepoEditor } from "../src/editor";
+// import { App } from "../src/app";
+// import { RepoEditor } from "../src/editor";
 import { main, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
 
-import { MainEditor } from "../src/new-editor";
+import { MainEditor } from "../src/editor";
 
 const t2 = {
   main: {
@@ -141,16 +141,16 @@ const storedRepo = localStorage.getItem(LOCAL_STORAGE_KEY);
 
 const repoToLoad = storedRepo ? JSON.parse(storedRepo) : defaultRepo;
 
-const context = {
-  [ContextRepo.KEY]: defaultRepo
-};
+// const context = {
+//   [ContextRepo.KEY]: defaultRepo
+// };
 
-const unpackTest = unpack({ ...main, user });
-const packTest = pack(unpackTest);
+// const unpackTest = unpack({ ...main, user });
+// const packTest = pack(unpackTest);
 
-const unpackLength = JSON.stringify(unpackTest).length;
-const packLength = JSON.stringify(packTest).length;
-console.log(packLength, unpackLength, packLength / unpackLength);
+// const unpackLength = JSON.stringify(unpackTest).length;
+// const packLength = JSON.stringify(packTest).length;
+// console.log(packLength, unpackLength, packLength / unpackLength);
 
 // window.n = Repo.create(packTest);
 

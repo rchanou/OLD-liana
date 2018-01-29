@@ -220,15 +220,12 @@ const Val = types
     select(val) {
       if (typeof self.val === "number") {
         const numVal = Number(val);
-
         if (isNaN(numVal)) {
           return;
         }
-
         self.val = numVal;
         return;
       }
-
       self.val = val;
     }
   }));
@@ -334,97 +331,95 @@ const Word = types.union(Val, Op, Arg, PkgRef, Ref);
 
 const Line = types.refinement(types.array(Word), l => l.length);
 
-const getDecNameViews = self => ({
-  get name() {
-    const { decs } = self[ContextUser.key].currentNameSet;
-    if (!decs) {
-      return `{${self.id}}`;
-    }
-    const nameRecord = decs.get(self.id);
-    if (typeof nameRecord === "string") {
-      return nameRecord;
-    }
-    return nameRecord.get("r") || `{${self.id}}`;
-  }
-});
+// const getDecNameViews = self => ({
+//   get name() {
+//     const { decs } = self[ContextUser.key].currentNameSet;
+//     if (!decs) {
+//       return `{${self.id}}`;
+//     }
+//     const nameRecord = decs.get(self.id);
+//     if (typeof nameRecord === "string") {
+//       return nameRecord;
+//     }
+//     return nameRecord.get("r") || `{${self.id}}`;
+//   }
+// });
 
-const Call = mixinModel(ContextUser.RefType, Named)("Call", {
-  id: types.identifier(types.string),
-  line: Line
-})
-  .views(self => ({
-    get out() {
-      return parseCallLine(self.line);
-    },
-    get color() {
-      return Color.reified;
-    }
-  }))
-  .views(getDecNameViews);
+// const Call = mixinModel(ContextUser.RefType, Named)("Call", {
+//   id: types.identifier(types.string),
+//   line: Line
+// })
+//   .views(self => ({
+//     get out() {
+//       return parseCallLine(self.line);
+//     },
+//     get color() {
+//       return Color.reified;
+//     }
+//   }))
+//   .views(getDecNameViews);
 
-const Def = mixinModel(ContextUser.RefType, Named)("Def", {
-  id: types.identifier(types.string),
-  lines: types.maybe(types.map(Line)),
-  ret: Line
-})
-  .views(self => ({
-    get out() {
-      const { repo } = self;
-      const { lines } = self;
-      return (...params) => {
-        const parseLine = line => {
-          const tokens = line.map(word => {
-            if ("arg" in word) {
-              return params[word.arg];
-            }
-            if ("sRef" in word) {
-              return word.calc(lines, params);
-            }
-            return word.out;
-            throw new Error("No match found!");
-          });
-          const [head, ...args] = tokens;
-          return typeof head === "function" ? head(...args) : head;
-        };
-        return parseLine(self.ret);
-      };
-    },
-    get color() {
-      return Color.pending;
-    },
-    lineName(lineId) {
-      // TODO: this isn't getting hit and it feels dirty
-      const { decs } = self[ContextUser.key].currentNameSet;
-      if (!decs) {
-        return `{${self.id}}`;
-      }
-      const nameRecord = decs.get(self.id);
-      const name = nameRecord.get(lineId);
-      return name;
-    }
-  }))
-  .views(getDecNameViews);
+// const Def = mixinModel(ContextUser.RefType, Named)("Def", {
+//   id: types.identifier(types.string),
+//   lines: types.maybe(types.map(Line)),
+//   ret: Line
+// })
+//   .views(self => ({
+//     get out() {
+//       const { repo } = self;
+//       const { lines } = self;
+//       return (...params) => {
+//         const parseLine = line => {
+//           const tokens = line.map(word => {
+//             if ("arg" in word) {
+//               return params[word.arg];
+//             }
+//             if ("sRef" in word) {
+//               return word.calc(lines, params);
+//             }
+//             return word.out;
+//             throw new Error("No match found!");
+//           });
+//           const [head, ...args] = tokens;
+//           return typeof head === "function" ? head(...args) : head;
+//         };
+//         return parseLine(self.ret);
+//       };
+//     },
+//     get color() {
+//       return Color.pending;
+//     },
+//     lineName(lineId) {
+//       // TODO: this isn't getting hit and it feels dirty
+//       const { decs } = self[ContextUser.key].currentNameSet;
+//       if (!decs) {
+//         return `{${self.id}}`;
+//       }
+//       const nameRecord = decs.get(self.id);
+//       const name = nameRecord.get(lineId);
+//       return name;
+//     }
+//   }))
+//   .views(getDecNameViews);
 
-export const Declaration = types.union(Call, Def);
-
-const parseCallLine = line => {
-  const func = (...params) => {
-    // TODO: hoist unchanging (non-param) slots
-    const tokens = line.map(word => {
-      if ("arg" in word) {
-        return params[word.arg];
-      }
-      return word.out;
-      // throw new Error("No match found for word, brah! " + word);
-    });
-    const [head, ...args] = tokens;
-    return typeof head === "function" ? head(...args) : head;
-  };
-  if (!line.some(word => "arg" in word)) {
-    return func();
-  }
-  return func;
-};
+// const parseCallLine = line => {
+//   const func = (...params) => {
+//     // TODO: hoist unchanging (non-param) slots
+//     const tokens = line.map(word => {
+//       if ("arg" in word) {
+//         return params[word.arg];
+//       }
+//       return word.out;
+//       // throw new Error("No match found for word, brah! " + word);
+//     });
+//     const [head, ...args] = tokens;
+//     return typeof head === "function" ? head(...args) : head;
+//   };
+//   if (!line.some(word => "arg" in word)) {
+//     return func();
+//   }
+//   return func;
+// };
 
 const walkPath = (base, up, walk) => {
   const finalPath = [...base];
@@ -486,26 +481,26 @@ export const Engine = types
 
 export const ContextEngine = makeContext(Engine);
 
-export const Repo = types
-  .model("Repo", {
-    decs: types.map(Declaration),
-    user: ContextUser.Type
-  })
-  .preProcessSnapshot(snapshot => {
-    if (snapshot.d) {
-      return unpack(snapshot);
-    }
-    return snapshot;
-  })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      return pack(snapshot);
-    }
-  }))
-  .views(self => ({
-    out(id) {
-      return self.decs.get(id).out;
-    }
-  }));
+// export const Repo = types
+//   .model("Repo", {
+//     decs: types.map(Declaration),
+//     user: ContextUser.Type
+//   })
+//   .preProcessSnapshot(snapshot => {
+//     if (snapshot.d) {
+//       return unpack(snapshot);
+//     }
+//     return snapshot;
+//   })
+//   .actions(self => ({
+//     postProcessSnapshot(snapshot) {
+//       return pack(snapshot);
+//     }
+//   }))
+//   .views(self => ({
+//     out(id) {
+//       return self.decs.get(id).out;
+//     }
+//   }));
 
-export const ContextRepo = makeContext(Repo);
+// export const ContextRepo = makeContext(Repo);

@@ -1,14 +1,14 @@
 import { getType, types } from "mobx-state-tree";
 
-import { ContextRepo, InputRef, Link, LinkRef, Fn, Op, DepRef, Val } from "./core";
-import { uiModel, formatOut } from "./user-interface";
+// import { ContextRepo, InputRef, Link, LinkRef, Fn, Op, DepRef, Val } from "./core";
+import { viewModel, formatOut } from "./view";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
 const Path = types.array(types.union(types.string, types.number));
 
-export const Tree = uiModel("ViewRepoTree", {
-  rootLink: types.reference(Link),
+export const Tree = viewModel("ViewRepoTree", {
+  // rootLink: types.reference(Link),
   openPaths: optionalMap(types.boolean)
 }).views(self => {
   const { repo } = self;
@@ -121,7 +121,8 @@ export const Tree = uiModel("ViewRepoTree", {
           break;
         case Val:
           const { val } = node;
-          const boxSize = typeof val === "string" ? Math.ceil(val.length / 6) : 1;
+          const boxSize =
+            typeof val === "string" ? Math.ceil(val.length / 6) : 1;
           allCells.push({
             ...defaultCell,
             width: boxSize
@@ -146,7 +147,9 @@ export const Tree = uiModel("ViewRepoTree", {
     // TODO: we need some crazy logic to make this more adaptable
     // or perhaps there's a much more elegant way of doing this that I'm not seeing currently
     const thisSize = nextIsRef
-      ? Math.max(...allCells.map(n => n.x)) - x + (immediateNextIsRef ? 2 : allCells[allCells.length - 1].width + 1)
+      ? Math.max(...allCells.map(n => n.x)) -
+        x +
+        (immediateNextIsRef ? 2 : allCells[allCells.length - 1].width + 1)
       : Math.max(...allCells.map(n => n.x + n.width)) - x;
 
     const thisNode = {
@@ -155,7 +158,10 @@ export const Tree = uiModel("ViewRepoTree", {
       ...(root
         ? {}
         : {
-            downPath: linkPath.length < 3 ? linkPath.slice(0, -1) : linkPath.slice(0, -2)
+            downPath:
+              linkPath.length < 3
+                ? linkPath.slice(0, -1)
+                : linkPath.slice(0, -2)
           }),
       x,
       y,
@@ -176,7 +182,8 @@ export const Tree = uiModel("ViewRepoTree", {
         const box = allCells[i];
         const { path } = box;
         let j = path.length - 1;
-        let currentKey = "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
+        let currentKey =
+          "" + (j in path ? (box.link ? path[j] : `I${path[j]}`) : "");
         if (!box.link) {
           j--;
           currentKey += "/" + (j in path ? path[j] : "");

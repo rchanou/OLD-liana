@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 // import { Dependency, Input, Hole, ContextRepo } from "./core";
-import { Declaration, Pkg, ContextEngine, ContextRepo } from "./repo";
+import { Pkg, ContextEngine } from "./repo";
 import { mixinModel } from "./context";
 
 export const formatOut = out => {
@@ -28,9 +28,9 @@ const BaseUI = types
     const cursorId = `CURSOR-${cursorIdCounter++}`;
 
     return {
-      get repo() {
-        return self[ContextRepo.key];
-      },
+      // get repo() {
+      //   return self[ContextRepo.key];
+      // },
       get engine() {
         return self[ContextEngine.key];
       },
@@ -182,11 +182,12 @@ const BaseUI = types
     }
   }));
 
-const UI = types.compose(ContextRepo.RefType, BaseUI);
-export const viewModel = (...args) => types.compose(types.model(...args), UI);
+// const UI = types.compose(ContextRepo.RefType, BaseUI);
+// export const viewModel = (...args) => types.compose(types.model(...args), UI);
 
 const NewUI = types.compose(ContextEngine.RefType, BaseUI);
-export const newViewModel = (...args) => types.compose(types.model(...args), NewUI);
+export const viewModel = (...args) =>
+  types.compose(types.model(...args), NewUI);
 
 export const cursorify = (baseCell, key, input) => {
   const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;

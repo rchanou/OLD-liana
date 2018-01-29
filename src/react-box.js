@@ -3,7 +3,7 @@ import { findDOMNode } from "react-dom";
 import { createTransformer } from "mobx";
 import { observer } from "mobx-react";
 
-import { Link } from "./core";
+// import { Link } from "./core";
 
 const containerStyle = {
   position: "absolute",
@@ -140,6 +140,11 @@ const ReactBox = observer(({ box, onInput, store }) => {
         {text}
       </Tag>
     );
+  }
+
+  if (true) {
+    // TODO: set to false for refs to render connector below
+    return element;
   }
 
   const connector =
