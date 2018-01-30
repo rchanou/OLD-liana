@@ -208,8 +208,12 @@ storiesOf("Liana", module)
               "e,R,R,0": "z",
               h: "math",
               i: "power",
-              j: "√",
-              "j,0": "base"
+              j: "x²",
+              "j,0": "base",
+              m: "√",
+              n: "hypotenuse",
+              "n,0": "a",
+              "n,1": "b"
             }
           }
         }
