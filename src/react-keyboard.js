@@ -34,8 +34,8 @@ const inputModeEl = (
   </div>
 );
 
-export const ReactKeyboard = observer(({ editor }) => {
-  const { keyMap, heldKeyCoords } = editor;
+export const ReactKeyboard = observer(({ store }) => {
+  const { keyMap, heldKeyCoords } = store;
 
   if (typeof keyMap === "function") {
     return inputModeEl;

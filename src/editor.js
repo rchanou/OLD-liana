@@ -1,7 +1,6 @@
 import { types, destroy, getSnapshot } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 
-// import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
 import { viewModel, cursorify, formatOut, calcWidth } from "./view";
@@ -74,13 +73,7 @@ export const MainEditor = viewModel("MainEditor", {
           x += width;
           proc.forEach((word, i) => {
             const { width = 2 } = word;
-            if ("ref" in word) {
-              const refName = user.pathName(word.ref);
-              if (refName) {
-                console.log(refName);
-              }
-            }
-            cells.push({
+            const newCell = {
               key: `CL-${path}-${i}`,
               x,
               y,
@@ -88,7 +81,11 @@ export const MainEditor = viewModel("MainEditor", {
               selectable: true,
               fill: word.color,
               text: word.name || word.out
-            });
+            };
+            if ("ref" in word) {
+              newCell.gotoCellKey = `CL-${word.ref.slice()}-0`;
+            }
+            cells.push(newCell);
             x += width;
           });
           return cells;
@@ -222,20 +219,20 @@ export const MainEditor = viewModel("MainEditor", {
         const keyMap = {
           2: {
             6: {
-              name: "Op",
+              label: "Op",
               action() {
                 toggleChangeCellMode();
                 toggleChangeOpMode();
               }
             }
           },
-          3: { 6: { name: "Cancel", action: toggleChangeCellMode } }
+          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
         };
 
         if (nodeIndex) {
           keyMap[1] = {
             7: {
-              name: "Num",
+              label: "Num",
               action() {
                 forDec.setNode(nodeIndex, { val: 0 });
                 toggleChangeCellMode();
@@ -243,7 +240,7 @@ export const MainEditor = viewModel("MainEditor", {
               }
             },
             8: {
-              name: "Text",
+              label: "Text",
               action() {
                 forDec.setNode(nodeIndex, { val: "" });
                 toggleChangeCellMode();
@@ -251,7 +248,7 @@ export const MainEditor = viewModel("MainEditor", {
               }
             },
             9: {
-              name: "Bool",
+              label: "Bool",
               action() {
                 forDec.setNode(nodeIndex, { val: false });
                 toggleChangeCellMode();
@@ -265,7 +262,7 @@ export const MainEditor = viewModel("MainEditor", {
 
       if (self.changeOpMode) {
         const o = op => ({
-          name: op,
+          label: op,
           action() {
             forDec.setNode(nodeIndex, { op });
             toggleChangeOpMode();
@@ -295,7 +292,7 @@ export const MainEditor = viewModel("MainEditor", {
             9: o(">=")
           },
           3: {
-            0: { name: "Cancel", action: toggleChangeOpMode },
+            0: { label: "Cancel", action: toggleChangeOpMode },
             6: o("=="),
             7: o("==="),
             8: o("!="),
@@ -319,7 +316,7 @@ export const MainEditor = viewModel("MainEditor", {
         return {
           1: {
             7: {
-              name: "Num",
+              label: "Num",
               action() {
                 const lastNodeIndex = forDec.addNode({ val: 0 });
                 selectNewCell(lastNodeIndex);
@@ -327,7 +324,7 @@ export const MainEditor = viewModel("MainEditor", {
               }
             },
             8: {
-              name: "Text",
+              label: "Text",
               action() {
                 const lastNodeIndex = forDec.addNode({ val: "" });
                 selectNewCell(lastNodeIndex);
@@ -335,7 +332,7 @@ export const MainEditor = viewModel("MainEditor", {
               }
             },
             9: {
-              name: "Bool",
+              label: "Bool",
               action() {
                 const lastNodeIndex = forDec.addNode({ val: false });
                 selectNewCell(lastNodeIndex);
@@ -344,7 +341,7 @@ export const MainEditor = viewModel("MainEditor", {
           },
           2: {
             6: {
-              name: "Op",
+              label: "Op",
               action() {
                 const lastNodeIndex = forDec.addNode({ op: "." });
                 selectNewCell(lastNodeIndex);
@@ -352,7 +349,7 @@ export const MainEditor = viewModel("MainEditor", {
               }
             }
           },
-          3: { 6: { name: "Cancel", action: toggleAddNodeMode } }
+          3: { 6: { label: "Cancel", action: toggleAddNodeMode } }
         };
       }
 
@@ -362,7 +359,7 @@ export const MainEditor = viewModel("MainEditor", {
         1: {
           ...baseKeyMap[1],
           0: {
-            name: "Save",
+            label: "Save",
             action() {
               const snapshot = getSnapshot(self.repo);
               const minified = minify(snapshot);
@@ -370,9 +367,9 @@ export const MainEditor = viewModel("MainEditor", {
               console.log(JSON.stringify(snapshot));
             }
           },
-          // 2: { name: "▲", action: self.moveUp },
+          // 2: { label: "▲", action: self.moveUp },
           5: {
-            name: "Add Dec",
+            label: "Add Dec",
             action() {
               self.repo.addLink();
 
@@ -387,16 +384,16 @@ export const MainEditor = viewModel("MainEditor", {
               }
             }
           },
-          6: { name: "Add", action: toggleAddNodeMode }
+          6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
           ...baseKeyMap[2],
-          // 1: { name: "◀", action: self.moveLeft },
-          // 2: { name: "▼", action: self.moveDown },
-          // 3: { name: "▶", action: self.moveRight },
-          6: { name: "Change", action: toggleChangeCellMode },
+          // 1: { label: "◀", action: self.moveLeft },
+          // 2: { label: "▼", action: self.moveDown },
+          // 3: { label: "▶", action: self.moveRight },
+          6: { label: "Change", action: toggleChangeCellMode },
           9: {
-            name: "Delete",
+            label: "Delete",
             action() {
               if (typeof nodeIndex === "number") {
                 selectedCell.forDec.deleteNode(nodeIndex);
@@ -410,25 +407,26 @@ export const MainEditor = viewModel("MainEditor", {
 
       if (selectedCell.labelForDec) {
         keyMap[2][6] = {
-          name: "Change Label",
+          label: "Change Label",
           action: self.toggleLabelEdit
         };
       }
 
       if (selectedCell.forDec) {
         keyMap[2][5] = {
-          name: "Chooser",
+          label: "Chooser",
           action: self.toggleChooser
         };
         keyMap[3][5] = {
-          name: "Tree",
+          label: "Tree",
           action: self.toggleTree
         };
       }
 
       if (selectedCell.gotoCellKey) {
+        console.log("humboldts", selectedCell.gotoCellKey, selectedCell.key);
         keyMap[2][7] = {
-          name: "Go To Def",
+          label: "Go To Def",
           action() {
             const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
