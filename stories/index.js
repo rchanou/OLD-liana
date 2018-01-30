@@ -35,18 +35,23 @@ const t2 = {
     },
     d: {
       R: {
-        R: [{ op: "+" }, { arg: [1, 0] }, { arg: 0 }]
+        R: [{ op: "+" }, { arg: ["d", 0] }, { arg: ["d", "R", 0] }]
       }
     },
     e: {
       R: {
         R: {
-          R: [{ op: "+" }, { arg: ["e", 0] }, { arg: ["e", "R", 0] }, { arg: ["e", "R", "R", 0] }]
+          R: [
+            { op: "+" },
+            { arg: ["e", 0] },
+            { arg: ["e", "R", 0] },
+            { arg: ["e", "R", "R", 0] }
+          ]
         }
       }
     },
     f: {
-      R: [{ ref: [1, "a"] }]
+      R: [{ ref: "a" }]
     },
     h: [{ op: "." }, { op: "g" }, { val: "Math" }],
     i: [{ op: "." }, { ref: "h" }, { val: "pow" }],
@@ -55,6 +60,8 @@ const t2 = {
     },
     k: [{ ref: "j" }, { val: 5 }],
     k2: [{ ref: "j" }, { val: 12 }],
+    k3: [{ op: "+" }, { ref: "k" }, { ref: "k2" }],
+    k4: [{ ref: "m" }, { ref: "k3" }],
     l: [{ op: "." }, { ref: "h" }, { val: "random" }],
     m: [{ op: "." }, { ref: "h" }, { val: "sqrt" }],
     n: {
@@ -201,7 +208,8 @@ storiesOf("Liana", module)
             }
           }
         }
-      }
+      },
+      mainEditor: { selectedCellIndex: 60 }
     });
     window.m = store;
 

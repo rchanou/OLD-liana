@@ -88,17 +88,45 @@ export const MainEditor = viewModel("MainEditor", {
             cells.push(newCell);
             x += width;
           });
+          // if (proc.every(word => "out" in word)) {
+          if (!proc.some(word => "arg" in word)) {
+            const result = engine.run(path);
+            if (typeof result !== "function") {
+              const text =
+                typeof result === "object"
+                  ? JSON.stringify(result)
+                  : String(result);
+              // console.log("bruv", result, width);
+              cells.push({
+                key: `CL-${path}-out`,
+                x,
+                y,
+                text,
+                width: calcWidth(text)
+              });
+            }
+          }
           return cells;
         }
         if (id !== undefined) {
           y++;
         }
         proc.forEach((_, subId) => {
-          if (id !== undefined && subId !== "R" && !user.pathName([...path.slice(), subId])) {
+          if (
+            id !== undefined &&
+            subId !== "R" &&
+            !user.pathName([...path.slice(), subId])
+          ) {
             return;
           }
           const subX = id === undefined ? x : x + 1;
-          const subProcCells = makeProcCells(proc, subId, [...path, subId], subX, y);
+          const subProcCells = makeProcCells(
+            proc,
+            subId,
+            [...path, subId],
+            subX,
+            y
+          );
           cells.push(...subProcCells);
           y = subProcCells[subProcCells.length - 1].y + 1;
           if (id === undefined) {
@@ -198,7 +226,13 @@ export const MainEditor = viewModel("MainEditor", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -427,7 +461,9 @@ export const MainEditor = viewModel("MainEditor", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.baseCells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
