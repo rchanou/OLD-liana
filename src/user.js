@@ -18,7 +18,7 @@ const User = types
   })
   .views(self => ({
     pathName(path) {
-      return self.currentNameSet.names.get(path);
+      return self.currentNameSet.names.get(path.slice());
     }
   }));
 

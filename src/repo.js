@@ -338,7 +338,7 @@ const Ref = mixinModel(ContextUser.RefType)("Ref", {
     // TODO: look up appropriate name based on user context
     const { ref } = self;
     if (isObservableArray(ref)) {
-      const pathName = self[ContextUser.key].pathName(ref.slice());
+      const pathName = self[ContextUser.key].pathName(ref);
       if (pathName) {
         return pathName;
       }

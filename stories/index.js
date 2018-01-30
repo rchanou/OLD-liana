@@ -186,7 +186,7 @@ storiesOf("Liana", module)
   //   });
   //   // window.m = store;
   //   return <ReactView store={store} />;
-  // })
+  // })````
   .add("new repo test", () => {
     const store = MainEditor.create({
       [ContextEngine.key]: t2,
@@ -199,7 +199,11 @@ storiesOf("Liana", module)
               "o,0": "state",
               "o,1": "action",
               "o,a": "state is undefined",
-              "o,b": "next state"
+              "o,b": "next state",
+              "o,c": "action type",
+              "e,0": "x",
+              "e,R,0": "y",
+              "e,R,R,0": "z"
             }
           }
         }

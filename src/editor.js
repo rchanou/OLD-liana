@@ -44,7 +44,7 @@ export const MainEditor = viewModel("RepoLister", {
             x,
             y,
             width: 2,
-            text: id === "R" ? "←" : id,
+            text: id === "R" ? "←" : user.pathName(path) || id,
             fill: "hsl(270,66%,88%)",
             color: "#333"
           }
@@ -69,6 +69,12 @@ export const MainEditor = viewModel("RepoLister", {
           x += 2;
           proc.forEach((word, i) => {
             const { width = 2 } = word;
+            if ("ref" in word) {
+              const refName = user.pathName(word.ref);
+              if (refName) {
+                console.log(refName);
+              }
+            }
             cells.push({
               key: `CL-${path}-${i}`,
               x,
@@ -86,6 +92,13 @@ export const MainEditor = viewModel("RepoLister", {
           y++;
         }
         proc.forEach((_, subId) => {
+          if (
+            id !== undefined &&
+            subId !== "R" &&
+            !user.pathName([...path.slice(), subId])
+          ) {
+            return;
+          }
           const subX = id === undefined ? x : x + 1;
           const subProcCells = makeProcCells(
             proc,
