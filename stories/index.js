@@ -31,7 +31,7 @@ const t2 = {
       R: [{ val: "fu" }]
     },
     c: {
-      R: [{ op: "+" }, { arg: [0, "c"] }, { val: 2 }]
+      R: [{ op: "+" }, { arg: ["c", 0] }, { val: 2 }]
     },
     d: {
       R: {
@@ -41,7 +41,7 @@ const t2 = {
     e: {
       R: {
         R: {
-          R: [{ op: "+" }, { arg: [0, "e"] }, { arg: [0, "e", "R"] }, { arg: [0, "e", "R", "R"] }]
+          R: [{ op: "+" }, { arg: ["e", 0] }, { arg: ["e", "R", 0] }, { arg: ["e", "R", "R", 0] }]
         }
       }
     },
@@ -51,20 +51,20 @@ const t2 = {
     h: [{ op: "." }, { op: "g" }, { val: "Math" }],
     i: [{ op: "." }, { ref: "h" }, { val: "pow" }],
     j: {
-      R: [{ ref: "i" }, { arg: [0, "j"] }, { val: 2 }]
+      R: [{ ref: "i" }, { arg: ["j", 0] }, { val: 2 }]
     },
     k: [{ ref: "j" }, { val: 5 }],
     k2: [{ ref: "j" }, { val: 12 }],
     l: [{ op: "." }, { ref: "h" }, { val: "random" }],
     m: [{ op: "." }, { ref: "h" }, { val: "sqrt" }],
     n: {
-      a: [{ ref: "j" }, { arg: [0, "n"] }],
-      b: [{ ref: "j" }, { arg: [1, "n"] }],
+      a: [{ ref: "j" }, { arg: ["n", 0] }],
+      b: [{ ref: "j" }, { arg: ["n", 1] }],
       c: [{ op: "+" }, { ref: ["n", "a"] }, { ref: ["n", "b"] }],
       R: [{ ref: "m" }, { ref: ["n", "c"] }]
     },
     o: {
-      a: [{ op: "e" }, { arg: [0, "o"] }, { op: "u" }],
+      a: [{ op: "e" }, { arg: ["o", 0] }, { op: "u" }],
       R: [{ op: "?" }, { ref: ["o", "a"] }, { val: 0 }, { ref: ["o", "b"] }],
       b: [
         { op: "s" },
@@ -73,11 +73,11 @@ const t2 = {
         { ref: ["o", "d"] },
         { val: "DECREMENT" },
         { ref: ["o", "e"] },
-        { arg: [0, "o"] }
+        { arg: ["o", 0] }
       ],
-      c: [{ op: "." }, { arg: [1, "o"] }, { val: "type" }],
-      d: [{ op: "+" }, { arg: [0, "o"] }, { val: 1 }],
-      e: [{ op: "+" }, { arg: [0, "o"] }, { val: -1 }]
+      c: [{ op: "." }, { arg: ["o", 1] }, { val: "type" }],
+      d: [{ op: "+" }, { arg: ["o", 0] }, { val: 1 }],
+      e: [{ op: "+" }, { arg: ["o", 0] }, { val: -1 }]
     },
     // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
     R: [{ arg: 0 }]

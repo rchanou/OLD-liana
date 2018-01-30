@@ -424,7 +424,6 @@ export const MainEditor = viewModel("MainEditor", {
       }
 
       if (selectedCell.gotoCellKey) {
-        console.log("humboldts", selectedCell.gotoCellKey, selectedCell.key);
         keyMap[2][7] = {
           label: "Go To Def",
           action() {

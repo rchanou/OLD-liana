@@ -278,16 +278,18 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
   arg: types.union(
     integerType,
     types.refinement(types.array(types.union(integerType, types.string)), path => {
-      if (typeof path[0] !== "number") {
-        return false;
-      }
       const { length } = path;
-      if (typeof path[1] === "number") {
+      if (typeof path[0] === "number" && typeof path[1] === "number") {
         return length === 2;
-      }
-      for (let i = 1; i < length; i++) {
-        if (typeof path[i] !== "string") {
-          return false;
+      } else {
+        for (let i = 0; i < length; i++) {
+          if (i === length - 1) {
+            if (typeof path[i] !== "number") {
+              return false;
+            }
+          } else if (typeof path[i] !== "string") {
+            return false;
+          }
         }
       }
       return true;
@@ -387,6 +389,7 @@ export const Engine = types
           proc = proc.get(id);
         }
         if (isObservableArray(proc)) {
+          // TODO: short-circuit if, and, or, switch, and possibly for
           const outs = proc.map(word => {
             if ("out" in word) {
               return word.out;
@@ -399,7 +402,15 @@ export const Engine = types
               }
             } else if ("arg" in word) {
               const { arg } = word;
-              const [index, ...path] = arg;
+              const path = [];
+              let index;
+              for (let i = 0; i < arg.length; i++) {
+                if (i < arg.length - 1) {
+                  path.push(arg[i]);
+                } else {
+                  index = arg[i];
+                }
+              }
               return scopes[path][index];
             }
           });
