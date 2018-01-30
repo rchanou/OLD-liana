@@ -240,9 +240,12 @@ const Named = types.model({
 });
 
 const defaultOpNames = {
+  [gRef]: "🌐",
+  [dot]: "•",
   [ifOp]: "IF",
+  [switchOp]: "SW",
   [strictEqual]: "===",
-  [gRef]: "🌐"
+  [undef]: "U"
 };
 
 const Op = mixinModel(Named)("Op", {
@@ -265,7 +268,7 @@ const Op = mixinModel(Named)("Op", {
     return Color.op;
   },
   get width() {
-    return 1;
+    return Math.ceil((self.name.length + 3) / 6);
   }
 }));
 
@@ -274,24 +277,21 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
   // TODO: type prop
   arg: types.union(
     integerType,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      path => {
-        if (typeof path[0] !== "number") {
+    types.refinement(types.array(types.union(integerType, types.string)), path => {
+      if (typeof path[0] !== "number") {
+        return false;
+      }
+      const { length } = path;
+      if (typeof path[1] === "number") {
+        return length === 2;
+      }
+      for (let i = 1; i < length; i++) {
+        if (typeof path[i] !== "string") {
           return false;
         }
-        const { length } = path;
-        if (typeof path[1] === "number") {
-          return length === 2;
-        }
-        for (let i = 1; i < length; i++) {
-          if (typeof path[i] !== "string") {
-            return false;
-          }
-        }
-        return true;
       }
-    )
+      return true;
+    })
   )
   // names: NameSet
 }).views(self => ({
@@ -311,27 +311,27 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
   },
   get color() {
     return Color.input;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
   }
 }));
 
 const Ref = mixinModel(ContextUser.RefType)("Ref", {
   ref: types.union(
     types.string,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      ref => {
-        const { length } = ref;
-        if (typeof ref[0] === "number") {
-          return length === 2 && typeof ref[1] === "string";
-        }
-        for (let i = 0; i < length; i++) {
-          if (typeof ref[i] !== "string") {
-            return false;
-          }
-        }
-        return true;
+    types.refinement(types.array(types.union(integerType, types.string)), ref => {
+      const { length } = ref;
+      if (typeof ref[0] === "number") {
+        return length === 2 && typeof ref[1] === "string";
       }
-    )
+      for (let i = 0; i < length; i++) {
+        if (typeof ref[i] !== "string") {
+          return false;
+        }
+      }
+      return true;
+    })
   )
 }).views(self => ({
   get name() {
@@ -348,6 +348,9 @@ const Ref = mixinModel(ContextUser.RefType)("Ref", {
   },
   get color() {
     return Color.pending;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
   }
 }));
 

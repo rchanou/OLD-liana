@@ -21,3 +21,16 @@ console.log(a.b.ref.name);
 const test = x => y => z => x + y + z;
 
 console.log(test(1)(5)(7));
+
+const C = types.model("C").views(self => ({
+  get wut() {
+    return self.num * 2;
+  }
+}));
+
+const D = types.model("D", { num: types.number });
+
+const E = types.compose("E", C, D);
+
+const e = E.create({ num: 3 });
+console.log(e.wut);

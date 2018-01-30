@@ -9,8 +9,6 @@ import { action } from "@storybook/addon-actions";
 // import { ReactEditor } from "../src/react-editor";
 import { ReactView } from "../src/react-box";
 
-import defaultRepo from "./test-repo";
-
 import {
   // Repo,
   Engine,
@@ -42,12 +40,7 @@ const t2 = {
     e: {
       R: {
         R: {
-          R: [
-            { op: "+" },
-            { arg: [0, "e"] },
-            { arg: [0, "e", "R"] },
-            { arg: [0, "e", "R", "R"] }
-          ]
+          R: [{ op: "+" }, { arg: [0, "e"] }, { arg: [0, "e", "R"] }, { arg: [0, "e", "R", "R"] }]
         }
       }
     },
