@@ -69,23 +69,25 @@ export const user = {
   nameSets: {
     "en-US": {
       id: "en-US",
-      decs: {
-        a: "always zero",
-        a1: "inc constant",
-        a2: "dec constant",
-        b: { 0: "x", r: "increment" },
-        b1: { 0: "x", r: "decrement" },
-        ba: "test sum",
-        c: "get updater by action type",
-        d: {
-          0: "action",
-          r: "action type"
-        },
-        e: {
-          0: "action",
-          a: "action type",
-          r: "updater from type"
-        }
+      names: {
+        "b,0": "nuthin",
+        e: "hof",
+        "e,0": "x",
+        "e,R,0": "y",
+        "e,R,R,0": "z",
+        h: "math",
+        i: "power",
+        j: "x²",
+        "j,0": "base",
+        m: "√",
+        n: "hypotenuse",
+        "n,0": "a",
+        "n,1": "b",
+        "o,0": "state",
+        "o,1": "action",
+        "o,a": "state is undefined",
+        "o,b": "next state",
+        "o,c": "action type"
       }
     }
   }
