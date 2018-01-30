@@ -1,17 +1,67 @@
 export const main = {
-  d: {
-    a: { r: [[0]] },
-    a1: [["INCREMENT"]],
-    a2: [["DECREMENT"]],
-    b: { r: ["+", 0, [1]] },
-    b1: { r: ["-", 0, [1]] },
-    ba: ["+", [1], [2]],
-    c: ["s", 0, { g: "a1" }, { g: "a" }, { g: "a2" }, { g: "b1" }, { g: "a" }],
-    d: [".", 0, ["type"]],
+  main: {
+    a: [{ op: "+" }, { val: 1 }, { val: 2 }],
+    b: {
+      R: [{ val: "fu" }]
+    },
+    c: {
+      R: [{ op: "+" }, { arg: ["c", 0] }, { val: 2 }]
+    },
+    d: {
+      R: {
+        R: [{ op: "+" }, { arg: ["d", 0] }, { arg: ["d", "R", 0] }]
+      }
+    },
     e: {
-      a: [{ g: "d" }, 0],
-      r: [{ g: "c" }, { s: "a" }]
-    }
+      R: {
+        R: {
+          R: [
+            { op: "+" },
+            { arg: ["e", 0] },
+            { arg: ["e", "R", 0] },
+            { arg: ["e", "R", "R", 0] }
+          ]
+        }
+      }
+    },
+    f: {
+      R: [{ ref: "a" }]
+    },
+    h: [{ op: "." }, { op: "g" }, { val: "Math" }],
+    i: [{ op: "." }, { ref: "h" }, { val: "pow" }],
+    j: {
+      R: [{ ref: "i" }, { arg: ["j", 0] }, { val: 2 }]
+    },
+    k: [{ ref: "j" }, { val: 5 }],
+    k2: [{ ref: "j" }, { val: 12 }],
+    k3: [{ op: "+" }, { ref: "k" }, { ref: "k2" }],
+    k4: [{ ref: "m" }, { ref: "k3" }],
+    l: [{ op: "." }, { ref: "h" }, { val: "random" }],
+    m: [{ op: "." }, { ref: "h" }, { val: "sqrt" }],
+    n: {
+      a: [{ ref: "j" }, { arg: ["n", 0] }],
+      b: [{ ref: "j" }, { arg: ["n", 1] }],
+      c: [{ op: "+" }, { ref: ["n", "a"] }, { ref: ["n", "b"] }],
+      R: [{ ref: "m" }, { ref: ["n", "c"] }]
+    },
+    o: {
+      a: [{ op: "e" }, { arg: ["o", 0] }, { op: "u" }],
+      R: [{ op: "?" }, { ref: ["o", "a"] }, { val: 0 }, { ref: ["o", "b"] }],
+      b: [
+        { op: "s" },
+        { ref: ["o", "c"] },
+        { val: "INCREMENT" },
+        { ref: ["o", "d"] },
+        { val: "DECREMENT" },
+        { ref: ["o", "e"] },
+        { arg: ["o", 0] }
+      ],
+      c: [{ op: "." }, { arg: ["o", 1] }, { val: "type" }],
+      d: [{ op: "+" }, { arg: ["o", 0] }, { val: 1 }],
+      e: [{ op: "+" }, { arg: ["o", 0] }, { val: -1 }]
+    },
+    // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
+    R: [{ arg: 0 }]
   }
 };
 
@@ -36,16 +86,6 @@ export const user = {
           a: "action type",
           r: "updater from type"
         }
-      }
-    }
-  }
-};
-
-export const hof = {
-  a: {
-    r: {
-      r: {
-        r: ["+", { a: 0 }, { u: 1, a: 0 }, { u: 2, a: 0 }]
       }
     }
   }
