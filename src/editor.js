@@ -88,23 +88,21 @@ export const MainEditor = viewModel("MainEditor", {
             cells.push(newCell);
             x += width;
           });
-          // if (proc.every(word => "out" in word)) {
           if (!proc.some(word => "arg" in word)) {
             const result = engine.run(path);
-            if (typeof result !== "function") {
-              const text =
-                typeof result === "object"
+            const text =
+              typeof result === "function"
+                ? "f"
+                : typeof result === "object"
                   ? JSON.stringify(result)
                   : String(result);
-              // console.log("bruv", result, width);
-              cells.push({
-                key: `CL-${path}-out`,
-                x,
-                y,
-                text,
-                width: calcWidth(text)
-              });
-            }
+            cells.push({
+              key: `CL-${path}-out`,
+              x,
+              y,
+              text,
+              width: calcWidth(text)
+            });
           }
           return cells;
         }

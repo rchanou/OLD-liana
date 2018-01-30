@@ -204,12 +204,16 @@ storiesOf("Liana", module)
               "o,c": "action type",
               "e,0": "x",
               "e,R,0": "y",
-              "e,R,R,0": "z"
+              "e,R,R,0": "z",
+              h: "math",
+              i: "power",
+              j: "square root",
+              "j,0": "base"
             }
           }
         }
       },
-      mainEditor: { selectedCellIndex: 60 }
+      mainEditor: { selectedCellIndex: 62 }
     });
     window.m = store;
 
