@@ -20,7 +20,7 @@ const NodeRef = types
     }
   }));
 
-export const MainEditor = viewModel("RepoLister", {
+export const MainEditor = viewModel("MainEditor", {
   changeCellMode: false,
   changeOpMode: false,
   addNodeMode: false,
@@ -48,7 +48,8 @@ export const MainEditor = viewModel("RepoLister", {
             width,
             text: id === "R" ? "←" : procName || id,
             fill: "hsl(270,66%,88%)",
-            color: "#333"
+            color: "#333",
+            selectable: true
           }
         ];
         let argX = x + width;
@@ -63,7 +64,8 @@ export const MainEditor = viewModel("RepoLister", {
               width,
               text: argName,
               fill: "hsl(30,66%,83%)",
-              color: "#333"
+              color: "#333",
+              selectable: true
             });
             argX += width;
           }

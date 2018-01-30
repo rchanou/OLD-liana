@@ -1,8 +1,10 @@
 import { types, getEnv, destroy } from "mobx-state-tree";
 
-import { ContextRepo } from "./core";
-import { ContextUser } from "./user";
-import { RepoEditor } from "./repo-editor";
+// import { ContextRepo } from "./core";
+// import { ContextUser } from "./user";
+// import { RepoEditor } from "./repo-editor";
+import { viewModel } from "./view";
+import { MainEditor } from "./editor";
 
 const keyLayout = {
   // TODO: make customizable
@@ -43,9 +45,9 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
-export const App = ContextRepo.refModel("Editor", {
+export const App = viewModel("App", {
   heldKeyCoords: types.maybe(HeldKeyCoords),
-  repoList: types.optional(RepoEditor, {})
+  mainEditor: types.optional(MainEditor, {})
 })
   .actions(self => {
     const { dom } = getEnv(self);
@@ -96,14 +98,14 @@ export const App = ContextRepo.refModel("Editor", {
   })
   .views(self => ({
     get cells() {
-      return self.repoList.activeCells;
-      // return self.repoList.cells.concat(self.chooser ? self.chooser.cells : []);
+      return self.mainEditor.cells;
+      // return self.mainEditor.cells.concat(self.chooser ? self.chooser.cells : []);
     },
     get keyMap() {
-      return self.repoList.keyMap;
+      return self.mainEditor.keyMap;
     },
     get handleInput() {
-      return self.repoList.handleInput;
+      return self.mainEditor.handleInput;
     }
   }));
 

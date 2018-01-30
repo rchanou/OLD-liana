@@ -5,13 +5,13 @@ import { ReactView } from "./react-box";
 import { ReactKeyboard } from "./react-keyboard";
 
 const containerStyle = {
-  height: 999 // TODO: test height, change to dynamic calculation
+  height: 2222 // TODO: test height, change to dynamic calculation
 };
 
-export const ReactEditor = observer(({ editor }) => (
+export const ReactEditor = observer(({ store }) => (
   <div style={containerStyle}>
-    <ReactView store={editor} />
-    <ReactKeyboard editor={editor} />
+    <ReactView store={store} />
+    <ReactKeyboard editor={store} />
     {/* <ReactKeyboard keyBoxMap={editor.keyMap} selectedCoords={editor.selectedCoords} /> */}
   </div>
 ));

@@ -42,7 +42,7 @@ render = {
 @ document 'getElementById 'incrementIfOdd
   -> @ # 'addEventListener 'click {
     if (@ store 'getState -> % # 2 -> !== # 0)
-      @ store 'dispatch ({} 'type increment);
+      @ store 'dispatch ({} 'type 'INCREMENT);
   }
 
 @ document 'getElementById 'incrementAsync
@@ -51,3 +51,6 @@ render = {
       @ store 'dispatch ({} 'type' 'INCREMENT)
     } 1000
   }
+
+
+copy o,b,0-1

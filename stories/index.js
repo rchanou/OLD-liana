@@ -6,7 +6,8 @@ import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
 // import { ContextRepo } from "../src/core";ƒ
-// import { ReactEditor } from "../src/react-editor";
+import { ReactEditor } from "../src/react-editor";
+import { App } from "../src/app";
 import { ReactView } from "../src/react-box";
 
 import {
@@ -181,7 +182,7 @@ storiesOf("Liana", module)
   //   return <ReactView store={store} />;
   // })````
   .add("new repo test", () => {
-    const store = MainEditor.create({
+    const store = App.create({
       [ContextEngine.key]: t2,
       [ContextUser.key]: {
         nameSets: {
@@ -204,5 +205,5 @@ storiesOf("Liana", module)
     });
     window.m = store;
 
-    return <ReactView store={store} />;
+    return <ReactEditor store={store} />;
   });
