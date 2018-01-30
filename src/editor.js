@@ -110,13 +110,13 @@ export const MainEditor = viewModel("MainEditor", {
           y++;
         }
         proc.forEach((_, subId) => {
-          if (
-            id !== undefined &&
-            subId !== "R" &&
-            !user.pathName([...path.slice(), subId])
-          ) {
-            return;
-          }
+          // if (
+          //   id !== undefined &&
+          //   subId !== "R" &&
+          //   !user.pathName([...path.slice(), subId])
+          // ) {
+          //   return;
+          // }
           const subX = id === undefined ? x : x + 1;
           const subProcCells = makeProcCells(
             proc,

@@ -202,12 +202,13 @@ storiesOf("Liana", module)
               "o,a": "state is undefined",
               "o,b": "next state",
               "o,c": "action type",
+              e: "hof",
               "e,0": "x",
               "e,R,0": "y",
               "e,R,R,0": "z",
               h: "math",
               i: "power",
-              j: "square root",
+              j: "√",
               "j,0": "base"
             }
           }

@@ -341,16 +341,8 @@ const Ref = mixinModel(ContextUser.RefType)("Ref", {
   )
 }).views(self => ({
   get name() {
-    // TODO: look up appropriate name based on user context
     const { ref } = self;
-    if (isObservableArray(ref)) {
-      const pathName = self[ContextUser.key].pathName(ref);
-      if (pathName) {
-        return pathName;
-      }
-      return `{${ref.join(",")}}`;
-    }
-    return typeof ref === "string" ? ref : `${ref.slice()}`;
+    return self[ContextUser.key].pathName(ref) || `(${ref.slice()})`;
   },
   get color() {
     return Color.pending;

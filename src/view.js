@@ -123,7 +123,6 @@ const BaseUI = types
     },
     moveBy(step = +1, axis = "x") {
       const crossAxis = axis === "x" ? "y" : "x";
-      // debugger;
       const currentCell = { ...self.selectedCell };
       const crossSizeProp = crossAxis === "x" ? "width" : "height";
       // TODO: center-finding can be improved (maybe try banker's rounding to prevent cursor "drift?")
@@ -132,7 +131,6 @@ const BaseUI = types
       );
       currentCell[crossAxis] = crossCenter;
       const crossAxisMap = self.cellMap[crossAxis];
-      // console.log(currentCell);
       if (!currentCell) {
         return;
       }
