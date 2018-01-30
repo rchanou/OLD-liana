@@ -3,7 +3,8 @@ import { Pkg, ContextEngine } from "./repo";
 import { ContextUser } from "./user";
 import { mixinModel } from "./context";
 
-export const calcWidth = text => (typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6));
+export const calcWidth = text =>
+  typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
 
 export const formatOut = out => {
   if (out instanceof Error) {
@@ -28,7 +29,6 @@ const BaseUI = types
   })
   .views(self => {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
-
     return {
       // get repo() {
       //   return self[ContextRepo.key];
@@ -45,7 +45,6 @@ const BaseUI = types
       get cursorCell() {
         const { input, selectedCell } = self;
         const { x, y, width } = selectedCell;
-
         return {
           x,
           y,
@@ -80,45 +79,40 @@ const BaseUI = types
         };
         const yx = base.y;
         const xy = base.x;
-
         const { baseCells } = self;
         const { length } = baseCells;
-
         for (let i = 0; i < length; i++) {
           const cell = baseCells[i];
           if (!cell.selectable) {
             continue;
           }
-
-          const { x, y } = cell;
-
-          if (!yx[y]) {
-            yx[y] = { min: 0, max: 0 };
-          }
-
-          yx[y][x] = i;
-
-          if (x > yx[y].max) {
-            yx[y].max = x;
-          }
-          if (x < yx[y].min) {
-            yx[y].min = x;
-          }
-
-          if (!xy[x]) {
-            xy[x] = { min: 0, max: 0 };
-          }
-
-          xy[x][y] = i;
-
-          if (y > xy[x].max) {
-            xy[x].max = y;
-          }
-          if (y < xy[x].min) {
-            xy[x].min = y;
+          const { x, y, width = 0, height = 0 } = cell;
+          for (let cy = y; cy <= y + height; cy++) {
+            for (let cx = x; cx <= x + width; cx++) {
+              if (!yx[cy]) {
+                yx[cy] = { min: 0, max: 0 };
+              }
+              if (!xy[cx]) {
+                xy[cx] = { min: 0, max: 0 };
+              }
+              yx[cy][cx] = i;
+              xy[cx][cy] = i;
+              if (cx > yx[cy].max) {
+                yx[cy].max = cx;
+              }
+              if (cx < yx[cy].min) {
+                yx[cy].min = cx;
+              }
+              if (cy > xy[cx].max) {
+                xy[cx].max = cy;
+              }
+              if (cy < xy[cx].min) {
+                xy[cx].min = cy;
+              }
+            }
           }
         }
-
+        // TODO: logic to fill out "edge" cells for less jumpiness
         return base;
       }
     };
@@ -130,39 +124,39 @@ const BaseUI = types
     moveBy(step = +1, axis = "x") {
       const crossAxis = axis === "x" ? "y" : "x";
       // debugger;
-      const currentCell = self.selectedCell;
+      const currentCell = { ...self.selectedCell };
+      const crossSizeProp = crossAxis === "x" ? "width" : "height";
+      // TODO: center-finding can be improved (maybe try banker's rounding to prevent cursor "drift?")
+      const crossCenter = Math.floor(
+        currentCell[crossAxis] + (currentCell[crossSizeProp] - 1 || 0) / 2
+      );
+      currentCell[crossAxis] = crossCenter;
+      const crossAxisMap = self.cellMap[crossAxis];
+      // console.log(currentCell);
       if (!currentCell) {
         return;
       }
-
-      const crossAxisMap = self.cellMap[crossAxis];
       const crossAxisPos = currentCell[crossAxis];
-
       const crossAxisSet = crossAxisMap[crossAxisPos];
       if (!crossAxisSet) {
         return;
       }
-
       let axisPos = currentCell[axis];
       const { min } = crossAxisSet;
       const { max } = crossAxisSet;
-
       while (min <= axisPos && axisPos <= max) {
         axisPos += step;
         const foundIndex = crossAxisSet[axisPos];
-        if (foundIndex !== undefined) {
+        if (foundIndex !== self.selectedCellIndex && foundIndex !== undefined) {
           self.selectCellIndex(foundIndex);
           return;
         }
       }
-
       // NOTE: Short-circuiting wraparound logic below at the moment (allow param to set?)
       return;
-
       if (axis === "y") {
         return;
       }
-
       let foundIndex;
       if (axisPos > max) {
         foundIndex = crossAxisSet[min];
@@ -187,15 +181,11 @@ const BaseUI = types
     }
   }));
 
-// const UI = types.compose(ContextRepo.RefType, BaseUI);
-// export const viewModel = (...args) => types.compose(types.model(...args), UI);
-
-const NewUI = types.compose(ContextEngine.RefType, ContextUser.RefType, BaseUI);
-export const viewModel = (...args) => types.compose(types.model(...args), NewUI);
+const UI = types.compose(ContextEngine.RefType, ContextUser.RefType, BaseUI);
+export const viewModel = (...args) => types.compose(types.model(...args), UI);
 
 export const cursorify = (baseCell, key, input) => {
   const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;
-
   return {
     x,
     y,

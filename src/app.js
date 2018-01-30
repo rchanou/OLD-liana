@@ -3,8 +3,10 @@ import { types, getEnv, destroy } from "mobx-state-tree";
 // import { ContextRepo } from "./core";
 // import { ContextUser } from "./user";
 // import { RepoEditor } from "./repo-editor";
-import { viewModel } from "./view";
+import { ContextEngine } from "./repo";
 import { MainEditor } from "./editor";
+import { mixinModel } from "./context";
+import { viewModel } from "./view";
 
 const keyLayout = {
   // TODO: make customizable

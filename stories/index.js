@@ -172,7 +172,7 @@ storiesOf("Liana", module)
   // ))
   // .add("editor in chooser", () => (
   //   <Story
-  //     editor={{
+  //     editor={{1
   //       ...context,
   //       repoList: {
   //         selectedCellIndex: 75,
@@ -187,7 +187,7 @@ storiesOf("Liana", module)
   //   });
   //   // window.m = store;
   //   return <ReactView store={store} />;
-  // })````
+  // })
   .add("new repo test", () => {
     const store = App.create({
       [ContextEngine.key]: t2,
