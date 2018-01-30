@@ -3,6 +3,8 @@ import { Pkg, ContextEngine } from "./repo";
 import { ContextUser } from "./user";
 import { mixinModel } from "./context";
 
+export const calcWidth = text => (typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6));
+
 export const formatOut = out => {
   if (out instanceof Error) {
     return out.message;
@@ -189,8 +191,7 @@ const BaseUI = types
 // export const viewModel = (...args) => types.compose(types.model(...args), UI);
 
 const NewUI = types.compose(ContextEngine.RefType, ContextUser.RefType, BaseUI);
-export const viewModel = (...args) =>
-  types.compose(types.model(...args), NewUI);
+export const viewModel = (...args) => types.compose(types.model(...args), NewUI);
 
 export const cursorify = (baseCell, key, input) => {
   const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;

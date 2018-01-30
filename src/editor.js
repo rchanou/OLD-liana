@@ -4,7 +4,7 @@ import { isObservableArray } from "mobx";
 // import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
-import { viewModel, cursorify, formatOut } from "./view";
+import { viewModel, cursorify, formatOut, calcWidth } from "./view";
 import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -38,35 +38,38 @@ export const MainEditor = viewModel("RepoLister", {
         if (id !== undefined) {
           proc = parent.get(id);
         }
+        const procName = user.pathName(path);
+        const width = calcWidth(procName);
         const cells = [
           {
             key: `CL-${path}`,
             x,
             y,
-            width: 2,
-            text: id === "R" ? "←" : user.pathName(path) || id,
+            width,
+            text: id === "R" ? "←" : procName || id,
             fill: "hsl(270,66%,88%)",
             color: "#333"
           }
         ];
-        let argX = x + 2;
+        let argX = x + width;
         for (let i = 0; i < 2; i++) {
           const argName = user.pathName([path, i]);
+          const width = calcWidth(argName);
           if (argName) {
             cells.push({
               key: `CL-${path}-arg-${i}`,
               x: argX,
               y,
-              width: 2,
+              width,
               text: argName,
               fill: "hsl(30,66%,83%)",
               color: "#333"
             });
-            argX += 2;
+            argX += width;
           }
         }
         if (isObservableArray(proc)) {
-          x += 2;
+          x += width;
           proc.forEach((word, i) => {
             const { width = 2 } = word;
             if ("ref" in word) {
@@ -92,21 +95,11 @@ export const MainEditor = viewModel("RepoLister", {
           y++;
         }
         proc.forEach((_, subId) => {
-          if (
-            id !== undefined &&
-            subId !== "R" &&
-            !user.pathName([...path.slice(), subId])
-          ) {
+          if (id !== undefined && subId !== "R" && !user.pathName([...path.slice(), subId])) {
             return;
           }
           const subX = id === undefined ? x : x + 1;
-          const subProcCells = makeProcCells(
-            proc,
-            subId,
-            [...path, subId],
-            subX,
-            y
-          );
+          const subProcCells = makeProcCells(proc, subId, [...path, subId], subX, y);
           cells.push(...subProcCells);
           y = subProcCells[subProcCells.length - 1].y + 1;
           if (id === undefined) {
@@ -206,13 +199,7 @@ export const MainEditor = viewModel("RepoLister", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const {
-        selectedCell,
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -441,9 +428,7 @@ export const MainEditor = viewModel("RepoLister", {
         keyMap[2][7] = {
           name: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
