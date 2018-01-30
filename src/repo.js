@@ -277,23 +277,26 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
   // TODO: type prop
   arg: types.union(
     integerType,
-    types.refinement(types.array(types.union(integerType, types.string)), path => {
-      const { length } = path;
-      if (typeof path[0] === "number" && typeof path[1] === "number") {
-        return length === 2;
-      } else {
-        for (let i = 0; i < length; i++) {
-          if (i === length - 1) {
-            if (typeof path[i] !== "number") {
+    types.refinement(
+      types.array(types.union(integerType, types.string)),
+      path => {
+        const { length } = path;
+        if (typeof path[0] === "number" && typeof path[1] === "number") {
+          return length === 2;
+        } else {
+          for (let i = 0; i < length; i++) {
+            if (i === length - 1) {
+              if (typeof path[i] !== "number") {
+                return false;
+              }
+            } else if (typeof path[i] !== "string") {
               return false;
             }
-          } else if (typeof path[i] !== "string") {
-            return false;
           }
         }
+        return true;
       }
-      return true;
-    })
+    )
   )
   // names: NameSet
 }).views(self => ({
@@ -301,9 +304,7 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
     // TODO: look up appropriate name based on user context
     const { arg } = self;
     if (isObservableArray(arg)) {
-      const [index, ...idPath] = arg.slice();
-      const realPath = [...idPath, index];
-      const pathName = self[ContextUser.key].pathName(realPath);
+      const pathName = self[ContextUser.key].pathName(self.arg);
       if (pathName) {
         return pathName;
       }
@@ -322,18 +323,21 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
 const Ref = mixinModel(ContextUser.RefType)("Ref", {
   ref: types.union(
     types.string,
-    types.refinement(types.array(types.union(integerType, types.string)), ref => {
-      const { length } = ref;
-      if (typeof ref[0] === "number") {
-        return length === 2 && typeof ref[1] === "string";
-      }
-      for (let i = 0; i < length; i++) {
-        if (typeof ref[i] !== "string") {
-          return false;
+    types.refinement(
+      types.array(types.union(integerType, types.string)),
+      ref => {
+        const { length } = ref;
+        if (typeof ref[0] === "number") {
+          return length === 2 && typeof ref[1] === "string";
         }
+        for (let i = 0; i < length; i++) {
+          if (typeof ref[i] !== "string") {
+            return false;
+          }
+        }
+        return true;
       }
-      return true;
-    })
+    )
   )
 }).views(self => ({
   get name() {
