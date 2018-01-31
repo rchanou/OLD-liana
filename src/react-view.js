@@ -64,7 +64,7 @@ class ScrollIn extends React.Component {
   componentDidMount() {
     this.me = findDOMNode(this);
     const { me } = this;
-    this.lastY = me.offsetTop;
+    let lastY = me.offsetTop;
     this.handleMove = e => {
       if (e.propertyName !== "top") {
         return;
@@ -85,17 +85,17 @@ class ScrollIn extends React.Component {
       const currentY = me.offsetTop;
       const windowY = window.scrollY;
       // const f = Math.floor;
-      if (currentY < windowY + 50 && currentY !== this.lastY) {
+      if (currentY < windowY + 50 && currentY !== lastY) {
         step(Math.min(-50, currentY - windowY));
         // console.log(f(this.lastY), f(currentY), f(currentY - this.lastY));
       } else {
         const upper = windowY + window.innerHeight - 200;
-        if (currentY > upper && currentY !== this.lastY) {
+        if (currentY > upper && currentY !== lastY) {
           step(Math.max(50, currentY - upper));
           // console.log(f(this.lastY), f(currentY), f(currentY - this.lastY));
         }
       }
-      this.lastY = currentY;
+      lastY = currentY;
     };
     me.addEventListener("transitionend", this.handleMove);
   }

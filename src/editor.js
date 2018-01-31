@@ -26,7 +26,7 @@ export const MainEditor = viewModel("MainEditor", {
   addOpMode: false,
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef),
-  editingLabelForProc: types.maybe(types.array(types.string)),
+  editingNameForProc: types.maybe(types.array(types.string)),
   tree: types.maybe(Tree)
 })
   .views(self => ({
@@ -49,7 +49,7 @@ export const MainEditor = viewModel("MainEditor", {
             fill: "hsl(270,66%,88%)",
             color: "#333",
             selectable: true,
-            labelForProc: path
+            nameForProc: path
           }
         ];
         let argX = x + width;
@@ -93,7 +93,11 @@ export const MainEditor = viewModel("MainEditor", {
           if (!proc.some(word => "arg" in word)) {
             const result = engine.run(path);
             const text =
-              typeof result === "function" ? "f" : typeof result === "object" ? JSON.stringify(result) : String(result);
+              typeof result === "function"
+                ? "f"
+                : typeof result === "object"
+                  ? JSON.stringify(result)
+                  : String(result);
             cells.push({
               key: `CL-${path}-out`,
               x,
@@ -116,7 +120,13 @@ export const MainEditor = viewModel("MainEditor", {
           //   return;
           // }
           const subX = id === undefined ? x : x + 1;
-          const subProcCells = makeProcCells(proc, subId, [...path, subId], subX, y);
+          const subProcCells = makeProcCells(
+            proc,
+            subId,
+            [...path, subId],
+            subX,
+            y
+          );
           cells.push(...subProcCells);
           y = subProcCells[subProcCells.length - 1].y + 1;
           if (id === undefined) {
@@ -143,9 +153,9 @@ export const MainEditor = viewModel("MainEditor", {
       if (self.editingNode) {
         return self.editingNode.node.out;
       }
-      if (self.editingLabelForProc) {
-        return self.user.pathName(self.editingLabelForProc);
-        // return self.editingLabelForProc.name;
+      if (self.editingNameForProc) {
+        return self.user.pathName(self.editingNameForProc);
+        // return self.editingNameForProc.name;
       }
       return null;
     }
@@ -160,9 +170,12 @@ export const MainEditor = viewModel("MainEditor", {
         self.editingNode.node.select(e.target.value);
       }
 
-      if (self.editingLabelForProc) {
-        self.user.currentNameSet.setName(self.editingLabelForProc, e.target.value);
-        // self.editingLabelForProc.setLabel(e.target.value);
+      if (self.editingNameForProc) {
+        self.user.currentNameSet.setName(
+          self.editingNameForProc,
+          e.target.value
+        );
+        // self.editingNameForProc.setLabel(e.target.value);
       }
     },
     toggleChooser(forDec, nodeIndex) {
@@ -194,10 +207,10 @@ export const MainEditor = viewModel("MainEditor", {
       self.linkChooser = { forDec };
     },
     toggleLabelEdit() {
-      if (self.editingLabelForProc) {
-        self.editingLabelForProc = null;
+      if (self.editingNameForProc) {
+        self.editingNameForProc = null;
       } else {
-        self.editingLabelForProc = self.selectedCell.labelForProc;
+        self.editingNameForProc = self.selectedCell.nameForProc;
       }
     },
     toggleTree() {
@@ -218,7 +231,13 @@ export const MainEditor = viewModel("MainEditor", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -228,7 +247,7 @@ export const MainEditor = viewModel("MainEditor", {
               self.toggleEditingValMode();
               // self.moveRight();
             }
-            if (self.editingLabelForProc) {
+            if (self.editingNameForProc) {
               self.toggleLabelEdit();
             }
           }
@@ -387,7 +406,6 @@ export const MainEditor = viewModel("MainEditor", {
               console.log(JSON.stringify(snapshot));
             }
           },
-          // 2: { label: "▲", action: self.moveUp },
           5: {
             label: "New Line",
             action() {
@@ -396,7 +414,7 @@ export const MainEditor = viewModel("MainEditor", {
               // TODO: this logic to find the last-added name feels kinda hacky; improve?
               let i = self.baseCells.length;
               while (--i) {
-                if (self.baseCells[i].labelForProc) {
+                if (self.baseCells[i].nameForProc) {
                   self.selectCellIndex(i);
                   self.toggleLabelEdit();
                   return;
@@ -408,9 +426,6 @@ export const MainEditor = viewModel("MainEditor", {
         },
         2: {
           ...baseKeyMap[2],
-          // 1: { label: "◀", action: self.moveLeft },
-          // 2: { label: "▼", action: self.moveDown },
-          // 3: { label: "▶", action: self.moveRight },
           6: { label: "Change", action: toggleChangeCellMode },
           9: {
             label: "Delete",
@@ -425,7 +440,7 @@ export const MainEditor = viewModel("MainEditor", {
         3: {}
       };
 
-      if (selectedCell.labelForProc) {
+      if (selectedCell.nameForProc) {
         keyMap[2][6] = {
           label: "Change Label",
           action: self.toggleLabelEdit
@@ -447,7 +462,9 @@ export const MainEditor = viewModel("MainEditor", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.baseCells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
