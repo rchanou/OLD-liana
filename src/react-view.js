@@ -60,41 +60,68 @@ class Input extends React.Component {
 //   };
 // };
 
-class Cursor extends React.Component {
+class ScrollIn extends React.Component {
+  initAnim = () => {
+    const { me } = this;
+    this.lastY = me.getBoundingClientRect().y;
+    let pendingMoves = 0;
+    this.handleMove = e => {
+      if (e.propertyName !== "top") {
+        return;
+      }
+      const step = units => {
+        const increment = units / 9;
+        let steps = 9;
+        let lastScrollToY;
+        const subStep = () =>
+          requestAnimationFrame(() => {
+            window.scrollTo(0, window.scrollY + increment);
+            if (steps--) {
+              subStep();
+            }
+          });
+        subStep();
+      };
+      const currentY = me.getBoundingClientRect().y;
+      if (currentY < 50 && currentY !== this.lastY) {
+        step(Math.min(-50, currentY - this.lastY));
+        // console.log(this.lastY, currentY, currentY - this.lastY);
+      } else if (
+        currentY > window.innerHeight - 200 &&
+        currentY !== this.lastY
+      ) {
+        step(Math.max(50, currentY - this.lastY));
+        // console.log(this.lastY, currentY, currentY - this.lastY);
+      }
+      this.lastY = currentY;
+    };
+    this.handleStart;
+    // me.addEventListener("transitionstart", this.handleStart);
+    me.addEventListener("transitionend", this.handleMove);
+  };
   componentDidMount() {
     this.me = findDOMNode(this);
-    window.scrollTo(0, 0);
-    this.me.scrollIntoView();
+    // window.scrollTo(0, 0);
+    // this.me.scrollIntoView();
+    this.initAnim();
   }
-  componentDidUpdate() {
-    const { me } = this;
-    // TODO: much room for improvement here
-    const scroll = () => {
-      me.removeEventListener("transitionend", scroll);
-      let lastY;
-      const step = () =>
-        requestAnimationFrame(() => {
-          const { y } = me.getBoundingClientRect();
-          if (y === lastY) {
-            return;
-          }
-          lastY = y;
-          if (y < 50) {
-            window.scrollTo(0, window.scrollY - 9);
-            step();
-          } else if (y > window.innerHeight - 200) {
-            window.scrollTo(0, window.scrollY + 9);
-            step();
-          }
-        });
-      step();
-    };
-    me.addEventListener("transitionend", scroll);
+  componentWillUnmount() {
+    this.me.removeEventListener("transitionend", this.handleMove);
+  }
+  render() {
+    return <div {...this.props} />;
+  }
+}
+
+class Cursor extends React.Component {
+  componentDidMount() {
+    window.scrollTo(0, 0);
+    findDOMNode(this).scrollIntoView();
   }
   render() {
     const { value, ...rest } = this.props;
-    const Tag = value != null ? Input : "div";
-    return <Tag {...rest} />;
+    const Tag = value != null ? Input : ScrollIn;
+    return <Tag {...rest} value={value} />;
   }
 }
 
@@ -119,19 +146,6 @@ const ReactBox = observer(({ box, onInput, store }) => {
     style.fontWeight = "550";
     style.color = "#333";
   }
-  // let element;
-  // if (input != null) {
-  //   style.background = "#eee";
-  //   element = (
-  //     <Cursor
-  //       key={key}
-  //       value={input}
-  //       style={style}
-  //       onChange={store.handleInput}
-  //     />
-  //   );
-  // } else {
-  // const Tag = cursor ? Cursor : "div";
   let Tag;
   const props = { key, style };
   if (cursor) {
@@ -143,12 +157,6 @@ const ReactBox = observer(({ box, onInput, store }) => {
     props.children = text;
   }
   const element = <Tag {...props} />;
-  // element = (
-  //   <Tag key={key} style={style}>
-  //     {text}
-  //   </Tag>
-  // );
-  // }
   if (true) {
     // TODO: set to false for refs to render connector below
     return element;
