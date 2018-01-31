@@ -166,10 +166,10 @@ const ReactBox = observer(({ box, onInput, store }) => {
 
 // TODO: better name
 export const ReactView = observer(({ store }) => {
-  const { activeCells, onInput } = store;
+  const { activeCells, cells, onInput } = store;
   let throwawayIdCounter = 0;
 
-  const cellBoxes = activeCells.map(cell => (
+  const cellBoxes = (activeCells || cells).map(cell => (
     <ReactBox
       key={cell ? cell.key : throwawayIdCounter++}
       box={cell}

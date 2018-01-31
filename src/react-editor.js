@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { ReactView } from "./react-box";
+import { ReactView } from "./react-view";
 import { ReactKeyboard } from "./react-keyboard";
 
 const containerStyle = {

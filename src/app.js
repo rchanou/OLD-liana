@@ -1,9 +1,7 @@
 import { types, getEnv, destroy } from "mobx-state-tree";
 
-// import { ContextRepo } from "./core";
-// import { ContextUser } from "./user";
-// import { RepoEditor } from "./repo-editor";
 import { ContextEngine } from "./repo";
+import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
 import { mixinModel } from "./context";
 import { viewModel } from "./view";
@@ -47,34 +45,30 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
-export const App = viewModel("App", {
-  heldKeyCoords: types.maybe(HeldKeyCoords),
-  mainEditor: types.optional(MainEditor, {})
-})
+export const App = types
+  .model("App", {
+    heldKeyCoords: types.maybe(HeldKeyCoords),
+    mainEditor: types.optional(MainEditor, {}),
+    user: ContextUser.Model,
+    engine: ContextEngine.Model
+  })
   .actions(self => {
     const { dom } = getEnv(self);
-
     return {
       handleKeyDown(e) {
         const { keyCode } = e;
         const { keyMap } = self;
-
         if (typeof keyMap === "function") {
           keyMap(keyCode);
           return;
         }
-
         const coords = keyLayout[keyCode]; // TODO: make key layout editable
         if (!coords) {
           return;
         }
-
         e.preventDefault();
-
         const [x, y] = coords;
-
         self.heldKeyCoords = { x, y };
-
         const YKeyMap = keyMap[y];
         if (YKeyMap) {
           const thisKey = YKeyMap[x];

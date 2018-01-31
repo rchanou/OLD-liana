@@ -12,27 +12,32 @@ export const makeContext = Model => {
     _id: types.optional(types.identifier(types.number), 0)
   });
 
-  const Type = types.compose(Model, Context);
+  const ContextModel = types.compose(Model, Context);
 
-  const Ref = types.optional(types.union(Type, types.reference(Type)), 0);
+  const Ref = types.optional(
+    types.union(ContextModel, types.reference(ContextModel)),
+    0
+  );
 
-  const RefType = types
+  const RefModel = types
     .model(`Context${Model.name}Child`, {
       [contextRefKey]: Ref
     })
     .actions(self => ({
-      postProcessSnapshot({ context, ...rest }) {
-        return rest;
+      postProcessSnapshot(snapshot) {
+        const clone = { ...snapshot };
+        delete clone[contextRefKey];
+        return clone;
       }
     }));
 
-  const refModel = (...args) => types.compose(RefType, types.model(...args));
+  const refModel = (...args) => types.compose(RefModel, types.model(...args));
 
   return {
-    Type,
+    Model: ContextModel,
     defKey,
     key: contextRefKey,
-    RefType,
+    RefModel,
     refModel,
     Ref
   };

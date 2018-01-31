@@ -5,25 +5,11 @@ import { destroy, getSnapshot, types } from "mobx-state-tree";
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 
-// import { ContextRepo } from "../src/core";ƒ
 import { ReactEditor } from "../src/react-editor";
 import { App } from "../src/app";
-import { ReactView } from "../src/react-box";
-
-import {
-  // Repo,
-  Engine,
-  ContextEngine,
-  ContextVM
-  // ContextRepo as NewContextRepo
-} from "../src/repo";
-import { ContextUser } from "../src/user";
-// import { App } from "../src/app";
-// import { RepoEditor } from "../src/editor";
+import { Engine } from "../src/repo";
 import { engine, user } from "./test-repos";
 import { pack, unpack, inflate } from "../src/pack";
-
-import { MainEditor } from "../src/editor";
 
 const T = Engine.create(engine);
 window.T = T;
@@ -124,8 +110,8 @@ storiesOf("Liana", module)
   // })
   .add("new repo test", () => {
     const store = App.create({
-      [ContextEngine.key]: engine,
-      [ContextUser.key]: user,
+      engine,
+      user,
       mainEditor: { selectedCellIndex: 62 }
     });
     window.m = store;
@@ -141,7 +127,3 @@ const unpackTest = unpack(packTest);
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
-
-const flat = inflate(engine.main);
-console.log(flat);
-window.n = ContextVM.Type.create(flat);
