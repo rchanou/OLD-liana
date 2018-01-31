@@ -61,10 +61,10 @@ class Input extends React.Component {
 // };
 
 class ScrollIn extends React.Component {
-  initAnim = () => {
+  componentDidMount() {
+    this.me = findDOMNode(this);
     const { me } = this;
-    this.lastY = me.getBoundingClientRect().y;
-    let pendingMoves = 0;
+    this.lastY = me.offsetTop;
     this.handleMove = e => {
       if (e.propertyName !== "top") {
         return;
@@ -82,28 +82,22 @@ class ScrollIn extends React.Component {
           });
         subStep();
       };
-      const currentY = me.getBoundingClientRect().y;
-      if (currentY < 50 && currentY !== this.lastY) {
-        step(Math.min(-50, currentY - this.lastY));
-        // console.log(this.lastY, currentY, currentY - this.lastY);
-      } else if (
-        currentY > window.innerHeight - 200 &&
-        currentY !== this.lastY
-      ) {
-        step(Math.max(50, currentY - this.lastY));
-        // console.log(this.lastY, currentY, currentY - this.lastY);
+      const currentY = me.offsetTop;
+      const windowY = window.scrollY;
+      // const f = Math.floor;
+      if (currentY < windowY + 50 && currentY !== this.lastY) {
+        step(Math.min(-50, currentY - windowY));
+        // console.log(f(this.lastY), f(currentY), f(currentY - this.lastY));
+      } else {
+        const upper = windowY + window.innerHeight - 200;
+        if (currentY > upper && currentY !== this.lastY) {
+          step(Math.max(50, currentY - upper));
+          // console.log(f(this.lastY), f(currentY), f(currentY - this.lastY));
+        }
       }
       this.lastY = currentY;
     };
-    this.handleStart;
-    // me.addEventListener("transitionstart", this.handleStart);
     me.addEventListener("transitionend", this.handleMove);
-  };
-  componentDidMount() {
-    this.me = findDOMNode(this);
-    // window.scrollTo(0, 0);
-    // this.me.scrollIntoView();
-    this.initAnim();
   }
   componentWillUnmount() {
     this.me.removeEventListener("transitionend", this.handleMove);
