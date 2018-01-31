@@ -33,7 +33,8 @@ export const makeContext = Model => {
     defKey,
     key: contextRefKey,
     RefType,
-    refModel
+    refModel,
+    Ref
   };
 };
 
