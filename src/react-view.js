@@ -1,9 +1,6 @@
 import React from "react";
 import { findDOMNode } from "react-dom";
-import { createTransformer } from "mobx";
 import { observer } from "mobx-react";
-
-// import { Link } from "./core";
 
 const containerStyle = {
   position: "absolute",
@@ -46,7 +43,8 @@ class Input extends React.Component {
     me.select();
   }
   render() {
-    return <input {...this.props} />;
+    const { style, ...rest } = this.props;
+    return <input {...rest} style={{ ...style, background: "#eee" }} />;
   }
 }
 
@@ -94,7 +92,9 @@ class Cursor extends React.Component {
     me.addEventListener("transitionend", scroll);
   }
   render() {
-    return <div {...this.props} />;
+    const { value, ...rest } = this.props;
+    const Tag = value != null ? Input : "div";
+    return <Tag {...rest} />;
   }
 }
 
@@ -102,9 +102,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
   if (!box) {
     return null;
   }
-
   const { x, y, width, fill, color, key, text, category, input, cursor } = box;
-
   const style = {
     ...boxStyle,
     top: y * unit,
@@ -121,32 +119,40 @@ const ReactBox = observer(({ box, onInput, store }) => {
     style.fontWeight = "550";
     style.color = "#333";
   }
-
-  let element;
-  if (input != null) {
-    style.background = "#eee";
-    element = (
-      <Input
-        key={key}
-        value={input}
-        style={style}
-        onChange={store.handleInput}
-      />
-    );
+  // let element;
+  // if (input != null) {
+  //   style.background = "#eee";
+  //   element = (
+  //     <Cursor
+  //       key={key}
+  //       value={input}
+  //       style={style}
+  //       onChange={store.handleInput}
+  //     />
+  //   );
+  // } else {
+  // const Tag = cursor ? Cursor : "div";
+  let Tag;
+  const props = { key, style };
+  if (cursor) {
+    Tag = Cursor;
+    props.value = input;
+    props.onChange = store.handleInput;
   } else {
-    const Tag = cursor ? Cursor : "div";
-    element = (
-      <Tag key={key} style={style}>
-        {text}
-      </Tag>
-    );
+    Tag = "div";
+    props.children = text;
   }
-
+  const element = <Tag {...props} />;
+  // element = (
+  //   <Tag key={key} style={style}>
+  //     {text}
+  //   </Tag>
+  // );
+  // }
   if (true) {
     // TODO: set to false for refs to render connector below
     return element;
   }
-
   const connector =
     category === Link ? (
       <div
@@ -160,7 +166,6 @@ const ReactBox = observer(({ box, onInput, store }) => {
         }}
       />
     ) : null;
-
   return [connector, element];
 });
 
@@ -168,7 +173,6 @@ const ReactBox = observer(({ box, onInput, store }) => {
 export const ReactView = observer(({ store }) => {
   const { activeCells, cells, onInput } = store;
   let throwawayIdCounter = 0;
-
   const cellBoxes = (activeCells || cells).map(cell => (
     <ReactBox
       key={cell ? cell.key : throwawayIdCounter++}
@@ -177,6 +181,5 @@ export const ReactView = observer(({ store }) => {
       store={store}
     />
   ));
-
   return <div style={containerStyle}>{cellBoxes}</div>;
 });
