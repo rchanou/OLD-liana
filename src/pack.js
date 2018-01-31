@@ -5,37 +5,22 @@ const packWord = full => {
   if ("op" in full) {
     return full.op;
   }
-  if ("gRef" in full) {
-    return { g: full.gRef };
+  if ("ref" in full) {
+    return { r: full.ref };
   }
   if ("arg" in full) {
-    return full.arg;
-  }
-  if ("sRef" in full) {
-    return { s: full.sRef };
+    return { a: full.arg };
   }
   throw new Error(`Could not pack word. Has no match: ${full}`);
 };
 
-const packDeclaration = full => {
-  if (full.line) {
-    return full.line.map(packWord);
+const packProc = full => {
+  if (Array.isArray(full)) {
+    return full.map(packWord);
   }
-  const packed = {};
-  if (full.lines) {
-    for (const id in full.lines) {
-      packed[id] = full.lines[id].map(packWord);
-    }
-  }
-  packed.r = full.ret.map(packWord);
-  return packed;
-};
-
-const packDecSet = full => {
   const packed = {};
   for (const id in full) {
-    const packedDec = packDeclaration(full[id]);
-    packed[id] = packedDec;
+    packed[id] = packProc(full[id]);
   }
   return packed;
 };
@@ -47,46 +32,27 @@ const unpackWord = packed => {
   if (typeof packed === "string") {
     return { op: packed };
   }
-  if (typeof packed === "number") {
-    return { arg: packed };
+  // if (typeof packed === "number") {
+  if ("a" in packed) {
+    return { arg: packed.a };
   }
-  if ("g" in packed) {
-    return { gRef: packed.g };
-  }
-  if ("s" in packed) {
-    return { sRef: packed.s };
+  if ("r" in packed) {
+    return { ref: packed.r };
   }
   throw new Error(`Could not unpack word. Has no match: ${packed}`);
 };
 
-const unpackDeclaration = packed => {
-  const full = {};
+const unpackProc = packed => {
   if (Array.isArray(packed)) {
-    full.line = packed.map(unpackWord);
-  } else {
-    full.lines = {};
-    for (const id in packed) {
-      const fullLine = packed[id].map(unpackWord);
-      if (id === "r") {
-        full.ret = fullLine;
-      } else {
-        full.lines[id] = fullLine;
-      }
-    }
+    return packed.map(unpackWord);
   }
-  return full;
-};
-
-const unpackDecSet = packed => {
   const full = {};
   for (const id in packed) {
-    const packedDec = packed[id];
-    const fullDec = unpackDeclaration(packedDec);
-    fullDec.id = id;
-    full[id] = fullDec;
+    full[id] = unpackProc(packed[id]);
   }
+
   return full;
 };
 
-export const pack = ({ decs, ...rest }) => ({ d: packDecSet(decs), ...rest });
-export const unpack = ({ d, ...rest }) => ({ decs: unpackDecSet(d), ...rest });
+export const pack = packProc;
+export const unpack = unpackProc;

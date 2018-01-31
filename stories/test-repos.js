@@ -1,4 +1,4 @@
-export const main = {
+export const engine = {
   main: {
     a: [{ op: "+" }, { val: 1 }, { val: 2 }],
     b: {
@@ -15,12 +15,7 @@ export const main = {
     e: {
       R: {
         R: {
-          R: [
-            { op: "+" },
-            { arg: ["e", 0] },
-            { arg: ["e", "R", 0] },
-            { arg: ["e", "R", "R", 0] }
-          ]
+          R: [{ op: "+" }, { arg: ["e", 0] }, { arg: ["e", "R", 0] }, { arg: ["e", "R", "R", 0] }]
         }
       }
     },

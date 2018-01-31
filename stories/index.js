@@ -19,12 +19,12 @@ import {
 import { ContextUser } from "../src/user";
 // import { App } from "../src/app";
 // import { RepoEditor } from "../src/editor";
-import { main, user } from "./test-repos";
+import { engine, user } from "./test-repos";
 import { pack, unpack } from "../src/pack";
 
 import { MainEditor } from "../src/editor";
 
-const T = Engine.create(main);
+const T = Engine.create(engine);
 window.T = T;
 strictEqual(T.run("c")(3), 5);
 strictEqual(T.run("e")(3)(5)(7), 15);
@@ -123,7 +123,7 @@ storiesOf("Liana", module)
   // })
   .add("new repo test", () => {
     const store = App.create({
-      [ContextEngine.key]: main,
+      [ContextEngine.key]: engine,
       [ContextUser.key]: user,
       mainEditor: { selectedCellIndex: 62 }
     });
@@ -131,3 +131,12 @@ storiesOf("Liana", module)
 
     return <ReactEditor store={store} />;
   });
+
+const packTest = pack(engine.main);
+console.log(packTest);
+const unpackTest = unpack(packTest);
+console.log(unpackTest);
+window.n = Engine.create({ main: unpackTest });
+const packLen = JSON.stringify(packTest).length;
+const fullLen = JSON.stringify(unpackTest).length;
+console.log(fullLen, packLen, packLen / fullLen);
