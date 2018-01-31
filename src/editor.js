@@ -26,7 +26,7 @@ export const MainEditor = viewModel("MainEditor", {
   addOpMode: false,
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef),
-  // editingLabelForDec: types.maybe(types.reference(Declaration)),
+  // editingLabelForProc: types.maybe(types.reference(Declaration)),
   tree: types.maybe(Tree)
 })
   .views(self => ({
@@ -48,7 +48,8 @@ export const MainEditor = viewModel("MainEditor", {
             text: id === "R" ? "←" : procName || id,
             fill: "hsl(270,66%,88%)",
             color: "#333",
-            selectable: true
+            selectable: true,
+            labelForProc: proc
           }
         ];
         let argX = x + width;
@@ -85,6 +86,7 @@ export const MainEditor = viewModel("MainEditor", {
             if ("ref" in word) {
               newCell.gotoCellKey = `CL-${word.ref.slice()}-0`;
             }
+            newCell.parentProc = parent;
             cells.push(newCell);
             x += width;
           });
@@ -151,8 +153,8 @@ export const MainEditor = viewModel("MainEditor", {
       if (self.editingNode) {
         return self.editingNode.node.out;
       }
-      if (self.editingLabelForDec) {
-        return self.editingLabelForDec.name;
+      if (self.editingLabelForProc) {
+        return self.editingLabelForProc.name;
       }
       return null;
     }
@@ -167,8 +169,8 @@ export const MainEditor = viewModel("MainEditor", {
         self.editingNode.node.select(e.target.value);
       }
 
-      if (self.editingLabelForDec) {
-        self.editingLabelForDec.setLabel(e.target.value);
+      if (self.editingLabelForProc) {
+        self.editingLabelForProc.setLabel(e.target.value);
       }
     },
     toggleChooser(forDec, nodeIndex) {
@@ -200,10 +202,10 @@ export const MainEditor = viewModel("MainEditor", {
       self.linkChooser = { forDec };
     },
     toggleLabelEdit() {
-      if (self.editingLabelForDec) {
-        self.editingLabelForDec = null;
+      if (self.editingLabelForProc) {
+        self.editingLabelForProc = null;
       } else {
-        self.editingLabelForDec = self.selectedCell.labelForDec;
+        self.editingLabelForProc = self.selectedCell.labelForProc;
       }
     },
     toggleTree() {
@@ -240,7 +242,7 @@ export const MainEditor = viewModel("MainEditor", {
               self.toggleEditingValMode();
               // self.moveRight();
             }
-            if (self.editingLabelForDec) {
+            if (self.editingLabelForProc) {
               self.toggleLabelEdit();
             }
           }
@@ -401,14 +403,14 @@ export const MainEditor = viewModel("MainEditor", {
           },
           // 2: { label: "▲", action: self.moveUp },
           5: {
-            label: "Add Dec",
+            label: "New Line",
             action() {
-              self.repo.addLink();
+              self.engine.addProc(self.selectedCellIndex);
 
               // TODO: this logic to find the last-added name feels kinda hacky; improve?
               let i = self.baseCells.length;
               while (--i) {
-                if (self.baseCells[i].labelForDec) {
+                if (self.baseCells[i].labelForProc) {
                   self.selectCellIndex(i);
                   self.toggleLabelEdit();
                   return;
@@ -437,7 +439,7 @@ export const MainEditor = viewModel("MainEditor", {
         3: {}
       };
 
-      if (selectedCell.labelForDec) {
+      if (selectedCell.labelForProc) {
         keyMap[2][6] = {
           label: "Change Label",
           action: self.toggleLabelEdit
