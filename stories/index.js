@@ -13,14 +13,15 @@ import { ReactView } from "../src/react-box";
 import {
   // Repo,
   Engine,
-  ContextEngine
+  ContextEngine,
+  ContextVM
   // ContextRepo as NewContextRepo
 } from "../src/repo";
 import { ContextUser } from "../src/user";
 // import { App } from "../src/app";
 // import { RepoEditor } from "../src/editor";
 import { engine, user } from "./test-repos";
-import { pack, unpack } from "../src/pack";
+import { pack, unpack, inflate } from "../src/pack";
 
 import { MainEditor } from "../src/editor";
 
@@ -133,10 +134,14 @@ storiesOf("Liana", module)
   });
 
 const packTest = pack(engine.main);
-console.log(packTest);
+// console.log(packTest);
 const unpackTest = unpack(packTest);
-console.log(unpackTest);
-window.n = Engine.create({ main: unpackTest });
+// console.log(unpackTest);
+// window.n = Engine.create({ main: unpackTest });
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
+
+const flat = inflate(engine.main);
+console.log(flat);
+window.n = ContextVM.Type.create(flat);

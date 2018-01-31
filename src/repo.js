@@ -277,26 +277,23 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
   // TODO: type prop
   arg: types.union(
     integerType,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      path => {
-        const { length } = path;
-        if (typeof path[0] === "number" && typeof path[1] === "number") {
-          return length === 2;
-        } else {
-          for (let i = 0; i < length; i++) {
-            if (i === length - 1) {
-              if (typeof path[i] !== "number") {
-                return false;
-              }
-            } else if (typeof path[i] !== "string") {
+    types.refinement(types.array(types.union(integerType, types.string)), path => {
+      const { length } = path;
+      if (typeof path[0] === "number" && typeof path[1] === "number") {
+        return length === 2;
+      } else {
+        for (let i = 0; i < length; i++) {
+          if (i === length - 1) {
+            if (typeof path[i] !== "number") {
               return false;
             }
+          } else if (typeof path[i] !== "string") {
+            return false;
           }
         }
-        return true;
       }
-    )
+      return true;
+    })
   )
   // names: NameSet
 }).views(self => ({
@@ -323,21 +320,18 @@ const Arg = mixinModel(ContextUser.RefType)("Arg", {
 const Ref = mixinModel(ContextUser.RefType)("Ref", {
   ref: types.union(
     types.string,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      ref => {
-        const { length } = ref;
-        if (typeof ref[0] === "number") {
-          return length === 2 && typeof ref[1] === "string";
-        }
-        for (let i = 0; i < length; i++) {
-          if (typeof ref[i] !== "string") {
-            return false;
-          }
-        }
-        return true;
+    types.refinement(types.array(types.union(integerType, types.string)), ref => {
+      const { length } = ref;
+      if (typeof ref[0] === "number") {
+        return length === 2 && typeof ref[1] === "string";
       }
-    )
+      for (let i = 0; i < length; i++) {
+        if (typeof ref[i] !== "string") {
+          return false;
+        }
+      }
+      return true;
+    })
   )
 }).views(self => ({
   get name() {
@@ -424,3 +418,42 @@ export const Engine = types
   }));
 
 export const ContextEngine = makeContext(Engine);
+
+const Argg = mixinModel(ContextUser.RefType)("Argg", {
+  id: types.identifier(types.string)
+});
+
+const ArgRef = types.model("ArgRef", {
+  arg: types.reference(Argg)
+});
+
+const Reff = mixinModel(ContextUser.RefType)("Reff", {
+  ref: types.reference(types.late(() => Dec))
+}).views(self => ({
+  get name() {
+    const { ref } = self;
+    return self[ContextUser.key].pathName(ref) || `(${ref.slice()})`;
+  },
+  get color() {
+    return Color.pending;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
+  }
+}));
+
+const Node = types.union(Val, Op, ArgRef, PkgRef, Reff);
+
+const Eval = types.refinement(types.array(Node), l => l.length);
+
+const Dec = types.model("Dec", {
+  id: types.identifier(types.string),
+  eval: Eval
+});
+
+const VM = types.model("VM", {
+  args: types.optional(types.map(Argg), {}),
+  decs: types.optional(types.map(Dec), {})
+});
+
+export const ContextVM = makeContext(VM);

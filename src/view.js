@@ -3,8 +3,7 @@ import { Pkg, ContextEngine } from "./repo";
 import { ContextUser } from "./user";
 import { mixinModel } from "./context";
 
-export const calcWidth = text =>
-  typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
+export const calcWidth = text => (typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6));
 
 export const formatOut = out => {
   if (out instanceof Error) {
@@ -126,9 +125,7 @@ const BaseUI = types
       const currentCell = { ...self.selectedCell };
       const crossSizeProp = crossAxis === "x" ? "width" : "height";
       // TODO: center-finding can be improved (maybe try banker's rounding to prevent cursor "drift?")
-      const crossCenter = Math.floor(
-        currentCell[crossAxis] + (currentCell[crossSizeProp] - 1 || 0) / 2
-      );
+      const crossCenter = Math.floor(currentCell[crossAxis] + (currentCell[crossSizeProp] - 1 || 0) / 2);
       currentCell[crossAxis] = crossCenter;
       const crossAxisMap = self.cellMap[crossAxis];
       if (!currentCell) {
@@ -179,7 +176,7 @@ const BaseUI = types
     }
   }));
 
-const UI = types.compose(ContextEngine.RefType, ContextUser.RefType, BaseUI);
+const UI = types.compose("UI", ContextEngine.RefType, ContextUser.RefType, BaseUI);
 export const viewModel = (...args) => types.compose(types.model(...args), UI);
 
 export const cursorify = (baseCell, key, input) => {

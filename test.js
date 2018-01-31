@@ -9,7 +9,7 @@ const B = types.model("B", {
 
 const A = types
   .model({
-    id: types.identifier(types.string),
+    id: types.refinement(types.identifier(types.string), id => id.length > 3),
     b: B,
     // ref: types.frozen
     ref: types.maybe(types.reference(types.late(() => A)))
@@ -29,12 +29,12 @@ const a = A.create({
 
 const c = C.create({
   as: {
-    a: { id: "a", b: { name: "sam" }, ref: "b" },
-    b: { id: "b", b: { name: "jam" } }
+    aaaa: { id: "aaaa", b: { name: "sam" }, ref: "bbbbb" },
+    bbbbb: { id: "bbbbb", b: { name: "jam" } }
   }
 });
 
-console.log(c.as.get("a").ref.b.name);
+console.log(c.as.get("aaaa").ref.b.name);
 
 const D = types.model("D", {
   b: types.reference(B, id => ({ id, name: "flim flam" }))
