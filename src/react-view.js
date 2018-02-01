@@ -64,7 +64,6 @@ class ScrollIn extends React.Component {
   componentDidMount() {
     this.me = findDOMNode(this);
     const { me } = this;
-    let lastY = me.offsetTop;
     this.handleMove = e => {
       if (e.propertyName !== "top") {
         return;
@@ -84,18 +83,14 @@ class ScrollIn extends React.Component {
       };
       const currentY = me.offsetTop;
       const windowY = window.scrollY;
-      // const f = Math.floor;
-      if (currentY < windowY + 50 && currentY !== lastY) {
+      if (currentY < windowY + 50) {
         step(Math.min(-50, currentY - windowY));
-        // console.log(f(this.lastY), f(currentY), f(currentY - this.lastY));
       } else {
         const upper = windowY + window.innerHeight - 200;
-        if (currentY > upper && currentY !== lastY) {
+        if (currentY > upper) {
           step(Math.max(50, currentY - upper));
-          // console.log(f(this.lastY), f(currentY), f(currentY - this.lastY));
         }
       }
-      lastY = currentY;
     };
     me.addEventListener("transitionend", this.handleMove);
   }
@@ -176,12 +171,7 @@ export const ReactView = observer(({ store }) => {
   const { activeCells, cells, onInput } = store;
   let throwawayIdCounter = 0;
   const cellBoxes = (activeCells || cells).map(cell => (
-    <ReactBox
-      key={cell ? cell.key : throwawayIdCounter++}
-      box={cell}
-      onInput={onInput}
-      store={store}
-    />
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} store={store} />
   ));
   return <div style={containerStyle}>{cellBoxes}</div>;
 });
