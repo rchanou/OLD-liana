@@ -11,18 +11,18 @@ const packWord = full => {
   if ("arg" in full) {
     return { a: full.arg };
   }
-  throw new Error(`Could not pack word. Has no match: ${full}`);
+  throw new Error(`Could not pack node. Has no match: ${full}`);
 };
 
 // TODO: convert ref/arg paths to/from relative paths
 
-const packProc = full => {
+const packDec = full => {
   if (Array.isArray(full)) {
     return full.map(packWord);
   }
   const packed = {};
   for (const id in full) {
-    packed[id] = packProc(full[id]);
+    packed[id] = packDec(full[id]);
   }
   return packed;
 };
@@ -41,23 +41,23 @@ const unpackWord = packed => {
   if ("r" in packed) {
     return { ref: packed.r };
   }
-  throw new Error(`Could not unpack word. Has no match: ${packed}`);
+  throw new Error(`Could not unpack node. Has no match: ${packed}`);
 };
 
-const unpackProc = packed => {
+const unpackDec = packed => {
   if (Array.isArray(packed)) {
     return packed.map(unpackWord);
   }
   const full = {};
   for (const id in packed) {
-    full[id] = unpackProc(packed[id]);
+    full[id] = unpackDec(packed[id]);
   }
 
   return full;
 };
 
-export const pack = packProc;
-export const unpack = unpackProc;
+export const pack = packDec;
+export const unpack = unpackDec;
 
 export const inflate = (parent, path = [], flat = { args: {}, decs: {} }) => {
   let dec = parent;

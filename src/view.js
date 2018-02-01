@@ -1,5 +1,5 @@
 import { types } from "mobx-state-tree";
-import { Pkg, ContextEngine } from "./repo";
+import { Pkg, ContextEngine } from "./core";
 import { ContextUser } from "./user";
 import { mixinModel } from "./context";
 
@@ -126,7 +126,7 @@ const BaseUI = types
       const currentCell = { ...self.selectedCell };
       const crossSizeProp = crossAxis === "x" ? "width" : "height";
       // TODO: center-finding can be improved (maybe try banker's rounding to prevent cursor "drift?")
-      const crossCenter = Math.floor(
+      const crossCenter = Math.ceil(
         currentCell[crossAxis] + (currentCell[crossSizeProp] - 1 || 0) / 2
       );
       currentCell[crossAxis] = crossCenter;

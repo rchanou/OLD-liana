@@ -1,6 +1,6 @@
 import { types, getEnv, destroy } from "mobx-state-tree";
 
-import { ContextEngine } from "./repo";
+import { ContextEngine } from "./core";
 import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
 import { mixinModel } from "./context";

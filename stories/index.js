@@ -7,7 +7,7 @@ import { action } from "@storybook/addon-actions";
 
 import { ReactEditor } from "../src/react-editor";
 import { App } from "../src/app";
-import { Engine } from "../src/repo";
+import { Engine } from "../src/core";
 import { engine, user } from "./test-repos";
 import { pack, unpack, inflate } from "../src/pack";
 

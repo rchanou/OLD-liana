@@ -352,9 +352,9 @@ const Ref = mixinModel(ContextUser.RefModel)("Ref", {
   }
 }));
 
-const Word = types.union(Val, Op, Arg, PkgRef, Ref);
+const Node = types.union(Val, Op, Arg, PkgRef, Ref);
 
-const Line = types.refinement(types.array(Word), l => l.length);
+const Line = types.refinement(types.array(Node), l => l.length);
 
 const walkPath = (base, up, walk) => {
   const finalPath = [...base];
@@ -367,11 +367,11 @@ const walkPath = (base, up, walk) => {
   return finalPath;
 };
 
-const Proc = types.map(types.union(types.string, Line, types.late(() => Proc)));
+const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 
 export const Engine = types
   .model("Engine", {
-    main: Proc
+    main: Dec
   })
   .views(self => ({
     get out() {
@@ -380,24 +380,24 @@ export const Engine = types
     run(...initialPath) {
       const { main } = self;
       const gen = (path = [], scopes = {}) => {
-        let proc = main;
+        let dec = main;
         for (const id of path) {
-          proc = proc.get(id);
+          dec = dec.get(id);
         }
-        if (isObservableArray(proc)) {
+        if (isObservableArray(dec)) {
           // TODO: short-circuit if, and, or, switch, and possibly for
-          const outs = proc.map(word => {
-            if ("out" in word) {
-              return word.out;
-            } else if ("ref" in word) {
-              const { ref } = word;
+          const outs = dec.map(node => {
+            if ("out" in node) {
+              return node.out;
+            } else if ("ref" in node) {
+              const { ref } = node;
               if (typeof ref === "string") {
                 return gen([ref], scopes);
               } else {
                 return gen(ref, scopes);
               }
-            } else if ("arg" in word) {
-              const { arg } = word;
+            } else if ("arg" in node) {
+              const { arg } = node;
               const path = [];
               let index;
               for (let i = 0; i < arg.length; i++) {
