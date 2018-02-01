@@ -49,8 +49,8 @@ export const App = types
   .model("App", {
     heldKeyCoords: types.maybe(HeldKeyCoords),
     mainEditor: types.optional(MainEditor, {}),
-    user: ContextUser.Model,
-    engine: ContextEngine.Model
+    user: ContextUser,
+    engine: ContextEngine
   })
   .actions(self => {
     const { dom } = getEnv(self);

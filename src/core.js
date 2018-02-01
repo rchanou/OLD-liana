@@ -293,7 +293,7 @@ const Param = types
       }
       return true;
     }),
-    user: types.late(() => ContextUser.RefType)
+    user: types.late(() => ContextUser)
   })
   .views(self => ({
     get cursor() {
@@ -341,20 +341,23 @@ const Ref = types
   .model("Ref", {
     ref: types.union(
       types.string,
-      types.refinement(types.array(types.union(integerType, types.string)), ref => {
-        const { length } = ref;
-        if (typeof ref[0] === "number") {
-          return length === 2 && typeof ref[1] === "string";
-        }
-        for (let i = 0; i < length; i++) {
-          if (typeof ref[i] !== "string") {
-            return false;
+      types.refinement(
+        types.array(types.union(integerType, types.string)),
+        ref => {
+          const { length } = ref;
+          if (typeof ref[0] === "number") {
+            return length === 2 && typeof ref[1] === "string";
           }
+          for (let i = 0; i < length; i++) {
+            if (typeof ref[i] !== "string") {
+              return false;
+            }
+          }
+          return true;
         }
-        return true;
-      })
+      )
     ),
-    user: ContextUser.RefType
+    user: ContextUser
   })
   .views(self => ({
     get name() {

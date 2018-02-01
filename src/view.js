@@ -1,7 +1,6 @@
 import { types } from "mobx-state-tree";
 import { Pkg, ContextEngine } from "./core";
 import { ContextUser } from "./user";
-import { mixinModel } from "./context";
 
 export const calcWidth = text =>
   typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
@@ -23,22 +22,15 @@ export const formatOut = out => {
 
 let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
-const BaseUI = types
+const UI = types
   .model("BaseUI", {
-    selectedCellIndex: 0
+    selectedCellIndex: 0,
+    engine: ContextEngine,
+    user: ContextUser
   })
   .views(self => {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
     return {
-      // get repo() {
-      //   return self[ContextRepo.key];
-      // },
-      get engine() {
-        return self[ContextEngine.key];
-      },
-      get user() {
-        return self[ContextUser.key];
-      },
       get selectedCell() {
         return self.baseCells[self.selectedCellIndex];
       },
@@ -179,12 +171,6 @@ const BaseUI = types
     }
   }));
 
-const UI = types.compose(
-  "UI",
-  ContextEngine.RefModel,
-  ContextUser.RefModel,
-  BaseUI
-);
 export const viewModel = (...args) => types.compose(types.model(...args), UI);
 
 export const cursorify = (baseCell, key, input) => {

@@ -4,10 +4,6 @@ export const makeContext = Model => {
   if (typeof Model.name !== "string") {
     throw new Error("Name required for context model type!");
   }
-
-  const defKey = `def${Model.name}`;
-  const contextRefKey = `context${Model.name}`;
-
   const Context = types
     .model(`Context${Model.name}`, {
       _contextId: types.optional(types.identifier(types.number), 0)
@@ -24,9 +20,7 @@ export const makeContext = Model => {
         return snapshot;
       }
     }));
-
   const ContextModel = types.compose(`Context${Model.name}`, Model, Context);
-
   const RefType = types.optional(
     types.union(
       // for some reason, in some cases, mobx-state-tree can't tell that 0 should be a reference
@@ -37,19 +31,7 @@ export const makeContext = Model => {
     ),
     0
   );
-
-  const RefModel = types
-    .model(`Context${Model.name}Child`, {
-      [contextRefKey]: RefType
-    })
-    .actions(self => ({
-      postProcessSnapshot(snapshot) {
-        const clone = { ...snapshot };
-        delete clone[contextRefKey];
-        return clone;
-      }
-    }));
-
+  return RefType;
   return {
     Model: ContextModel,
     RefModel,
