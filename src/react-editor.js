@@ -12,6 +12,5 @@ export const ReactEditor = observer(({ store }) => (
   <div style={containerStyle}>
     <ReactView store={store} />
     <ReactKeyboard store={store} />
-    {/* <ReactKeyboard keyBoxMap={editor.keyMap} selectedCoords={editor.selectedCoords} /> */}
   </div>
 ));

@@ -1,5 +1,6 @@
 import { types, flow } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
+import produce from "immer";
 
 import { ContextUser } from "./user";
 import { makeContext, mixinModel } from "./context";
@@ -272,53 +273,86 @@ const Op = mixinModel(Named)("Op", {
   }
 }));
 
-const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
-const Arg = mixinModel(ContextUser.RefModel)("Arg", {
-  // TODO: type prop
-  arg: types.union(
-    integerType,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      path => {
-        const { length } = path;
-        if (typeof path[0] === "number" && typeof path[1] === "number") {
-          return length === 2;
-        } else {
-          for (let i = 0; i < length; i++) {
-            if (i === length - 1) {
-              if (typeof path[i] !== "number") {
-                return false;
-              }
-            } else if (typeof path[i] !== "string") {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-    )
-  )
-  // names: NameSet
-}).views(self => ({
-  get name() {
-    // TODO: look up appropriate name based on user context
-    const { arg } = self;
-    if (isObservableArray(arg)) {
-      const pathName = self[ContextUser.key].pathName(self.arg);
-      if (pathName) {
-        return pathName;
-      }
-      return `{${arg.join(",")}}`;
+const Param = mixinModel(ContextUser.RefModel)("Param", {
+  id: types.refinement(types.identifier(types.string), id => {
+    const path = id.split(",");
+    const { length } = path;
+    if (typeof path[0] === "number" && typeof path[1] === "number") {
+      return length === 2;
     }
-    return `{${arg}}`;
-  },
-  get color() {
-    return Color.input;
-  },
-  get width() {
-    return Math.ceil((self.name.length + 3) / 6);
-  }
-}));
+    for (let i = 0; i < length; i++) {
+      if (i === length - 1) {
+        // if (typeof path[i] !== "number") {
+        if (isNaN(path[i])) {
+          return false;
+        }
+      } else if (typeof path[i] !== "string") {
+        return false;
+      }
+    }
+    return true;
+  })
+});
+
+const ParamDefs = types
+  .model("ParamDefs", {
+    _defaultParam: types.maybe(Param),
+    params: types.optional(types.map(Param), {})
+  })
+  .preProcessSnapshot(snapshot => ({
+    ...snapshot,
+    _defaultParam: { id: "-1" }
+  }));
+
+const ContextParamDefs = makeContext(ParamDefs);
+
+const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
+const Arg = mixinModel(ContextUser.RefModel, ContextParamDefs.RefModel)("Arg", {
+  arg: types.reference(Param, {
+    get(id, parent) {
+      const foundParam = parent[ContextParamDefs.key].params.get(id);
+      if (foundParam) {
+        return foundParam;
+      }
+      // debugger;
+      return parent[ContextParamDefs.key]._defaultParam;
+    },
+    set(value) {
+      return value.arg;
+    }
+  })
+})
+  .preProcessSnapshot(snapshot => {
+    const { arg } = snapshot;
+    if (Array.isArray(arg)) {
+      return { arg: String(arg) };
+    }
+    return snapshot;
+  })
+  .views(self => ({
+    get cursor() {
+      return self.arg.id.split(",");
+    },
+    get name() {
+      // TODO: look up appropriate name based on user context
+      // const { arg } = self;
+      // if (isObservableArray(arg)) {
+      //   const pathName = self[ContextUser.key].pathName(self.cursor);
+      //   if (pathName) {
+      //     return pathName;
+      //   }
+      //   return `{${arg.join(",")}}`;
+      // }
+      const { id } = self.arg;
+      return self[ContextUser.key].pathName(id) || `{${id}}`;
+    },
+    get color() {
+      return Color.input;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
+    }
+  }));
 
 const Ref = mixinModel(ContextUser.RefModel)("Ref", {
   ref: types.union(
@@ -371,8 +405,34 @@ const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 
 export const Engine = types
   .model("Engine", {
-    main: Dec
+    main: Dec,
+    params: types.optional(ContextParamDefs.Model, {})
   })
+  .preProcessSnapshot(snapshot =>
+    produce(snapshot, draft => {
+      if (!draft.params) {
+        draft.params = {};
+      }
+      if (!draft.params.params) {
+        draft.params.params = {};
+      }
+      const { params } = draft.params;
+      const getParams = dec => {
+        if (Array.isArray(dec)) {
+          for (const node of dec) {
+            if ("arg" in node) {
+              params[node.arg] = { id: String(node.arg) };
+            }
+          }
+          return;
+        }
+        for (const id in dec) {
+          getParams(dec[id]);
+        }
+      };
+      getParams(draft.main);
+    })
+  )
   .views(self => ({
     get out() {
       return self.run();
@@ -397,14 +457,15 @@ export const Engine = types
                 return gen(ref, scopes);
               }
             } else if ("arg" in node) {
-              const { arg } = node;
+              // debugger;
+              const { cursor } = node;
               const path = [];
               let index;
-              for (let i = 0; i < arg.length; i++) {
-                if (i < arg.length - 1) {
-                  path.push(arg[i]);
+              for (let i = 0; i < cursor.length; i++) {
+                if (i < cursor.length - 1) {
+                  path.push(cursor[i]);
                 } else {
-                  index = arg[i];
+                  index = cursor[i];
                 }
               }
               return scopes[path][index];

@@ -12,16 +12,20 @@ export const makeContext = Model => {
     _id: types.optional(types.identifier(types.number), 0)
   });
 
-  const ContextModel = types.compose(Model, Context);
+  const ContextModel = types.compose(`Context${Model.name}`, Model, Context);
 
-  const Ref = types.optional(
-    types.union(ContextModel, types.reference(ContextModel)),
+  const RefType = types.optional(
+    types.union(
+      () => types.reference(ContextModel),
+      ContextModel,
+      types.reference(ContextModel)
+    ),
     0
   );
 
   const RefModel = types
     .model(`Context${Model.name}Child`, {
-      [contextRefKey]: Ref
+      [contextRefKey]: RefType
     })
     .actions(self => ({
       postProcessSnapshot(snapshot) {
@@ -31,15 +35,12 @@ export const makeContext = Model => {
       }
     }));
 
-  const refModel = (...args) => types.compose(RefModel, types.model(...args));
-
   return {
     Model: ContextModel,
-    defKey,
-    key: contextRefKey,
     RefModel,
-    refModel,
-    Ref
+    RefType,
+    defKey,
+    key: contextRefKey
   };
 };
 

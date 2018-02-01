@@ -49,7 +49,8 @@ export const MainEditor = viewModel("MainEditor", {
             fill: "hsl(270,66%,88%)",
             color: "#333",
             selectable: true,
-            nameForDec: path
+            nameForDec: path,
+            parentDec: path
           }
         ];
         let argX = x + width;
@@ -65,7 +66,8 @@ export const MainEditor = viewModel("MainEditor", {
               text: argName,
               fill: "hsl(30,66%,83%)",
               color: "#333",
-              selectable: true
+              selectable: true,
+              parentDec: path
             });
             argX += width;
           }
