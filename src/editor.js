@@ -56,11 +56,12 @@ export const MainEditor = viewModel("MainEditor", {
         const params = engine.params.get(path);
         if (params) {
           let paramX = x + width;
-          for (const param of params) {
-            const { name } = param;
+          for (let i = 0; i < params.length; i++) {
+            const param = params[i];
+            const name = user.pathName([...path, i]);
             const width = calcWidth(name);
             cells.push({
-              key: `CL-${param.id}`,
+              key: `CL-P-${path}-${i}`,
               x: paramX,
               y,
               width,
@@ -96,7 +97,11 @@ export const MainEditor = viewModel("MainEditor", {
           if (!dec.some(node => "arg" in node)) {
             const result = engine.run(path);
             const text =
-              typeof result === "function" ? "f" : typeof result === "object" ? JSON.stringify(result) : String(result);
+              typeof result === "function"
+                ? "f"
+                : typeof result === "object"
+                  ? JSON.stringify(result)
+                  : String(result);
             cells.push({
               key: `CL-${path}-out`,
               x,
@@ -119,7 +124,13 @@ export const MainEditor = viewModel("MainEditor", {
           //   return;
           // }
           const subX = id === undefined ? x : x + 1;
-          const subDecCells = makeDecCells(dec, subId, [...path, subId], subX, y);
+          const subDecCells = makeDecCells(
+            dec,
+            subId,
+            [...path, subId],
+            subX,
+            y
+          );
           cells.push(...subDecCells);
           y = subDecCells[subDecCells.length - 1].y + 1;
           if (id === undefined) {
@@ -164,7 +175,10 @@ export const MainEditor = viewModel("MainEditor", {
       }
 
       if (self.editingNameForDec) {
-        self.user.currentNameSet.setName(self.editingNameForDec, e.target.value);
+        self.user.currentNameSet.setName(
+          self.editingNameForDec,
+          e.target.value
+        );
         // self.editingNameForDec.setLabel(e.target.value);
       }
     },
@@ -221,7 +235,13 @@ export const MainEditor = viewModel("MainEditor", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -446,7 +466,9 @@ export const MainEditor = viewModel("MainEditor", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.baseCells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

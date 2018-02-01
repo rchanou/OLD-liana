@@ -274,67 +274,72 @@ const Op = mixinModel(Named)("Op", {
 }));
 
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1)); // logic using this got removed
-const Param = types
-  .model("Param", {
-    id: types.refinement(types.identifier(types.string), id => {
-      const path = id.split(",");
-      const { length } = path;
-      if (typeof path[0] === "number" && typeof path[1] === "number") {
-        return length === 2;
-      }
-      for (let i = 0; i < length; i++) {
-        if (i === length - 1) {
-          if (isNaN(path[i])) {
-            return false;
-          }
-        } else if (typeof path[i] !== "string") {
-          return false;
-        }
-      }
-      return true;
-    }),
-    user: ContextUser
-  })
-  .views(self => ({
-    get cursor() {
-      return self.id.split(",");
-    },
-    get name() {
-      const { id } = self;
-      return self.user.pathName(id) || `{${id}}`;
-    },
-    get color() {
-      return Color.input;
-    },
-    get width() {
-      return Math.ceil((self.name.length + 3) / 6);
-    }
-  }));
+const Param = types.model("Param", {
+  // id: types.refinement(types.identifier(types.string), id => {
+  //   const path = id.split(",");
+  //   const { length } = path;
+  //   if (typeof path[0] === "number" && typeof path[1] === "number") {
+  //     return length === 2;
+  //   }
+  //   for (let i = 0; i < length; i++) {
+  //     if (i === length - 1) {
+  //       if (isNaN(path[i])) {
+  //         return false;
+  //       }
+  //     } else if (typeof path[i] !== "string") {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }),
+  // user: ContextUser,
+  type: types.maybe(types.string)
+});
+// .views(self => ({
+// get cursor() {
+//   return self.id.split(",");
+// },
+// get name() {
+//   const { id } = self;
+//   return self.user.pathName(id) || `{${id}}`;
+// },
+//   get color() {
+//     return Color.input;
+//   },
+//   get width() {
+//     return Math.ceil((self.name.length + 3) / 6);
+//   }
+// }));
 
 const Arg = types
   .model("Arg", {
-    arg: types.reference(Param),
-    engine: types.late(() => ContextEngine)
+    // arg: types.reference(Param),
+    arg: types.array(types.union(types.string, types.number)),
+    user: ContextUser
   })
-  .preProcessSnapshot(snapshot => {
-    const { arg } = snapshot;
-    if (Array.isArray(arg)) {
-      return { arg: String(arg) };
-    }
-    return snapshot;
-  })
+  // .preProcessSnapshot(snapshot => {
+  //   const { arg } = snapshot;
+  //   if (Array.isArray(arg)) {
+  //     return { arg: String(arg) };
+  //   }
+  //   return snapshot;
+  // })
   .views(self => ({
     get cursor() {
-      return self.arg.cursor;
+      return self.arg;
     },
     get name() {
-      return self.arg.name;
+      const { arg } = self;
+      return self.user.pathName(arg) || `{${arg.slice()}}`;
+      // return self.param.name;
     },
     get color() {
-      return self.arg.color;
+      return Color.input;
+      // return self.param.color;
     },
     get width() {
-      return self.arg.width;
+      return Math.ceil((self.name.length + 3) / 6);
+      // return self.param.width;
     }
   }));
 
@@ -418,7 +423,7 @@ export const Engine = types
               if (!params[path]) {
                 params[path] = [];
               }
-              params[path][index] = { id: String(node.arg) };
+              params[path][index] = {};
             }
           }
           return;
