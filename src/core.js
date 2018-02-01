@@ -84,8 +84,8 @@ const opFuncs = {
     }
     return obj;
   },
-  [ifOp](condition, trueVal, falseVal) {
-    return condition ? trueVal : falseVal;
+  [ifOp]() {
+    throw new Error("'If' is special-cased...this shouldn't be run!");
   },
   [switchOp](switcher, ...casePairs) {
     // console.log(switcher, ...casePairs, "SWIT");
@@ -299,17 +299,13 @@ const Arg = types
   })
   .views(self => ({
     get name() {
-      const { arg } = self;
-      return self.user.pathName(arg) || `{${arg.slice()}}`;
-      // return self.param.name;
+      return self.user.pathName(self.arg);
     },
     get color() {
       return Color.input;
-      // return self.param.color;
     },
     get width() {
       return Math.ceil((self.name.length + 3) / 6);
-      // return self.param.width;
     }
   }));
 
@@ -421,8 +417,7 @@ export const Engine = types
           dec = dec.get(id);
         }
         if (isObservableArray(dec)) {
-          // TODO: short-circuit if, and, or, switch, and possibly for
-          const outs = dec.map(node => {
+          const parseNode = node => {
             if ("out" in node) {
               return node.out;
             } else if ("ref" in node) {
@@ -445,7 +440,18 @@ export const Engine = types
               }
               return scopes[path][index];
             }
-          });
+          };
+          // special-case ifOp for short-circuiting ("lazy evaluation") behavior
+          if (dec[0].op === ifOp) {
+            const cond = parseNode(dec[1]);
+            if (cond) {
+              return parseNode(dec[2]);
+            } else {
+              return parseNode(dec[3]);
+            }
+          }
+          // TODO: short-circuit "and", "or", "switch", and possibly "for"
+          const outs = dec.map(parseNode);
           const [head, ...args] = outs;
           return typeof head === "function" ? head(...args) : head;
         }
