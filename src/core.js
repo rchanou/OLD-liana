@@ -273,41 +273,44 @@ const Op = mixinModel(Named)("Op", {
   }
 }));
 
-const Param = mixinModel(ContextUser.RefModel)("Param", {
-  id: types.refinement(types.identifier(types.string), id => {
-    const path = id.split(",");
-    const { length } = path;
-    if (typeof path[0] === "number" && typeof path[1] === "number") {
-      return length === 2;
-    }
-    for (let i = 0; i < length; i++) {
-      if (i === length - 1) {
-        if (isNaN(path[i])) {
+const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1)); // logic using this got removed
+const Param = types
+  .model("Param", {
+    id: types.refinement(types.identifier(types.string), id => {
+      const path = id.split(",");
+      const { length } = path;
+      if (typeof path[0] === "number" && typeof path[1] === "number") {
+        return length === 2;
+      }
+      for (let i = 0; i < length; i++) {
+        if (i === length - 1) {
+          if (isNaN(path[i])) {
+            return false;
+          }
+        } else if (typeof path[i] !== "string") {
           return false;
         }
-      } else if (typeof path[i] !== "string") {
-        return false;
       }
-    }
-    return true;
+      return true;
+    }),
+    user: types.late(() => ContextUser.RefType)
   })
-}).views(self => ({
-  get cursor() {
-    return self.id.split(",");
-  },
-  get name() {
-    const { id } = self;
-    return self[ContextUser.key].pathName(id) || `{${id}}`;
-  },
-  get color() {
-    return Color.input;
-  },
-  get width() {
-    return Math.ceil((self.name.length + 3) / 6);
-  }
-}));
+  .views(self => ({
+    get cursor() {
+      return self.id.split(",");
+    },
+    get name() {
+      const { id } = self;
+      return self.user.pathName(id) || `{${id}}`;
+    },
+    get color() {
+      return Color.input;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
+    }
+  }));
 
-const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = types
   .model("Arg", {
     arg: types.reference(Param)
@@ -334,34 +337,37 @@ const Arg = types
     }
   }));
 
-const Ref = mixinModel(ContextUser.RefModel)("Ref", {
-  ref: types.union(
-    types.string,
-    types.refinement(types.array(types.union(integerType, types.string)), ref => {
-      const { length } = ref;
-      if (typeof ref[0] === "number") {
-        return length === 2 && typeof ref[1] === "string";
-      }
-      for (let i = 0; i < length; i++) {
-        if (typeof ref[i] !== "string") {
-          return false;
+const Ref = types
+  .model("Ref", {
+    ref: types.union(
+      types.string,
+      types.refinement(types.array(types.union(integerType, types.string)), ref => {
+        const { length } = ref;
+        if (typeof ref[0] === "number") {
+          return length === 2 && typeof ref[1] === "string";
         }
-      }
-      return true;
-    })
-  )
-}).views(self => ({
-  get name() {
-    const { ref } = self;
-    return self[ContextUser.key].pathName(ref) || `(${ref.slice()})`;
-  },
-  get color() {
-    return Color.pending;
-  },
-  get width() {
-    return Math.ceil((self.name.length + 3) / 6);
-  }
-}));
+        for (let i = 0; i < length; i++) {
+          if (typeof ref[i] !== "string") {
+            return false;
+          }
+        }
+        return true;
+      })
+    ),
+    user: ContextUser.RefType
+  })
+  .views(self => ({
+    get name() {
+      const { ref } = self;
+      return self.user.pathName(ref) || `(${ref.slice()})`;
+    },
+    get color() {
+      return Color.pending;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
+    }
+  }));
 
 const Node = types.union(Val, Op, Arg, PkgRef, Ref);
 
