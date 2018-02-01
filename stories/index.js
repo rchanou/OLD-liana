@@ -7,11 +7,11 @@ import { action } from "@storybook/addon-actions";
 
 import { ReactEditor } from "../src/react-editor";
 import { App } from "../src/app";
-import { Engine } from "../src/core";
+import { ContextEngine } from "../src/core";
 import { engine, user } from "./test-repos";
 import { pack, unpack, inflate } from "../src/pack";
 
-const T = Engine.create(engine);
+const T = ContextEngine.create(engine);
 window.T = T;
 strictEqual(T.run("c")(3), 5);
 strictEqual(T.run("e")(3)(5)(7), 15);

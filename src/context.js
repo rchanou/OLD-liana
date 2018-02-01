@@ -32,13 +32,6 @@ export const makeContext = Model => {
     0
   );
   return RefType;
-  return {
-    Model: ContextModel,
-    RefModel,
-    RefType,
-    defKey,
-    key: contextRefKey
-  };
 };
 
 export const mixinModel = (...Models) => (name, ...rest) => {

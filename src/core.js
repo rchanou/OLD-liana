@@ -293,7 +293,7 @@ const Param = types
       }
       return true;
     }),
-    user: types.late(() => ContextUser)
+    user: ContextUser
   })
   .views(self => ({
     get cursor() {
@@ -313,7 +313,8 @@ const Param = types
 
 const Arg = types
   .model("Arg", {
-    arg: types.reference(Param)
+    arg: types.reference(Param),
+    engine: types.late(() => ContextEngine)
   })
   .preProcessSnapshot(snapshot => {
     const { arg } = snapshot;
