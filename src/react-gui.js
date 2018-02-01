@@ -8,7 +8,7 @@ const containerStyle = {
   height: 2222 // TODO: test height, change to dynamic calculation
 };
 
-export const ReactEditor = observer(({ store }) => (
+export const ReactGUI = observer(({ store }) => (
   <div style={containerStyle}>
     <ReactView store={store} />
     <ReactKeyboard store={store} />

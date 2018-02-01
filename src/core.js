@@ -366,7 +366,7 @@ export const Engine = types
       if (!draft.params) {
         draft.params = {};
       }
-      const { params } = draft;
+      const { main, params } = draft;
       const getParams = dec => {
         if (Array.isArray(dec)) {
           for (const node of dec) {
@@ -393,7 +393,7 @@ export const Engine = types
           getParams(dec[id]);
         }
       };
-      getParams(draft.main);
+      getParams(main);
     })
   )
   .views(self => ({

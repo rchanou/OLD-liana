@@ -33,7 +33,7 @@ const User = types
       if (path[path.length - 1] === "R") {
         return "←";
       }
-      return self.currentNameSet.names.get(path) || `{${path})`;
+      return self.currentNameSet.names.get(path) || `(${path})`;
     }
   }));
 
