@@ -56,7 +56,7 @@ export const engine = {
       e: [{ op: "+" }, { arg: ["o", 0] }, { val: -1 }]
     },
     // o: [{ ref: "n" }, { val: 5 }, { val: 12 }],
-    R: [{ arg: 0 }]
+    R: [{ arg: [0] }]
   }
 };
 

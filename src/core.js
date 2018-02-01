@@ -383,7 +383,7 @@ const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 export const Engine = types
   .model("Engine", {
     main: Dec,
-    params: types.optional(types.map(Param), {})
+    params: types.optional(types.map(types.array(types.maybe(Param))), {})
   })
   .preProcessSnapshot(snapshot =>
     produce(snapshot, draft => {
@@ -395,7 +395,20 @@ export const Engine = types
         if (Array.isArray(dec)) {
           for (const node of dec) {
             if ("arg" in node) {
-              params[node.arg] = { id: String(node.arg) };
+              const { arg } = node;
+              const path = [];
+              let index;
+              for (let i = 0; i < arg.length; i++) {
+                if (i < arg.length - 1) {
+                  path.push(arg[i]);
+                } else {
+                  index = arg[i];
+                }
+              }
+              if (!params[path]) {
+                params[path] = [];
+              }
+              params[path][index] = { id: String(node.arg) };
             }
           }
           return;
@@ -431,7 +444,6 @@ export const Engine = types
                 return gen(ref, scopes);
               }
             } else if ("arg" in node) {
-              // debugger;
               const { cursor } = node;
               const path = [];
               let index;
