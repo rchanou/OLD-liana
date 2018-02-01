@@ -24,9 +24,10 @@ const User = types
   .views(self => ({
     pathName(path) {
       if (typeof path === "string") {
-        return self.currentNameSet.names.get(path) || "";
+        return self.currentNameSet.names.get(path) || path;
       }
-      return self.currentNameSet.names.get(path.slice()) || "";
+      path = path.slice();
+      return self.currentNameSet.names.get(path) || `(${path})`;
     }
   }));
 
