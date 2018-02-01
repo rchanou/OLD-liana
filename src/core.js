@@ -87,17 +87,8 @@ const opFuncs = {
   [ifOp]() {
     throw new Error("'If' is special-cased...this shouldn't be run!");
   },
-  [switchOp](switcher, ...casePairs) {
-    // console.log(switcher, ...casePairs, "SWIT");
-    const { length } = casePairs;
-    for (let i = 0; i < length; i += 2) {
-      if (switcher === casePairs[i]) {
-        return casePairs[i + 1];
-      }
-    }
-    if (length % 2) {
-      return casePairs[length - 1];
-    }
+  [switchOp]() {
+    throw new Error("'If' is special-cased...this shouldn't be run!");
   },
   [lessThan](a, b) {
     return a < b;
@@ -442,15 +433,35 @@ export const Engine = types
             }
           };
           // special-case ifOp for short-circuiting ("lazy evaluation") behavior
-          if (dec[0].op === ifOp) {
-            const cond = parseNode(dec[1]);
-            if (cond) {
-              return parseNode(dec[2]);
-            } else {
-              return parseNode(dec[3]);
-            }
+          const { op } = dec[0];
+          switch (op) {
+            case ifOp:
+              const cond = parseNode(dec[1]);
+              if (cond) {
+                return parseNode(dec[2]);
+              } else {
+                return parseNode(dec[3]);
+              }
+              break;
+            case switchOp:
+              const [_, switcherNode, ...casePairs] = dec;
+              const { length } = casePairs;
+              const switcher = parseNode(switcherNode);
+              for (let i = 0; i < length; i += 2) {
+                if (switcher === parseNode(casePairs[i])) {
+                  return parseNode(casePairs[i + 1]);
+                }
+              }
+              if (length % 2) {
+                return parseNode(casePairs[length - 1]);
+              }
+              // throwing for now, but maybe that's too strict
+              throw new Error(
+                "Switch case not handled. No default case defined."
+              );
+              break;
           }
-          // TODO: short-circuit "and", "or", "switch", and possibly "for"
+          // TODO: short-circuit "and", "or", and possibly "for"
           const outs = dec.map(parseNode);
           const [head, ...args] = outs;
           return typeof head === "function" ? head(...args) : head;
