@@ -45,7 +45,7 @@ export const MainEditor = viewModel("MainEditor", {
             x,
             y,
             width,
-            text: id === "R" ? "←" : procName || id,
+            text: procName,
             fill: "hsl(270,66%,88%)",
             color: "#333",
             selectable: true,
@@ -116,13 +116,7 @@ export const MainEditor = viewModel("MainEditor", {
           y++;
         }
         dec.forEach((_, subId) => {
-          // if (
-          //   id !== undefined &&
-          //   subId !== "R" &&
-          //   !user.pathName([...path.slice(), subId])
-          // ) {
-          //   return;
-          // }
+          // TODO: inline anonymous decs
           const subX = id === undefined ? x : x + 1;
           const subDecCells = makeDecCells(
             dec,
@@ -141,9 +135,6 @@ export const MainEditor = viewModel("MainEditor", {
       };
       return makeDecCells(engine.main);
     },
-    // get cells() {
-    //   return self.activeCells;
-    // },
     // get activeCells() {
     //   if (self.chooser) {
     //     return self.chooser.allCells;
