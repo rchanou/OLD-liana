@@ -432,7 +432,9 @@ export const Engine = types
               return scopes[path][index];
             }
           };
-          // special-case ifOp for short-circuiting ("lazy evaluation") behavior
+          // special-case handling of conditional ops
+          // for short-circuiting ("lazy evaluation") flow control behavior
+          // as would be expected in plain JS
           const { op } = dec[0];
           switch (op) {
             case ifOp:
@@ -444,6 +446,8 @@ export const Engine = types
               }
               break;
             case switchOp:
+              // TODO: try to generate a proper switch statement
+              // but this requires "eval" or the Function constructor
               const [_, switcherNode, ...casePairs] = dec;
               const { length } = casePairs;
               const switcher = parseNode(switcherNode);
