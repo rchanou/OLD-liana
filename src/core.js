@@ -273,61 +273,31 @@ const Op = mixinModel(Named)("Op", {
   }
 }));
 
-const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1)); // logic using this got removed
-const Param = types.model("Param", {
-  // id: types.refinement(types.identifier(types.string), id => {
-  //   const path = id.split(",");
-  //   const { length } = path;
-  //   if (typeof path[0] === "number" && typeof path[1] === "number") {
-  //     return length === 2;
-  //   }
-  //   for (let i = 0; i < length; i++) {
-  //     if (i === length - 1) {
-  //       if (isNaN(path[i])) {
-  //         return false;
-  //       }
-  //     } else if (typeof path[i] !== "string") {
-  //       return false;
-  //     }
-  //   }
-  //   return true;
-  // }),
-  // user: ContextUser,
-  type: types.maybe(types.string)
-});
-// .views(self => ({
-// get cursor() {
-//   return self.id.split(",");
-// },
-// get name() {
-//   const { id } = self;
-//   return self.user.pathName(id) || `{${id}}`;
-// },
-//   get color() {
-//     return Color.input;
-//   },
-//   get width() {
-//     return Math.ceil((self.name.length + 3) / 6);
-//   }
-// }));
-
+const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = types
   .model("Arg", {
-    // arg: types.reference(Param),
-    arg: types.array(types.union(types.string, types.number)),
+    arg: types.refinement(
+      types.array(types.union(types.string, integerType)),
+      path => {
+        const { length } = path;
+        if (typeof path[0] === "number" && typeof path[1] === "number") {
+          return length === 2;
+        }
+        for (let i = 0; i < length; i++) {
+          if (i === length - 1) {
+            if (typeof path[i] !== "number") {
+              return false;
+            }
+          } else if (typeof path[i] !== "string") {
+            return false;
+          }
+        }
+        return true;
+      }
+    ),
     user: ContextUser
   })
-  // .preProcessSnapshot(snapshot => {
-  //   const { arg } = snapshot;
-  //   if (Array.isArray(arg)) {
-  //     return { arg: String(arg) };
-  //   }
-  //   return snapshot;
-  // })
   .views(self => ({
-    get cursor() {
-      return self.arg;
-    },
     get name() {
       const { arg } = self;
       return self.user.pathName(arg) || `{${arg.slice()}}`;
@@ -395,6 +365,10 @@ const walkPath = (base, up, walk) => {
 
 const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 
+const Param = types.model("Param", {
+  type: types.maybe(types.string)
+});
+
 export const Engine = types
   .model("Engine", {
     main: Dec,
@@ -459,14 +433,14 @@ export const Engine = types
                 return gen(ref, scopes);
               }
             } else if ("arg" in node) {
-              const { cursor } = node;
+              const { arg } = node;
               const path = [];
               let index;
-              for (let i = 0; i < cursor.length; i++) {
-                if (i < cursor.length - 1) {
-                  path.push(cursor[i]);
+              for (let i = 0; i < arg.length; i++) {
+                if (i < arg.length - 1) {
+                  path.push(arg[i]);
                 } else {
-                  index = cursor[i];
+                  index = arg[i];
                 }
               }
               return scopes[path][index];
