@@ -282,7 +282,6 @@ const Param = mixinModel(ContextUser.RefModel)("Param", {
     }
     for (let i = 0; i < length; i++) {
       if (i === length - 1) {
-        // if (typeof path[i] !== "number") {
         if (isNaN(path[i])) {
           return false;
         }
@@ -292,36 +291,27 @@ const Param = mixinModel(ContextUser.RefModel)("Param", {
     }
     return true;
   })
-});
-
-const ParamDefs = types
-  .model("ParamDefs", {
-    _defaultParam: types.maybe(Param),
-    params: types.optional(types.map(Param), {})
-  })
-  .preProcessSnapshot(snapshot => ({
-    ...snapshot,
-    _defaultParam: { id: "-1" }
-  }));
-
-const ContextParamDefs = makeContext(ParamDefs);
+}).views(self => ({
+  get cursor() {
+    return self.id.split(",");
+  },
+  get name() {
+    const { id } = self;
+    return self[ContextUser.key].pathName(id) || `{${id}}`;
+  },
+  get color() {
+    return Color.input;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
+  }
+}));
 
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
-const Arg = mixinModel(ContextUser.RefModel, ContextParamDefs.RefModel)("Arg", {
-  arg: types.reference(Param, {
-    get(id, parent) {
-      const foundParam = parent[ContextParamDefs.key].params.get(id);
-      if (foundParam) {
-        return foundParam;
-      }
-      // debugger;
-      return parent[ContextParamDefs.key]._defaultParam;
-    },
-    set(value) {
-      return value.arg;
-    }
+const Arg = types
+  .model("Arg", {
+    arg: types.reference(Param)
   })
-})
   .preProcessSnapshot(snapshot => {
     const { arg } = snapshot;
     if (Array.isArray(arg)) {
@@ -331,47 +321,34 @@ const Arg = mixinModel(ContextUser.RefModel, ContextParamDefs.RefModel)("Arg", {
   })
   .views(self => ({
     get cursor() {
-      return self.arg.id.split(",");
+      return self.arg.cursor;
     },
     get name() {
-      // TODO: look up appropriate name based on user context
-      // const { arg } = self;
-      // if (isObservableArray(arg)) {
-      //   const pathName = self[ContextUser.key].pathName(self.cursor);
-      //   if (pathName) {
-      //     return pathName;
-      //   }
-      //   return `{${arg.join(",")}}`;
-      // }
-      const { id } = self.arg;
-      return self[ContextUser.key].pathName(id) || `{${id}}`;
+      return self.arg.name;
     },
     get color() {
-      return Color.input;
+      return self.arg.color;
     },
     get width() {
-      return Math.ceil((self.name.length + 3) / 6);
+      return self.arg.width;
     }
   }));
 
 const Ref = mixinModel(ContextUser.RefModel)("Ref", {
   ref: types.union(
     types.string,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      ref => {
-        const { length } = ref;
-        if (typeof ref[0] === "number") {
-          return length === 2 && typeof ref[1] === "string";
-        }
-        for (let i = 0; i < length; i++) {
-          if (typeof ref[i] !== "string") {
-            return false;
-          }
-        }
-        return true;
+    types.refinement(types.array(types.union(integerType, types.string)), ref => {
+      const { length } = ref;
+      if (typeof ref[0] === "number") {
+        return length === 2 && typeof ref[1] === "string";
       }
-    )
+      for (let i = 0; i < length; i++) {
+        if (typeof ref[i] !== "string") {
+          return false;
+        }
+      }
+      return true;
+    })
   )
 }).views(self => ({
   get name() {
@@ -406,17 +383,14 @@ const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 export const Engine = types
   .model("Engine", {
     main: Dec,
-    params: types.optional(ContextParamDefs.Model, {})
+    params: types.optional(types.map(Param), {})
   })
   .preProcessSnapshot(snapshot =>
     produce(snapshot, draft => {
       if (!draft.params) {
         draft.params = {};
       }
-      if (!draft.params.params) {
-        draft.params.params = {};
-      }
-      const { params } = draft.params;
+      const { params } = draft;
       const getParams = dec => {
         if (Array.isArray(dec)) {
           for (const node of dec) {

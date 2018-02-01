@@ -8,15 +8,30 @@ export const makeContext = Model => {
   const defKey = `def${Model.name}`;
   const contextRefKey = `context${Model.name}`;
 
-  const Context = types.model(`Context${Model.name}`, {
-    _id: types.optional(types.identifier(types.number), 0)
-  });
+  const Context = types
+    .model(`Context${Model.name}`, {
+      _contextId: types.optional(types.identifier(types.number), 0)
+    })
+    .preProcessSnapshot(snapshot => {
+      if ("_contextId" in snapshot) {
+        throw new Error('_contextId is "private"; defining it is not allowed.');
+      }
+      return snapshot;
+    })
+    .actions(self => ({
+      postProcessSnapshot(snapshot) {
+        delete snapshot._contextId;
+        return snapshot;
+      }
+    }));
 
   const ContextModel = types.compose(`Context${Model.name}`, Model, Context);
 
   const RefType = types.optional(
     types.union(
-      () => types.reference(ContextModel),
+      // for some reason, in some cases, mobx-state-tree can't tell that 0 should be a reference
+      // so define a dispatcher to help it out
+      val => (val === 0 ? types.reference(ContextModel) : ContextModel),
       ContextModel,
       types.reference(ContextModel)
     ),
