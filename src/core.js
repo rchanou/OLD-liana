@@ -267,25 +267,22 @@ const Op = mixinModel(Named)("Op", {
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = types
   .model("Arg", {
-    arg: types.refinement(
-      types.array(types.union(types.string, integerType)),
-      path => {
-        const { length } = path;
-        if (typeof path[0] === "number" && typeof path[1] === "number") {
-          return length === 2;
-        }
-        for (let i = 0; i < length; i++) {
-          if (i === length - 1) {
-            if (typeof path[i] !== "number") {
-              return false;
-            }
-          } else if (typeof path[i] !== "string") {
+    arg: types.refinement(types.array(types.union(types.string, integerType)), path => {
+      const { length } = path;
+      if (typeof path[0] === "number" && typeof path[1] === "number") {
+        return length === 2;
+      }
+      for (let i = 0; i < length; i++) {
+        if (i === length - 1) {
+          if (typeof path[i] !== "number") {
             return false;
           }
+        } else if (typeof path[i] !== "string") {
+          return false;
         }
-        return true;
       }
-    ),
+      return true;
+    }),
     user: ContextUser
   })
   .views(self => ({
@@ -304,21 +301,18 @@ const Ref = types
   .model("Ref", {
     ref: types.union(
       types.string,
-      types.refinement(
-        types.array(types.union(integerType, types.string)),
-        ref => {
-          const { length } = ref;
-          if (typeof ref[0] === "number") {
-            return length === 2 && typeof ref[1] === "string";
-          }
-          for (let i = 0; i < length; i++) {
-            if (typeof ref[i] !== "string") {
-              return false;
-            }
-          }
-          return true;
+      types.refinement(types.array(types.union(integerType, types.string)), ref => {
+        const { length } = ref;
+        if (typeof ref[0] === "number") {
+          return length === 2 && typeof ref[1] === "string";
         }
-      )
+        for (let i = 0; i < length; i++) {
+          if (typeof ref[i] !== "string") {
+            return false;
+          }
+        }
+        return true;
+      })
     ),
     user: ContextUser
   })
@@ -355,6 +349,26 @@ const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 const Param = types.model("Param", {
   type: types.maybe(types.string)
 });
+
+export const incrementLetterId = prev => {
+  const next = [...prev];
+  const addAtIndex = index => {
+    const val = prev[index];
+    if (val === "z") {
+      next[index] = 0;
+      if (index === 0) {
+        next.splice(0, 0, "a");
+      } else {
+        addAtIndex(index - 1);
+      }
+    } else {
+      const valAsInt = parseInt(val, 36);
+      next[index] = (valAsInt + 1).toString(36);
+    }
+  };
+  addAtIndex(prev.length - 1);
+  return next.join("");
+};
 
 export const Engine = types
   .model("Engine", {
@@ -446,9 +460,7 @@ export const Engine = types
                 return parseNode(casePairs[length - 1]);
               }
               // throwing for now, but maybe that's too strict
-              throw new Error(
-                "Switch case not matched. No default case defined."
-              );
+              throw new Error("Switch case not matched. No default case defined.");
               break;
           }
           // TODO: short-circuit "and", "or", and possibly "for"
@@ -471,7 +483,14 @@ export const Engine = types
       for (const id of scopePath) {
         scope = scope.get(id);
       }
-      console.log(scope.toJSON());
+      const ids = scope.keys();
+      const lastId = ids[ids.length - 1];
+
+      let newId = incrementLetterId(lastId);
+      while (scope.get(newId)) {
+        newId = incrementLetterId(newId);
+      }
+      scope.set(newId, [{ op: add }]);
     }
   }));
 

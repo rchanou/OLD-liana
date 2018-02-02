@@ -6,7 +6,7 @@ import { destroy } from "mobx-state-tree";
 
 import { ReactGUI } from "../src/react-gui";
 import { App } from "../src/app";
-import { ContextEngine } from "../src/core";
+import { ContextEngine, incrementLetterId } from "../src/core";
 import { engine, user } from "./test-data";
 import { pack, unpack, inflate } from "../src/pack";
 
@@ -82,26 +82,6 @@ const unpackTest = unpack(packTest);
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
-
-const incrementLetterId = prev => {
-  const next = [...prev];
-  const addAtIndex = index => {
-    const val = prev[index];
-    if (val === "z") {
-      next[index] = 0;
-      if (index === 0) {
-        next.splice(0, 0, "a");
-      } else {
-        addAtIndex(index - 1);
-      }
-    } else {
-      const valAsInt = parseInt(val, 36);
-      next[index] = (valAsInt + 1).toString(36);
-    }
-  };
-  addAtIndex(prev.length - 1);
-  return next.join("");
-};
 
 strictEqual(incrementLetterId("a"), "b");
 strictEqual(incrementLetterId("z"), "a0");
