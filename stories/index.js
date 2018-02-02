@@ -10,12 +10,12 @@ import { ContextEngine } from "../src/core";
 import { engine, user } from "./test-data";
 import { pack, unpack, inflate } from "../src/pack";
 
-const T = ContextEngine.create(engine);
-window.T = T;
-strictEqual(T.run("c")(3), 5);
-strictEqual(T.run("e")(3)(5)(7), 15);
-strictEqual(T.run("n")(11, 60), 61);
-const counter = T.run("o");
+const t = ContextEngine.create(engine);
+window.t = t;
+strictEqual(t.run("c")(3), 5);
+strictEqual(t.run("e")(3)(5)(7), 15);
+strictEqual(t.run("n")(11, 60), 61);
+const counter = t.run("o");
 strictEqual(counter(), 0);
 strictEqual(counter(5), 5);
 strictEqual(counter(5, { type: "INCREMENT" }), 6);

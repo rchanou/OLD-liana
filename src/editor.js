@@ -61,7 +61,7 @@ export const MainEditor = viewModel("MainEditor", {
             const name = user.pathName([...path, i]);
             const width = calcWidth(name);
             cells.push({
-              key: `CL-P-${path}-${i}`,
+              key: `CL-P-${path},${i}`,
               x: paramX,
               y,
               width,
@@ -89,6 +89,9 @@ export const MainEditor = viewModel("MainEditor", {
             };
             if ("ref" in node) {
               newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
+            }
+            if ("arg" in node) {
+              newCell.gotoCellKey = `CL-P-${node.arg.slice()}`;
             }
             newCell.parentDec = parent;
             cells.push(newCell);

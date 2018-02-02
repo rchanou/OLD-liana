@@ -372,19 +372,12 @@ export const Engine = types
           for (const node of dec) {
             if ("arg" in node) {
               const { arg } = node;
-              const path = [];
-              let index;
-              for (let i = 0; i < arg.length; i++) {
-                if (i < arg.length - 1) {
-                  path.push(arg[i]);
-                } else {
-                  index = arg[i];
-                }
+              const scopePath = arg.slice(0, -1);
+              const index = arg[arg.length - 1];
+              if (!params[scopePath]) {
+                params[scopePath] = [];
               }
-              if (!params[path]) {
-                params[path] = [];
-              }
-              params[path][index] = {};
+              params[scopePath][index] = {};
             }
           }
           return;
@@ -420,16 +413,9 @@ export const Engine = types
               }
             } else if ("arg" in node) {
               const { arg } = node;
-              const path = [];
-              let index;
-              for (let i = 0; i < arg.length; i++) {
-                if (i < arg.length - 1) {
-                  path.push(arg[i]);
-                } else {
-                  index = arg[i];
-                }
-              }
-              return scopes[path][index];
+              const scopePath = arg.slice(0, -1);
+              const index = arg[arg.length - 1];
+              return scopes[scopePath][index];
             }
           };
           // special-case handling of conditional ops
@@ -448,7 +434,7 @@ export const Engine = types
             case switchOp:
               // TODO: try to generate a proper switch statement
               // but this requires "eval" or the Function constructor
-              const [_, switcherNode, ...casePairs] = dec;
+              const [, switcherNode, ...casePairs] = dec;
               const { length } = casePairs;
               const switcher = parseNode(switcherNode);
               for (let i = 0; i < length; i += 2) {
@@ -461,7 +447,7 @@ export const Engine = types
               }
               // throwing for now, but maybe that's too strict
               throw new Error(
-                "Switch case not handled. No default case defined."
+                "Switch case not matched. No default case defined."
               );
               break;
           }
@@ -478,6 +464,9 @@ export const Engine = types
       };
       return gen(initialPath);
     }
+  }))
+  .actions(self => ({
+    addDec() {}
   }));
 
 export const ContextEngine = makeContext(Engine);
