@@ -466,7 +466,13 @@ export const Engine = types
     }
   }))
   .actions(self => ({
-    addDec() {}
+    addDec(scopePath) {
+      let scope = self.main;
+      for (const id of scopePath) {
+        scope = scope.get(id);
+      }
+      console.log(scope.toJSON());
+    }
   }));
 
 export const ContextEngine = makeContext(Engine);

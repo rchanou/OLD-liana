@@ -37,6 +37,7 @@ export const MainEditor = viewModel("MainEditor", {
         if (id !== undefined) {
           dec = parent.get(id);
         }
+        const scopePath = path.slice(0, -1);
         const procName = user.pathName(path);
         const width = calcWidth(procName);
         const cells = [
@@ -50,7 +51,7 @@ export const MainEditor = viewModel("MainEditor", {
             color: "#333",
             selectable: true,
             nameForDec: path,
-            parentDec: path
+            scopePath
           }
         ];
         const params = engine.params.get(path);
@@ -69,7 +70,7 @@ export const MainEditor = viewModel("MainEditor", {
               fill: "hsl(30,66%,83%)",
               color: "#333",
               selectable: true,
-              parentDec: path
+              scopePath
             });
             paramX += width;
           }
@@ -85,7 +86,8 @@ export const MainEditor = viewModel("MainEditor", {
               width,
               selectable: true,
               fill: node.color,
-              text: node.name || node.out
+              text: node.name || node.out,
+              scopePath
             };
             if ("ref" in node) {
               newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
@@ -93,7 +95,6 @@ export const MainEditor = viewModel("MainEditor", {
             if ("arg" in node) {
               newCell.gotoCellKey = `CL-P-${node.arg.slice()}`;
             }
-            newCell.parentDec = parent;
             cells.push(newCell);
             x += width;
           });
@@ -407,8 +408,8 @@ export const MainEditor = viewModel("MainEditor", {
           5: {
             label: "New Line",
             action() {
-              self.engine.addDec(self.selectedCellIndex);
-
+              self.engine.addDec(self.selectedCell.scopePath);
+              return;
               // TODO: this logic to find the last-added name feels kinda hacky; improve?
               let i = self.baseCells.length;
               while (--i) {
