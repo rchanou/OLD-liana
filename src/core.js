@@ -491,6 +491,7 @@ export const Engine = types
         newId = incrementLetterId(newId);
       }
       scope.set(newId, [{ op: add }]);
+      return [...scopePath, newId];
     }
   }));
 

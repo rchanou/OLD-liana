@@ -101,11 +101,7 @@ export const MainEditor = viewModel("MainEditor", {
           if (!dec.some(node => "arg" in node)) {
             const result = engine.run(path);
             const text =
-              typeof result === "function"
-                ? "f"
-                : typeof result === "object"
-                  ? JSON.stringify(result)
-                  : String(result);
+              typeof result === "function" ? "f" : typeof result === "object" ? JSON.stringify(result) : String(result);
             cells.push({
               key: `CL-${path}-out`,
               x,
@@ -122,13 +118,7 @@ export const MainEditor = viewModel("MainEditor", {
         dec.forEach((_, subId) => {
           // TODO: inline anonymous decs
           const subX = id === undefined ? x : x + 1;
-          const subDecCells = makeDecCells(
-            dec,
-            subId,
-            [...path, subId],
-            subX,
-            y
-          );
+          const subDecCells = makeDecCells(dec, subId, [...path, subId], subX, y);
           cells.push(...subDecCells);
           y = subDecCells[subDecCells.length - 1].y + 1;
           if (id === undefined) {
@@ -170,10 +160,7 @@ export const MainEditor = viewModel("MainEditor", {
       }
 
       if (self.editingNameForDec) {
-        self.user.currentNameSet.setName(
-          self.editingNameForDec,
-          e.target.value
-        );
+        self.user.currentNameSet.setName(self.editingNameForDec, e.target.value);
         // self.editingNameForDec.setLabel(e.target.value);
       }
     },
@@ -230,13 +217,7 @@ export const MainEditor = viewModel("MainEditor", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const {
-        selectedCell,
-        setInput,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
-      } = self;
+      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -408,17 +389,11 @@ export const MainEditor = viewModel("MainEditor", {
           5: {
             label: "New Line",
             action() {
-              self.engine.addDec(self.selectedCell.scopePath);
-              return;
-              // TODO: this logic to find the last-added name feels kinda hacky; improve?
-              let i = self.baseCells.length;
-              while (--i) {
-                if (self.baseCells[i].nameForDec) {
-                  self.selectCellIndex(i);
-                  self.toggleLabelEdit();
-                  return;
-                }
-              }
+              const newPath = self.engine.addDec(self.selectedCell.scopePath);
+              console.log(newPath);
+              const newCellIndex = self.baseCells.findIndex(cell => cell.key === `CL-${newPath}`);
+              self.selectCellIndex(newCellIndex);
+              self.toggleLabelEdit();
             }
           },
           6: { label: "Add", action: toggleAddNodeMode }
@@ -461,9 +436,7 @@ export const MainEditor = viewModel("MainEditor", {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(
-              cell => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
