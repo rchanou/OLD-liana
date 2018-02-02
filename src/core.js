@@ -3,9 +3,11 @@ import { isObservableArray } from "mobx";
 import produce from "immer";
 
 import { ContextUser } from "./user";
-import { makeContext, mixinModel } from "./context";
+import { makeContext, makeSnapshotCleaner, mixinModel } from "./context";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
+
+const cleanContext = makeSnapshotCleaner("engine", "user");
 
 const gRef = "g";
 const dot = ".";
@@ -288,6 +290,7 @@ const Arg = types
     ),
     user: ContextUser
   })
+  .actions(cleanContext)
   .views(self => ({
     get name() {
       return self.user.pathName(self.arg);

@@ -1,6 +1,7 @@
 import { types } from "mobx-state-tree";
 import { Pkg, Engine } from "./core";
 import { ContextUser } from "./user";
+import { makeSnapshotCleaner } from "./context";
 
 export const calcWidth = text =>
   typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
@@ -28,6 +29,7 @@ const UI = types
     engine: Engine,
     user: ContextUser
   })
+  .actions(makeSnapshotCleaner("engine", "user"))
   .views(self => {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
     return {
