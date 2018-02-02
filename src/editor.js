@@ -1,92 +1,16 @@
 import { types, destroy, getSnapshot } from "mobx-state-tree";
+import { isObservableArray } from "mobx";
 
-import { Declaration } from "./repo";
 import { Chooser } from "./chooser";
 import { Tree } from "./tree";
-import { viewModel, cursorify, formatOut } from "./view";
+import { viewModel, cursorify, formatOut, calcWidth } from "./view";
 import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
-export const makeRepoCells = (repo, x = 0, y = 0) => {
-  const cells = [];
-
-  let currentX = x;
-  let currentY = y - 1;
-
-  repo.decs.forEach(dec => {
-    const { id, line, ret, lines, out, name } = dec;
-
-    const renderLine = (line, subKey, lineId) => {
-      for (let i = 0; i < line.length; i++) {
-        currentX += 2;
-        const word = line[i];
-        const key = `CL-${subKey}-${i}`;
-
-        const newCell = {
-          key,
-          x: currentX,
-          y: currentY,
-          width: 2,
-          selectable: true,
-          forDec: dec,
-          nodeIndex: i,
-          text: lineId ? dec.lineName(lineId) : word.name, // TODO: not fully working, see lineName method comment
-          fill: word.color
-        };
-
-        if (word.gRef) {
-          newCell.gotoCellKey = `CL-${word.gRef.id}-0`;
-        }
-
-        cells.push(newCell);
-      }
-    };
-
-    currentX = x;
-    currentY++;
-
-    const key = `CL-${id}`;
-
-    cells.push({
-      key,
-      x: currentX,
-      y: currentY,
-      width: 2,
-      selectable: true,
-      text: `${id}: ${name}`,
-      labelForDec: dec
-    });
-
-    if (line) {
-      renderLine(line, id);
-    } else {
-      lines.forEach((line, lineId) => {
-        renderLine(line, `${id}-${lineId}`, lineId);
-        currentX = 0;
-        currentY++;
-      });
-      renderLine(ret, `${id}-r`);
-    }
-
-    currentX += 2;
-
-    cells.push({
-      key: `${key}-V`,
-      x: currentX,
-      y: currentY,
-      width: 2,
-      selectable: false,
-      text: formatOut(out)
-    });
-  });
-
-  return cells;
-};
-
 const NodeRef = types
   .model("NodeRef", {
-    forDec: types.reference(Declaration),
+    // forDec: types.reference(Declaration),
     nodeIndex: types.maybe(types.number)
   })
   .views(self => ({
@@ -95,43 +19,143 @@ const NodeRef = types
     }
   }));
 
-export const RepoEditor = viewModel("RepoLister", {
+export const MainEditor = viewModel("MainEditor", {
   changeCellMode: false,
   changeOpMode: false,
   addNodeMode: false,
   addOpMode: false,
   chooser: types.maybe(Chooser),
   editingNode: types.maybe(NodeRef),
-  editingLabelForDec: types.maybe(types.reference(Declaration)),
+  editingNameForDec: types.maybe(types.array(types.string)),
   tree: types.maybe(Tree)
 })
   .views(self => ({
     get baseCells() {
-      return makeRepoCells(self.repo);
+      const { engine, user } = self;
+      const makeDecCells = (parent, id, path = [], x = 0, y = 0) => {
+        let dec = parent;
+        if (id !== undefined) {
+          dec = parent.get(id);
+        }
+        const scopePath = path.slice(0, -1);
+        const procName = user.pathName(path);
+        const width = calcWidth(procName);
+        const cells = [
+          {
+            key: `CL-${path}`,
+            x,
+            y,
+            width,
+            text: procName,
+            fill: "hsl(270,66%,88%)",
+            color: "#333",
+            selectable: true,
+            nameForDec: path,
+            scopePath
+          }
+        ];
+        const params = engine.params.get(path);
+        if (params) {
+          let paramX = x + width;
+          for (let i = 0; i < params.length; i++) {
+            const param = params[i];
+            const name = user.pathName([...path, i]);
+            const width = calcWidth(name);
+            cells.push({
+              key: `CL-P-${path},${i}`,
+              x: paramX,
+              y,
+              width,
+              text: name,
+              fill: "hsl(30,66%,83%)",
+              color: "#333",
+              selectable: true,
+              scopePath
+            });
+            paramX += width;
+          }
+        }
+        if (isObservableArray(dec)) {
+          x += width;
+          dec.forEach((node, i) => {
+            const { width = 2 } = node;
+            const newCell = {
+              key: `CL-${path}-${i}`,
+              x,
+              y,
+              width,
+              selectable: true,
+              fill: node.color,
+              text: node.name || node.out,
+              scopePath
+            };
+            if ("ref" in node) {
+              newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
+            }
+            if ("arg" in node) {
+              newCell.gotoCellKey = `CL-P-${node.arg.slice()}`;
+            }
+            cells.push(newCell);
+            x += width;
+          });
+          if (!dec.some(node => "arg" in node)) {
+            const result = engine.run(path);
+            const text =
+              typeof result === "function"
+                ? "f"
+                : typeof result === "object"
+                  ? JSON.stringify(result)
+                  : String(result);
+            cells.push({
+              key: `CL-${path}-out`,
+              x,
+              y,
+              text,
+              width: calcWidth(text)
+            });
+          }
+          return cells;
+        }
+        if (id !== undefined) {
+          y++;
+        }
+        dec.forEach((_, subId) => {
+          // TODO: inline anonymous decs
+          const subX = id === undefined ? x : x + 1;
+          const subDecCells = makeDecCells(
+            dec,
+            subId,
+            [...path, subId],
+            subX,
+            y
+          );
+          cells.push(...subDecCells);
+          y = subDecCells[subDecCells.length - 1].y + 1;
+          if (id === undefined) {
+            y++;
+          }
+        });
+        return cells;
+      };
+      return makeDecCells(engine.main);
     },
-    // get cells() {
-    //   return self.activeCells;
-    // },
     // get activeCells() {
     //   if (self.chooser) {
     //     return self.chooser.allCells;
     //   }
-
     //   if (self.tree) {
     //     return self.tree.allCells;
     //   }
-
     //   return self.allCells;
     // },
     get input() {
       if (self.editingNode) {
         return self.editingNode.node.out;
       }
-
-      if (self.editingLabelForDec) {
-        return self.editingLabelForDec.name;
+      if (self.editingNameForDec) {
+        return self.user.pathName(self.editingNameForDec);
+        // return self.editingNameForDec.name;
       }
-
       return null;
     }
   }))
@@ -145,8 +169,12 @@ export const RepoEditor = viewModel("RepoLister", {
         self.editingNode.node.select(e.target.value);
       }
 
-      if (self.editingLabelForDec) {
-        self.editingLabelForDec.setLabel(e.target.value);
+      if (self.editingNameForDec) {
+        self.user.currentNameSet.setName(
+          self.editingNameForDec,
+          e.target.value
+        );
+        // self.editingNameForDec.setLabel(e.target.value);
       }
     },
     toggleChooser(forDec, nodeIndex) {
@@ -178,10 +206,10 @@ export const RepoEditor = viewModel("RepoLister", {
       self.linkChooser = { forDec };
     },
     toggleLabelEdit() {
-      if (self.editingLabelForDec) {
-        self.editingLabelForDec = null;
+      if (self.editingNameForDec) {
+        self.editingNameForDec = null;
       } else {
-        self.editingLabelForDec = self.selectedCell.labelForDec;
+        self.editingNameForDec = self.selectedCell.nameForDec;
       }
     },
     toggleTree() {
@@ -202,7 +230,13 @@ export const RepoEditor = viewModel("RepoLister", {
         return self.tree.keyMap(self.toggleTree);
       }
 
-      const { selectedCell, setInput, toggleChangeCellMode, toggleChangeOpMode, toggleAddNodeMode } = self;
+      const {
+        selectedCell,
+        setInput,
+        toggleChangeCellMode,
+        toggleChangeOpMode,
+        toggleAddNodeMode
+      } = self;
       const { forDec, nodeIndex } = selectedCell;
 
       if (self.input != null) {
@@ -212,7 +246,7 @@ export const RepoEditor = viewModel("RepoLister", {
               self.toggleEditingValMode();
               // self.moveRight();
             }
-            if (self.editingLabelForDec) {
+            if (self.editingNameForDec) {
               self.toggleLabelEdit();
             }
           }
@@ -223,20 +257,20 @@ export const RepoEditor = viewModel("RepoLister", {
         const keyMap = {
           2: {
             6: {
-              name: "Op",
+              label: "Op",
               action() {
                 toggleChangeCellMode();
                 toggleChangeOpMode();
               }
             }
           },
-          3: { 6: { name: "Cancel", action: toggleChangeCellMode } }
+          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
         };
 
         if (nodeIndex) {
           keyMap[1] = {
             7: {
-              name: "Num",
+              label: "Num",
               action() {
                 forDec.setNode(nodeIndex, { val: 0 });
                 toggleChangeCellMode();
@@ -244,7 +278,7 @@ export const RepoEditor = viewModel("RepoLister", {
               }
             },
             8: {
-              name: "Text",
+              label: "Text",
               action() {
                 forDec.setNode(nodeIndex, { val: "" });
                 toggleChangeCellMode();
@@ -252,7 +286,7 @@ export const RepoEditor = viewModel("RepoLister", {
               }
             },
             9: {
-              name: "Bool",
+              label: "Bool",
               action() {
                 forDec.setNode(nodeIndex, { val: false });
                 toggleChangeCellMode();
@@ -266,7 +300,7 @@ export const RepoEditor = viewModel("RepoLister", {
 
       if (self.changeOpMode) {
         const o = op => ({
-          name: op,
+          label: op,
           action() {
             forDec.setNode(nodeIndex, { op });
             toggleChangeOpMode();
@@ -296,7 +330,7 @@ export const RepoEditor = viewModel("RepoLister", {
             9: o(">=")
           },
           3: {
-            0: { name: "Cancel", action: toggleChangeOpMode },
+            0: { label: "Cancel", action: toggleChangeOpMode },
             6: o("=="),
             7: o("==="),
             8: o("!="),
@@ -320,7 +354,7 @@ export const RepoEditor = viewModel("RepoLister", {
         return {
           1: {
             7: {
-              name: "Num",
+              label: "Num",
               action() {
                 const lastNodeIndex = forDec.addNode({ val: 0 });
                 selectNewCell(lastNodeIndex);
@@ -328,7 +362,7 @@ export const RepoEditor = viewModel("RepoLister", {
               }
             },
             8: {
-              name: "Text",
+              label: "Text",
               action() {
                 const lastNodeIndex = forDec.addNode({ val: "" });
                 selectNewCell(lastNodeIndex);
@@ -336,7 +370,7 @@ export const RepoEditor = viewModel("RepoLister", {
               }
             },
             9: {
-              name: "Bool",
+              label: "Bool",
               action() {
                 const lastNodeIndex = forDec.addNode({ val: false });
                 selectNewCell(lastNodeIndex);
@@ -345,7 +379,7 @@ export const RepoEditor = viewModel("RepoLister", {
           },
           2: {
             6: {
-              name: "Op",
+              label: "Op",
               action() {
                 const lastNodeIndex = forDec.addNode({ op: "." });
                 selectNewCell(lastNodeIndex);
@@ -353,7 +387,7 @@ export const RepoEditor = viewModel("RepoLister", {
               }
             }
           },
-          3: { 6: { name: "Cancel", action: toggleAddNodeMode } }
+          3: { 6: { label: "Cancel", action: toggleAddNodeMode } }
         };
       }
 
@@ -363,7 +397,7 @@ export const RepoEditor = viewModel("RepoLister", {
         1: {
           ...baseKeyMap[1],
           0: {
-            name: "Save",
+            label: "Save",
             action() {
               const snapshot = getSnapshot(self.repo);
               const minified = minify(snapshot);
@@ -371,16 +405,15 @@ export const RepoEditor = viewModel("RepoLister", {
               console.log(JSON.stringify(snapshot));
             }
           },
-          // 2: { name: "▲", action: self.moveUp },
           5: {
-            name: "Add Dec",
+            label: "New Line",
             action() {
-              self.repo.addLink();
-
+              self.engine.addDec(self.selectedCell.scopePath);
+              return;
               // TODO: this logic to find the last-added name feels kinda hacky; improve?
               let i = self.baseCells.length;
               while (--i) {
-                if (self.baseCells[i].labelForDec) {
+                if (self.baseCells[i].nameForDec) {
                   self.selectCellIndex(i);
                   self.toggleLabelEdit();
                   return;
@@ -388,16 +421,13 @@ export const RepoEditor = viewModel("RepoLister", {
               }
             }
           },
-          6: { name: "Add", action: toggleAddNodeMode }
+          6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
           ...baseKeyMap[2],
-          // 1: { name: "◀", action: self.moveLeft },
-          // 2: { name: "▼", action: self.moveDown },
-          // 3: { name: "▶", action: self.moveRight },
-          6: { name: "Change", action: toggleChangeCellMode },
+          6: { label: "Change", action: toggleChangeCellMode },
           9: {
-            name: "Delete",
+            label: "Delete",
             action() {
               if (typeof nodeIndex === "number") {
                 selectedCell.forDec.deleteNode(nodeIndex);
@@ -409,29 +439,31 @@ export const RepoEditor = viewModel("RepoLister", {
         3: {}
       };
 
-      if (selectedCell.labelForDec) {
+      if (selectedCell.nameForDec) {
         keyMap[2][6] = {
-          name: "Change Label",
+          label: "Change Label",
           action: self.toggleLabelEdit
         };
       }
 
       if (selectedCell.forDec) {
         keyMap[2][5] = {
-          name: "Chooser",
+          label: "Chooser",
           action: self.toggleChooser
         };
         keyMap[3][5] = {
-          name: "Tree",
+          label: "Tree",
           action: self.toggleTree
         };
       }
 
       if (selectedCell.gotoCellKey) {
         keyMap[2][7] = {
-          name: "Go To Def",
+          label: "Go To Def",
           action() {
-            const gotoCellIndex = self.baseCells.findIndex(cell => cell.key === selectedCell.gotoCellKey);
+            const gotoCellIndex = self.baseCells.findIndex(
+              cell => cell.key === selectedCell.gotoCellKey
+            );
 
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);

@@ -1,6 +1,18 @@
+const p = obj => JSON.stringify(obj, true, 2);
+
 const ops = {
   dot: (o, k) => o[k],
-  add: (x, y) => x + y,
+  add(...nums) {
+    let sum;
+    for (let i = 0; i < nums.length; i++) {
+      if (i === 0) {
+        sum = nums[i];
+      } else {
+        sum += nums[i];
+      }
+    }
+    return sum;
+  },
   minus: (x, y) => x - y,
   sw: (switcher, ...casePairs) => {
     const { length } = casePairs;
@@ -26,26 +38,6 @@ const ops = {
   mutate: (obj, key, value) => (obj[key] = value)
 };
 
-const { dot, add } = ops;
-
-let math = dot(window, "Math");
-let pow = dot(math, "pow");
-let sqrt = dot(math, "sqrt");
-let sq5 = pow(5, 2);
-let sq12 = pow(12, 2);
-let sumsq5n12 = add(sq5, sq12);
-let hyp5n12 = sqrt(sumsq5n12);
-let hyp = (a, b) => {
-  let sqA = pow(a, 2);
-  let sqB = pow(b, 2);
-  let sumsq = add(sqA, sqB);
-  return sqrt(sumsq);
-};
-
-console.log(hyp5n12, hyp(5, 12), hyp(60, 11));
-
-const out = {};
-
 const test = {
   z: {
     R: [0] // identity
@@ -56,19 +48,19 @@ const test = {
   d: ["dot", 0, ["type"]], // get type
   e: {
     a: ["d", 0], // action type
-    R: ["c", { i: "a" }] // get updater from action
+    R: ["c", { e: "a" }] // get updater from action
   },
   f: {
     a: ["e", 1], // updater
-    R: [{ i: "a" }, 0] // counter when not zero
+    R: [{ f: "a" }, 0] // counter when not zero
   },
   g: {
     R: [[0]] // get zero
   },
   h: {
     a: ["eq", 0, [undefined]], // is undefined
-    b: ["iif", { i: "a" }, "g", "f"], // counter to use
-    R: [{ i: "b" }, 1] // counter
+    b: ["iif", { h: "a" }, "g", "f"], // counter to use
+    R: [{ h: "b" }, 1] // counter
   },
   j: ["dot", [window], ["Redux"]], // redux
   k: ["dot", [Redux], ["createStore"]], // create store
@@ -77,153 +69,206 @@ const test = {
   n: {
     a: ["m", 0],
     b: ["obj", ["type"], ["INCREMENT"]],
-    R: [{ i: "a" }, { i: "b" }] // dispatch inc
+    R: [{ n: "a" }, { n: "b" }] // dispatch inc
   },
   o: {
     a: ["m", 0],
     b: ["obj", ["type"], ["DECREMENT"]],
-    R: [{ i: "a" }, { i: "b" }] // dispatch dec
+    R: [{ o: "a" }, { o: "b" }] // dispatch dec
   }
+  // p: {
+  //   a: {
+  //     b: {
+  //       R: ["add", { a: 0 }, { b: 0 }, 0]
+  //     },
+  //     R: ["b"]
+  //   },
+  //   R: ["a"]
+  // }
 };
 
-const parse = (repo, id) => {
-  if (!(id in repo)) {
-    throw new Error("You done goofed! Could not find ID in repo: " + id);
-  }
-
-  out[id] = {};
-
-  const parseLambda = lambda => {
-    const func = (...params) => {
-      // TODO: hoist unchanging (non-param) slots
-      const tokens = lambda.map(code => {
-        if (Array.isArray(code)) {
-          return code[0];
-        }
-
-        const op = ops[code];
-        if (op) {
-          return op;
-        }
-
-        if (typeof code === "number") {
-          out[id][code] = params[code];
-          return params[code];
-        }
-
-        if (code in repo) {
-          return parse(repo, code);
-        }
-
-        throw new Error("No match found for code, brah! " + code);
-      });
-
-      const [head, ...args] = tokens;
-      return typeof head === "function" ? head(...args) : head;
-    };
-
-    out[id].R = func;
-    return func;
-  };
-
-  const line = repo[id];
-
-  if (Array.isArray(line)) {
-    const func = parseLambda(line);
-    if (line.some(code => typeof code === "number")) {
-      return func;
+const mergePaths = (base, walk) => {
+  const finalPath = [...base];
+  for (const token of walk) {
+    if (token === "..") {
+      finalPath.pop();
+    } else {
+      finalPath.push(token);
     }
-    return func();
   }
-
-  const sub = line;
-  const subRet = sub.R;
-
-  return (...params) => {
-    const parseSubLine = subLine => {
-      const tokens = subLine.map(code => {
-        if (Array.isArray(code)) {
-          return code[0];
-        }
-
-        const op = ops[code];
-        if (op) {
-          return op;
-        }
-
-        if (typeof code === "number") {
-          out[id][code] = params[code];
-          return params[code];
-        }
-
-        if (typeof code === "object") {
-          const { i } = code;
-          if (!(i in sub)) {
-            throw new Error("Sub-line not found dawg! " + code);
-          }
-
-          const refSubLine = sub[i];
-          if (
-            !refSubLine.some(code => typeof code === "object" && "i" in code)
-          ) {
-            return parseLambda(refSubLine)(...params);
-          }
-          const refSubVal = parseSubLine(refSubLine)(...params);
-          out[id]["i" + i] = refSubVal;
-          return refSubVal;
-        }
-
-        if (code in repo) {
-          return parse(repo, code);
-        }
-
-        throw new Error("No match found for code, brah! " + code);
-      });
-
-      const [head, ...args] = tokens;
-      return typeof head === "function" ? head(...args) : head;
-    };
-
-    const subRetVal = parseSubLine(subRet);
-    out[id].R = subRetVal;
-    return subRetVal;
-  };
+  return finalPath;
 };
 
-console.log(parse(test, "a")(3), 4);
+const walkPath = (base, up, walk) => {
+  const finalPath = [...base];
+  while (up--) {
+    finalPath.pop();
+  }
+  for (const token of walk) {
+    finalPath.push(token);
+  }
+  return finalPath;
+};
 
-const zTest = parse(test, "z");
-console.log(zTest(321), 321);
+const gen = program => {
+  const out = {};
+  const args = {};
+  const subGen = (path = []) => {
+    return function(...params) {
+      if (params.length) {
+        if (!path.length) {
+          args.S = params;
+        } else {
+          let scopeArgs = args;
+          let i = 0;
+          for (i; i < path.length - 1; i++) {
+            const key = path[i];
+            if (!scopeArgs[key]) {
+              scopeArgs[key] = {};
+            }
+            scopeArgs = scopeArgs[key];
+          }
+          scopeArgs[path[i]] = params;
+        }
+      }
+      const call = line => {
+        const tokens = line.map(word => {
+          if ("V" in word) {
+            return word.V;
+          }
+          if ("O" in word) {
+            const op = ops[word.O];
+            if (!op) {
+              throw new Error("invalid op");
+            }
+            return op;
+          }
+          if ("A" in word) {
+            if (typeof word.A === "number") {
+              return params[word.A];
+            } else {
+              const [scopeLevel, ...argWalk] = word.A;
+              const argPath = walkPath(path, scopeLevel, argWalk);
+              let subArgs = args;
+              let i = 0;
+              for (i; i < argPath.length - 1; i++) {
+                subArgs = args[argPath[i]];
+              }
+              return subArgs.S[argPath[i]];
+            }
+          }
+          if (Array.isArray(word)) {
+            const [scopeLevel, ...refWalk] = word;
+            const outPath = walkPath(path, scopeLevel, refWalk);
+            let subOut = out;
+            for (let i = 0; i < outPath.length; i++) {
+              subOut = subOut[outPath[i]];
+            }
+            // console.log(path, word, outPath, subOut, out);
+            return subOut;
+          }
+        });
+        const [head, ...tail] = tokens;
+        return typeof head === "function" ? head(...tail) : head;
+      };
+      let scope = program;
+      let scopeOut = out;
+      if (path.length) {
+        let i = 0;
+        for (i; i < path.length - 1; i++) {
+          const id = path[i];
+          scope = scope[id];
+          scopeOut = scopeOut[id];
+        }
+        const scopeId = path[i];
+        scopeOut[scopeId] = {};
+        scope = scope[scopeId];
+        scopeOut = scopeOut[scopeId];
+      }
+      let lastScopeOut;
+      for (const id in scope) {
+        const line = scope[id];
+        if (Array.isArray(line)) {
+          scopeOut[id] = call(line);
+        } else if (typeof line === "object") {
+          scopeOut[id] = subGen([...path, id]);
+        }
+        lastScopeOut = scopeOut[id];
+      }
+      // console.log(out, scopeOut, path, p(args), "args");
+      window.o = out;
+      window.a = args;
+      return lastScopeOut;
+    };
+  };
+  return subGen();
+};
 
-const updater = parse(test, "e");
-console.log(updater({ type: "INCREMENT" })(4), 5);
+const t2 = {
+  a: [{ O: "add" }, { V: 1 }, { V: 2 }],
+  b: {
+    R: [{ V: "fu" }]
+  },
+  c: [["b"]],
+  d: {
+    R: [{ O: "add" }, { A: 0 }, { V: 1 }]
+  },
+  e: {
+    R: [{ O: "minus" }, { A: 0 }, { V: 1 }]
+  },
+  f: {
+    b: [{ V: 7 }],
+    a: {
+      R: [{ O: "add" }, { A: [1, 0] }, { A: 0 }, [1, "b"]]
+    }
+  },
+  g: [["f"], { V: 8 }],
+  h: [["g"], { V: 9 }],
+  i: [["d"], { V: 4 }],
+  j: { R: [{ O: "dot" }, { A: 0 }, { V: "type" }] },
+  R: [{ v: "foo" }]
+};
 
-const reducer = parse(test, "f");
-console.log(
-  reducer(0, { type: "INCREMENT" }),
-  1,
-  reducer(3, { type: "DECREMENT" }),
-  2,
-  reducer(5, { type: "INCREMENT" }),
-  6
-);
+// const cTest = gen(t2);
+// console.log(cTest(1, 2, 3));
+const fTest = gen(t2.f);
+console.log("hmm", fTest(3)(5));
+console.log(gen(t2.j)({ type: "WUT" }));
 
-const counter = parse(test, "h");
-console.log(counter(), 0);
-console.log(counter(3, { type: "INCREMENT" }), 4);
-console.log(counter(3, { type: "DECREMENT" }), 2);
+// console.log(parse(test, "a")(3), 4);
 
-const store = parse(test, "l");
-const dispatchInc = parse(test, "n");
-const dispatchDec = parse(test, "o");
-store.dispatch({ type: "INCREMENT" });
-dispatchInc(store);
-dispatchInc(store);
-store.dispatch({ type: "DECREMENT" });
-dispatchInc(store);
-dispatchInc(store);
-dispatchInc(store);
-dispatchInc(store);
-dispatchDec(store);
-dispatchInc(store);
-console.log(store.getState(), 6);
+// const zTest = parse(test, "z");
+// console.log(zTest(321), 321);
+
+// const updater = parse(test, "e");
+// console.log(updater({ type: "INCREMENT" })(4), 5);
+
+// const reducer = parse(test, "f");
+// console.log(
+//   reducer(0, { type: "INCREMENT" }),
+//   1,
+//   reducer(3, { type: "DECREMENT" }),
+//   2,
+//   reducer(5, { type: "INCREMENT" }),
+//   6
+// );
+
+// const counter = parse(test, "h");
+// console.log(counter(), 0);
+// console.log(counter(3, { type: "INCREMENT" }), 4);
+// console.log(counter(3, { type: "DECREMENT" }), 2);
+
+// const store = parse(test, "l");
+// const dispatchInc = parse(test, "n");
+// const dispatchDec = parse(test, "o");
+// store.dispatch({ type: "INCREMENT" });
+// dispatchInc(store);
+// dispatchInc(store);
+// store.dispatch({ type: "DECREMENT" });
+// dispatchInc(store);
+// dispatchInc(store);
+// dispatchInc(store);
+// dispatchInc(store);
+// dispatchDec(store);
+// dispatchInc(store);
+// console.log(store.getState(), 6);

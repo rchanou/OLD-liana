@@ -1,9 +1,10 @@
 import { types, getEnv, destroy } from "mobx-state-tree";
-import EventEmitter from "eventemitter3";
 
-import { ContextRepo } from "./core";
+import { ContextEngine } from "./core";
 import { ContextUser } from "./user";
-import { RepoEditor } from "./repo-editor";
+import { MainEditor } from "./editor";
+import { mixinModel } from "./context";
+import { viewModel } from "./view";
 
 const keyLayout = {
   // TODO: make customizable
@@ -44,34 +45,30 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
-export const App = ContextRepo.refModel("Editor", {
-  heldKeyCoords: types.maybe(HeldKeyCoords),
-  repoList: types.optional(RepoEditor, {})
-})
+export const App = types
+  .model("App", {
+    heldKeyCoords: types.maybe(HeldKeyCoords),
+    mainEditor: types.optional(MainEditor, {}),
+    user: ContextUser,
+    engine: ContextEngine
+  })
   .actions(self => {
     const { dom } = getEnv(self);
-
     return {
       handleKeyDown(e) {
         const { keyCode } = e;
         const { keyMap } = self;
-
         if (typeof keyMap === "function") {
           keyMap(keyCode);
           return;
         }
-
         const coords = keyLayout[keyCode]; // TODO: make key layout editable
         if (!coords) {
           return;
         }
-
         e.preventDefault();
-
         const [x, y] = coords;
-
         self.heldKeyCoords = { x, y };
-
         const YKeyMap = keyMap[y];
         if (YKeyMap) {
           const thisKey = YKeyMap[x];
@@ -97,14 +94,14 @@ export const App = ContextRepo.refModel("Editor", {
   })
   .views(self => ({
     get cells() {
-      return self.repoList.activeCells;
-      // return self.repoList.cells.concat(self.chooser ? self.chooser.cells : []);
+      return self.mainEditor.cells;
+      // return self.mainEditor.cells.concat(self.chooser ? self.chooser.cells : []);
     },
     get keyMap() {
-      return self.repoList.keyMap;
+      return self.mainEditor.keyMap;
     },
     get handleInput() {
-      return self.repoList.handleInput;
+      return self.mainEditor.handleInput;
     }
   }));
 

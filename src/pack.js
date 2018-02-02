@@ -5,37 +5,24 @@ const packWord = full => {
   if ("op" in full) {
     return full.op;
   }
-  if ("gRef" in full) {
-    return { g: full.gRef };
+  if ("ref" in full) {
+    return { r: full.ref };
   }
   if ("arg" in full) {
-    return full.arg;
+    return { a: full.arg };
   }
-  if ("sRef" in full) {
-    return { s: full.sRef };
-  }
-  throw new Error(`Could not pack word. Has no match: ${full}`);
+  throw new Error(`Could not pack node. Has no match: ${full}`);
 };
 
-const packDeclaration = full => {
-  if (full.line) {
-    return full.line.map(packWord);
-  }
-  const packed = {};
-  if (full.lines) {
-    for (const id in full.lines) {
-      packed[id] = full.lines[id].map(packWord);
-    }
-  }
-  packed.r = full.ret.map(packWord);
-  return packed;
-};
+// TODO: convert ref/arg paths to/from relative paths
 
-const packDecSet = full => {
+const packDec = full => {
+  if (Array.isArray(full)) {
+    return full.map(packWord);
+  }
   const packed = {};
   for (const id in full) {
-    const packedDec = packDeclaration(full[id]);
-    packed[id] = packedDec;
+    packed[id] = packDec(full[id]);
   }
   return packed;
 };
@@ -47,46 +34,57 @@ const unpackWord = packed => {
   if (typeof packed === "string") {
     return { op: packed };
   }
-  if (typeof packed === "number") {
-    return { arg: packed };
+  // if (typeof packed === "number") {
+  if ("a" in packed) {
+    return { arg: packed.a };
   }
-  if ("g" in packed) {
-    return { gRef: packed.g };
+  if ("r" in packed) {
+    return { ref: packed.r };
   }
-  if ("s" in packed) {
-    return { sRef: packed.s };
-  }
-  throw new Error(`Could not unpack word. Has no match: ${packed}`);
+  throw new Error(`Could not unpack node. Has no match: ${packed}`);
 };
 
-const unpackDeclaration = packed => {
-  const full = {};
+const unpackDec = packed => {
   if (Array.isArray(packed)) {
-    full.line = packed.map(unpackWord);
-  } else {
-    full.lines = {};
-    for (const id in packed) {
-      const fullLine = packed[id].map(unpackWord);
-      if (id === "r") {
-        full.ret = fullLine;
-      } else {
-        full.lines[id] = fullLine;
-      }
-    }
+    return packed.map(unpackWord);
   }
-  return full;
-};
-
-const unpackDecSet = packed => {
   const full = {};
   for (const id in packed) {
-    const packedDec = packed[id];
-    const fullDec = unpackDeclaration(packedDec);
-    fullDec.id = id;
-    full[id] = fullDec;
+    full[id] = unpackDec(packed[id]);
   }
+
   return full;
 };
 
-export const pack = ({ decs, ...rest }) => ({ d: packDecSet(decs), ...rest });
-export const unpack = ({ d, ...rest }) => ({ decs: unpackDecSet(d), ...rest });
+export const pack = packDec;
+export const unpack = unpackDec;
+
+export const inflate = (parent, path = [], flat = { args: {}, decs: {} }) => {
+  let dec = parent;
+  if (path.length) {
+    const id = path[path.length - 1];
+    dec = parent[id];
+  }
+  if (Array.isArray(dec)) {
+    flat.decs[path] = { id: String(path), eval: [] };
+    for (const node of dec) {
+      let newNode;
+      if ("arg" in node) {
+        newNode = { arg: String(node.arg) };
+        if (!flat.args[node.arg]) {
+          flat.args[node.arg] = { id: String(node.arg) };
+        }
+      } else if ("ref" in node) {
+        newNode = { ref: String(node.ref) };
+      } else {
+        newNode = node;
+      }
+      flat.decs[path].eval.push(newNode);
+    }
+  } else {
+    for (const id in dec) {
+      inflate(dec, [...path, id], flat);
+    }
+  }
+  return flat;
+};

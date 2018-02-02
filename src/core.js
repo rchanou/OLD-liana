@@ -1,52 +1,51 @@
-import { types, getEnv, getParent, getType, flow, getSnapshot } from "mobx-state-tree";
+import { types, flow } from "mobx-state-tree";
+import { isObservableArray } from "mobx";
+import produce from "immer";
 
-import { setupContext } from "./context";
-import { unminify } from "./minify";
+import { ContextUser } from "./user";
+import { makeContext, mixinModel } from "./context";
+import { pack, unpack } from "./pack";
 import * as Color from "./color";
 
-const optionalMap = type => types.optional(types.map(type), {});
-const optionalString = types.optional(types.string, "");
+const gRef = "g";
+const dot = ".";
+const array = "[";
+const object = "{";
+const mutate = "@";
+const identity = "#";
 
-export const global = "g";
-export const access = ".";
-export const array = "[";
-export const object = "{";
-export const mutate = "@";
-export const identity = "#";
+const add = "+";
+const minus = "-";
+const times = "*";
+const divide = "/";
+const mod = "%";
 
-export const add = "+";
-export const subtract = "-";
-export const multiply = "*";
-export const divide = "/";
-export const mod = "%";
+const ifOp = "?";
+const switchOp = "s";
+const forOp = "f";
 
-export const ifOp = "?";
-export const switchOp = "s";
-export const forOp = "f";
+const lessThan = "<";
+const greaterThan = ">";
+const lessThanOrEqual = "v";
+const greaterThanOrEqual = "^";
 
-export const lessThan = "<";
-export const greaterThan = ">";
-export const lessThanOrEqual = "<=";
-export const greaterThanOrEqual = ">=";
+const equal = "=";
+const strictEqual = "e";
+const notEqual = "!";
+const notStrictEqual = "n";
 
-export const equal = "==";
-export const strictEqual = "===";
-export const notEqual = "!=";
-export const notStrictEqual = "!==";
-
-export const importOp = "m";
-export const newOp = "n";
-export const typeofOp = "t";
-export const instanceOfOp = "i";
-export const classOp = "c";
-export const thisOp = "h";
+const importOp = "m";
+const newOp = "w";
+const typeofOp = "t";
+const instanceOfOp = "i";
+const classOp = "c";
+const thisOp = "h";
+const undef = "u";
 
 const opFuncs = {
-  [global](val) {
-    return window[val];
-    // return eval(val);
-  },
-  [access](obj, key) {
+  [gRef]: typeof window !== "undefined" ? window : global,
+  [undef]: undefined,
+  [dot](obj, key) {
     try {
       return obj[key];
     } catch (ex) {
@@ -64,6 +63,17 @@ const opFuncs = {
     }
     return sum;
   },
+  [minus](...nums) {
+    let sum;
+    for (let i = 0; i < nums.length; i++) {
+      if (i === 0) {
+        sum = nums[i];
+      } else {
+        sum -= nums[i];
+      }
+    }
+    return sum;
+  },
   [array](...items) {
     return items;
   },
@@ -74,20 +84,11 @@ const opFuncs = {
     }
     return obj;
   },
-  [ifOp](condition, trueVal, falseVal) {
-    return condition ? trueVal : falseVal;
+  [ifOp]() {
+    throw new Error("'If' is special-cased...this shouldn't be run!");
   },
-  [switchOp](switcher, ...casePairs) {
-    // console.log(switcher, ...casePairs, "SWIT");
-    const { length } = casePairs;
-    for (let i = 0; i < length; i += 2) {
-      if (switcher === casePairs[i]) {
-        return casePairs[i + 1];
-      }
-    }
-    if (length % 2) {
-      return casePairs[length - 1];
-    }
+  [switchOp]() {
+    throw new Error("'If' is special-cased...this shouldn't be run!");
   },
   [lessThan](a, b) {
     return a < b;
@@ -96,83 +97,20 @@ const opFuncs = {
     return function() {
       return x;
     };
+  },
+  [strictEqual](a, b) {
+    return a === b;
   }
 };
 
-const findInputs = link => {
-  const foundInputs = [];
-  const { nodes } = link;
-  for (const node of nodes) {
-    if ("input" in node) {
-      foundInputs.push(node.input);
-    } else if (node.ref) {
-      foundInputs.push(...node.inputs);
-    }
-  }
-  return foundInputs;
-};
-
-const Label = types.model("Label", {
-  labelId: types.identifier(types.string),
-  text: optionalString
-});
-
-const LabelSet = types.maybe(types.union(types.string, types.map(Label)));
-
-export const Val = types
-  .model("Val", {
-    val: types.union(
-      types.string,
-      types.number,
-      types.boolean,
-      types.null
-      // types.undefined
-    )
-  })
-  .views(self => ({
-    get out() {
-      return self.val;
-    },
-    // equivalent(other) {
-    //   return self.val === other.val;
-    // },
-    get label() {
-      const { val } = self;
-      if (typeof val === "string") {
-        return `"${val}"`;
-      } else {
-        return String(val);
-      }
-    },
-    get color() {
-      return Color.val;
-    }
-  }))
-  .actions(self => ({
-    select(val) {
-      if (typeof self.val === "number") {
-        const numVal = Number(val);
-
-        if (isNaN(numVal)) {
-          return;
-        }
-
-        self.val = numVal;
-        return;
-      }
-
-      self.val = val;
-    }
-  }));
-
-export const ops = [
-  global,
-  access,
+const ops = [
+  gRef,
+  dot,
   array,
   object,
   add,
-  subtract,
-  multiply,
+  minus,
+  times,
   divide,
   mod,
   ifOp,
@@ -193,445 +131,367 @@ export const ops = [
   notEqual,
   notStrictEqual,
   mutate,
-  identity
+  identity,
+  undef
 ];
 
-export const OpEnum = types.enumeration("OpEnum", ops);
-
-export const Op = types
-  .model("Op", {
-    op: OpEnum
-  })
-  .views(self => ({
-    get out() {
-      return opFuncs[self.op];
-    },
-    // equivalent(other) {
-    //   return self.op === other.op;
-    // },
-    get label() {
-      // TODO: look up?
-      return self.op;
-    },
-    get color() {
-      return Color.op;
-    }
-  }));
-
-export const Dependency = types
-  .model("Dependency", {
-    depId: types.identifier(types.string),
+export const Pkg = types
+  .model("Pkg", {
+    id: types.identifier(types.string),
     path: types.string,
-    resolved: types.optional(types.boolean, false)
+    resolved: false
   })
   .actions(self => {
     const { system } = getEnv(self);
-
     return {
       afterCreate: flow(function*() {
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
       }),
-      postProcessSnapshot(snapshot) {
-        delete snapshot.resolved;
-        return snapshot;
+      postProcessSnapshot({ resolved, ...rest }) {
+        return rest;
       }
     };
-  })
-  .views(self => {
-    const { system } = getEnv(self);
-
-    return {
-      get out() {
-        if (self.resolved) {
-          return system.get(self.path);
-        }
-
-        return Dependency;
-      },
-      equivalent(other) {
-        return other === self || other.dep === self;
-      },
-      get label() {
-        return self.path.replace("https://unpkg.com/", "").split("/")[0];
-      },
-      get color() {
-        return Color.dep;
-      }
-    };
-  });
-
-export const DepRef = types
-  .model("DepRef", {
-    dep: types.reference(Dependency)
   })
   .views(self => ({
     get out() {
-      return self.dep.out;
+      if (resolved) {
+        return system.get(self.path);
+      }
+      return Pkg;
     },
-    // equivalent(other) {
-    //   return self.dep === other || self.dep === other.dep;
-    // },
-    get label() {
-      return self.dep.label;
+    equivalent(other) {
+      return other === self || other.pkg === self;
+    },
+    get name() {
+      return self.path.replace("https://unpkg.com/", "").split("/")[0];
     },
     get color() {
-      return self.dep.color;
+      return Color.dep;
     }
   }));
 
-// TYPE-CEPTION
-export const stringType = "s";
-export const numType = "n";
-export const boolType = "b";
-export const anyType = "a";
-export const InputType = types.enumeration("InputType", [stringType, numType, boolType, anyType]);
-
-// HACK: couldn't think of a way to contain this in mobx models
-// TODO: possibly revisit this (but this is just a PoC, so...)
-window._inputs = {};
-
-export const Input = types
-  .model("Input", {
-    inputId: types.identifier(types.string),
-    type: types.maybe(InputType, anyType),
-    labelSet: types.maybe(types.union(types.string, types.map(Label)))
+const PkgRef = types
+  .model("PkgRef", {
+    pkg: types.reference(Pkg)
   })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      delete snapshot.hack;
-      if (!snapshot.labelSet) {
-        delete snapshot.labelSet;
+  .views(self => ({
+    get out() {
+      return self.pkg.out;
+    },
+    get name() {
+      return self.pkg.name;
+    },
+    get color() {
+      return self.pkg.color;
+    }
+  }));
+
+const Val = types
+  .model("Val", {
+    val: types.union(types.number, types.string, types.boolean, types.null)
+  })
+  .views(self => ({
+    get out() {
+      return self.val;
+    },
+    get name() {
+      const { val } = self;
+      if (typeof val === "string") {
+        return `'${val}'`;
+      } else {
+        return String(val);
       }
-      if (!snapshot.type) {
-        delete snapshot.type;
-      }
-      return snapshot;
+    },
+    get color() {
+      return Color.val;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
     }
   }))
+  .actions(self => ({
+    select(val) {
+      if (typeof self.val === "number") {
+        const numVal = Number(val);
+        if (isNaN(numVal)) {
+          return;
+        }
+        self.val = numVal;
+        return;
+      }
+      self.val = val;
+    }
+  }));
+
+const LocaleNameSet = types.map(types.string);
+const NameSet = types.optional(types.map(LocaleNameSet), {});
+const Named = types.model({
+  names: NameSet
+});
+
+const defaultOpNames = {
+  [gRef]: "🌐",
+  [dot]: "•",
+  [ifOp]: "IF",
+  [switchOp]: "SW",
+  [strictEqual]: "===",
+  [undef]: "U"
+};
+
+const Op = mixinModel(Named)("Op", {
+  op: types.enumeration(ops)
+}).views(self => ({
+  get out() {
+    const { op } = self;
+    if (!(op in opFuncs)) {
+      throw new Error(self.op + " op not yet implemented!");
+    }
+    const opFunc = opFuncs[op];
+    return opFunc;
+  },
+  get name() {
+    // TODO: look up from context user
+    const { op } = self;
+    return defaultOpNames[op] || op;
+  },
+  get color() {
+    return Color.op;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
+  }
+}));
+
+const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
+const Arg = types
+  .model("Arg", {
+    arg: types.refinement(types.array(types.union(types.string, integerType)), path => {
+      const { length } = path;
+      if (typeof path[0] === "number" && typeof path[1] === "number") {
+        return length === 2;
+      }
+      for (let i = 0; i < length; i++) {
+        if (i === length - 1) {
+          if (typeof path[i] !== "number") {
+            return false;
+          }
+        } else if (typeof path[i] !== "string") {
+          return false;
+        }
+      }
+      return true;
+    }),
+    user: ContextUser
+  })
   .views(self => ({
-    call() {
-      return window._inputs[self.inputId];
-    },
-    get out() {
-      // can be used to display sample values and such
-      return window._inputs[self.inputId];
-    },
-    equivalent(other) {
-      return other === self || other.input === self;
-    },
-    get label() {
-      // TODO: look up appropriate label based on user context
-      return self.labelSet || `{${self.inputId}}`;
+    get name() {
+      return self.user.pathName(self.arg);
     },
     get color() {
       return Color.input;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
     }
   }));
 
-export const InputRef = types
-  .model("InputRef", {
-    input: types.reference(Input)
-  })
-  .views(self => ({
-    call() {
-      return self.input.call();
-    },
-    get out() {
-      return self.input.out;
-    },
-    // equivalent(other) {
-    //   return self.input === other || self.input === other.input;
-    // },
-    get label() {
-      return self.input.label;
-    },
-    get color() {
-      return self.input.color;
-    }
-  }));
-
-export const Node = types.union(Val, Op, InputRef, types.late(() => LinkRef), types.late(() => Fn), DepRef);
-
-export const Link = types
-  .model("Link", {
-    linkId: types.identifier(types.string),
-    nodes: types.maybe(types.array(Node)),
-    inputOrder: types.maybe(types.array(types.reference(Input))),
-    labelSet: LabelSet,
-    tags: types.optional(types.array(types.string), [])
-  })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      if (!snapshot.inputOrder) {
-        delete snapshot.inputOrder;
-      }
-      if (!snapshot.labelSet) {
-        delete snapshot.labelSet;
-      }
-      if (!snapshot.tags.length) {
-        delete snapshot.tags;
-      }
-      return snapshot;
-    }
-  }))
-  .views(self => ({
-    call() {
-      const { nodes } = self;
-      const nodeOuts = nodes.map(node => (node.call ? node.call() : node.out));
-      if (nodeOuts.indexOf(Dependency) !== -1) {
-        return Dependency;
-      }
-      const [head, ...args] = nodeOuts;
-      if (typeof head !== "function") {
-        return head;
-      }
-      return head(...args);
-    },
-    get inputs() {
-      return self.inputOrder || findInputs(self);
-    },
-    get inputIds() {
-      return self.inputs.map(input => input.inputId);
-    },
-    get out() {
-      // TODO: this if-clause effectively creates an "auto-currying" system
-      // should I try taking it out and require manual "unwrapping"?
-      const { inputIds } = self;
-      const { length } = inputIds;
-      if (length) {
-        return function(...args) {
-          for (let i = 0; i < length; i++) {
-            window._inputs[inputIds[i]] = args[i];
+const Ref = types
+  .model("Ref", {
+    ref: types.union(
+      types.string,
+      types.refinement(types.array(types.union(integerType, types.string)), ref => {
+        const { length } = ref;
+        if (typeof ref[0] === "number") {
+          return length === 2 && typeof ref[1] === "string";
+        }
+        for (let i = 0; i < length; i++) {
+          if (typeof ref[i] !== "string") {
+            return false;
           }
-          return self.call();
-        };
-      }
-
-      const { nodes } = self;
-      const nodeOuts = nodes.map(node => node.out);
-      if (nodeOuts.indexOf(Dependency) !== -1) {
-        return Dependency;
-      }
-      const [head, ...args] = nodeOuts;
-      if (typeof head !== "function") {
-        return head;
-      }
-      return head(...args);
-    },
-    equivalent(other) {
-      return other === self || other.ref === self || other.fn === self;
-    },
-    get label() {
-      if (self.labelSet) {
-        // TODO: handle maps for localization, icon labels, etc.
-        return self.labelSet;
-      }
-
-      return `(${self.linkId})`;
+        }
+        return true;
+      })
+    ),
+    user: ContextUser
+  })
+  .views(self => ({
+    get name() {
+      const { ref } = self;
+      return self.user.pathName(ref) || `(${ref.slice()})`;
     },
     get color() {
       return Color.pending;
+    },
+    get width() {
+      return Math.ceil((self.name.length + 3) / 6);
     }
-  }))
-  .actions(self => ({
-    addNode(newNode = { val: "🍆" }) {
-      // TODO: extend functionality, remove test string
-      const { nodes } = self;
-      nodes.push(newNode);
-      return nodes.length - 1;
-    },
-    setNode(index, newNode) {
-      self.nodes[index] = newNode;
-    },
-    deleteNode(index) {
-      if (self.nodes.length > 1) {
-        self.nodes.splice(index, 1);
+  }));
+
+const Node = types.union(Val, Op, Arg, PkgRef, Ref);
+
+const Line = types.refinement(types.array(Node), l => l.length);
+
+const walkPath = (base, up, walk) => {
+  const finalPath = [...base];
+  while (up--) {
+    finalPath.pop();
+  }
+  for (const token of walk) {
+    finalPath.push(token);
+  }
+  return finalPath;
+};
+
+const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
+
+const Param = types.model("Param", {
+  type: types.maybe(types.string)
+});
+
+export const incrementLetterId = prev => {
+  const next = [...prev];
+  const addAtIndex = index => {
+    const val = prev[index];
+    if (val === "z") {
+      next[index] = 0;
+      if (index === 0) {
+        next.splice(0, 0, "a");
+      } else {
+        addAtIndex(index - 1);
       }
-    },
-    setVal(index, val) {
-      self.nodes[index].select(val);
-    },
-    setLabel(text) {
-      // TODO: allowing setting for specific label set
-      self.labelSet = text;
+    } else {
+      const valAsInt = parseInt(val, 36);
+      next[index] = (valAsInt + 1).toString(36);
     }
-  }));
+  };
+  addAtIndex(prev.length - 1);
+  return next.join("");
+};
 
-export const LinkRef = types
-  .model("LinkRef", {
-    ref: types.reference(Link)
+export const Engine = types
+  .model("Engine", {
+    main: Dec,
+    params: types.optional(types.map(types.array(types.maybe(Param))), {})
   })
-  .actions(self => ({
-    postProcessSnapshot(snapshot) {
-      if (!snapshot.inputs) {
-        delete snapshot.inputs;
+  .preProcessSnapshot(snapshot =>
+    produce(snapshot, draft => {
+      if (!draft.params) {
+        draft.params = {};
       }
-      return snapshot;
-    }
-  }))
-  .views(self => ({
-    get inputs() {
-      return self.ref.inputs;
-    },
-    call() {
-      return self.ref.call();
-    },
-    get out() {
-      return self.ref.out;
-    },
-    // equivalent(other) {
-    //   return self.ref === other || self.ref === other.ref;
-    // },
-    get label() {
-      return self.ref.label;
-    },
-    get color() {
-      return self.ref.color;
-    }
-  }));
-
-export const Fn = types
-  .model("Fn", {
-    fn: types.reference(Link)
-  })
-  .views(self => ({
-    get out() {
-      return self.fn.out;
-    },
-    get label() {
-      return self.fn.label;
-    },
-    get color() {
-      return Color.reified;
-    }
-  }));
-
-// export const SubParam = types
-//   .model("SubParam", {
-//     param: types.number
-//   })
-//   .views(self => ({
-//     get out() {
-//       return self.param;
-//     },
-//     with() {
-//       return self.out;
-//     }
-//   }));
-
-// export const SubLink = types
-//   .model("SubLink", {
-//     subLink: types.number
-//   })
-//   .views(self => ({
-//     get out() {
-//       return self.subLink;
-//     },
-//     with() {
-//       return self.out;
-//     }
-//   }));
-
-// export const SubNode = types.union(
-//   Val,
-//   Op,
-//   InputRef,
-//   LinkRef,
-//   Fn,
-//   SubParam,
-//   SubLink,
-//   types.late(() => SubRef)
-// );
-
-// export const Sub = types
-//   .model("Sub", {
-//     subId: types.identifier(types.string),
-//     nodes: types.map(types.array(SubNode))
-//   })
-//   .views(self => ({
-//     get out() {
-//       return self;
-//     },
-//     with() {
-//       return self.out;
-//     }
-//   }));
-
-// export const SubRef = types
-//   .model("SubRef", {
-//     subRef: types.reference(Sub)
-//   })
-//   .views(self => ({
-//     get out() {
-//       return self.subRef;
-//     },
-//     with() {
-//       return self.out;
-//     }
-//   }));
-
-let newLinkIdCounter = 0;
-
-export const Repo = types
-  .model("Repo", {
-    dependencies: optionalMap(Dependency),
-    inputs: optionalMap(Input),
-    links: optionalMap(Link),
-    // subs: optionalMap(Sub),
-    linkLabelSets: optionalMap(LabelSet)
-  })
-  .preProcessSnapshot(snapshot => (!snapshot || snapshot.links ? snapshot : unminify(snapshot)))
-  .views(self => ({
-    get linkList() {
-      return self.links.values(); //.map(link => ({ value: link.linkId, label: link.label }));
-    },
-    get inputList() {
-      return self.inputs.values().map(input => ({ value: input.inputId, label: input.label }));
-    },
-    get depList() {
-      return self.dependencies.values().map(dep => ({ value: dep.depId, label: dep.label }));
-    }
-  }))
-  .actions(self => ({
-    addLink() {
-      const linkId = `N${newLinkIdCounter++}`;
-
-      self.links.put({
-        linkId,
-        nodes: [{ op: "+" }]
-      });
-
-      return linkId;
-    },
-    putLink(newLink) {
-      self.links.put(newLink);
-    },
-    expandSub(subId, baseId, ...params) {
-      const { nodes } = self.subs.get(subId);
-
-      let inputCounter = 0;
-      nodes.forEach((subLink, i) => {
-        const linkNodes = subLink.map(node => {
-          const nodeType = getType(node);
-          const { val } = node;
-          switch (nodeType) {
-            case SubParam:
-              return params[val];
-            case SubLink:
-              return { ref: `${baseId}-${val}` };
-            case LinkRef:
-              const retVal = { ref: node.ref.linkId };
-              return retVal;
-            default:
-              return val;
+      const { main, params } = draft;
+      const getParams = dec => {
+        if (Array.isArray(dec)) {
+          for (const node of dec) {
+            if ("arg" in node) {
+              const { arg } = node;
+              const scopePath = arg.slice(0, -1);
+              const index = arg[arg.length - 1];
+              if (!params[scopePath]) {
+                params[scopePath] = [];
+              }
+              params[scopePath][index] = {};
+            }
           }
-        });
+          return;
+        }
+        for (const id in dec) {
+          getParams(dec[id]);
+        }
+      };
+      getParams(main);
+    })
+  )
+  .views(self => ({
+    get out() {
+      return self.run();
+    },
+    run(...initialPath) {
+      const { main } = self;
+      const gen = (path = [], scopes = {}) => {
+        let dec = main;
+        for (const id of path) {
+          dec = dec.get(id);
+        }
+        if (isObservableArray(dec)) {
+          const parseNode = node => {
+            if ("out" in node) {
+              return node.out;
+            } else if ("ref" in node) {
+              const { ref } = node;
+              if (typeof ref === "string") {
+                return gen([ref], scopes);
+              } else {
+                return gen(ref, scopes);
+              }
+            } else if ("arg" in node) {
+              const { arg } = node;
+              const scopePath = arg.slice(0, -1);
+              const index = arg[arg.length - 1];
+              return scopes[scopePath][index];
+            }
+          };
+          // special-case handling of conditional ops
+          // for short-circuiting ("lazy evaluation") flow control behavior
+          // as would be expected in plain JS
+          const { op } = dec[0];
+          switch (op) {
+            case ifOp:
+              const cond = parseNode(dec[1]);
+              if (cond) {
+                return parseNode(dec[2]);
+              } else {
+                return parseNode(dec[3]);
+              }
+              break;
+            case switchOp:
+              // TODO: try to generate a proper switch statement
+              // but this requires "eval" or the Function constructor
+              const [, switcherNode, ...casePairs] = dec;
+              const { length } = casePairs;
+              const switcher = parseNode(switcherNode);
+              for (let i = 0; i < length; i += 2) {
+                if (switcher === parseNode(casePairs[i])) {
+                  return parseNode(casePairs[i + 1]);
+                }
+              }
+              if (length % 2) {
+                return parseNode(casePairs[length - 1]);
+              }
+              // throwing for now, but maybe that's too strict
+              throw new Error("Switch case not matched. No default case defined.");
+              break;
+          }
+          // TODO: short-circuit "and", "or", and possibly "for"
+          const outs = dec.map(parseNode);
+          const [head, ...args] = outs;
+          return typeof head === "function" ? head(...args) : head;
+        }
+        return function(...params) {
+          scopes[path] = params;
+          const retLine = gen([...path, "R"], scopes);
+          return retLine;
+        };
+      };
+      return gen(initialPath);
+    }
+  }))
+  .actions(self => ({
+    addDec(scopePath) {
+      let scope = self.main;
+      for (const id of scopePath) {
+        scope = scope.get(id);
+      }
+      const ids = scope.keys();
+      const lastId = ids[ids.length - 1];
 
-        self.links.put({ linkId: `${baseId}-${i}`, nodes: linkNodes });
-      });
+      let newId = incrementLetterId(lastId);
+      while (scope.get(newId)) {
+        newId = incrementLetterId(newId);
+      }
+      scope.set(newId, [{ op: add }]);
     }
   }));
 
-export const ContextRepo = setupContext(Repo);
+export const ContextEngine = makeContext(Engine);

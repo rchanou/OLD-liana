@@ -1,23 +1,45 @@
-const { types } = require("mobx-state-tree");
+const { types, getSnapshot } = require("mobx-state-tree");
 
-const B = types.model({
-  id: types.identifier(types.number),
-  name: types.string,
-  ref: types.reference(types.late(() => B))
+let idCounter = 0;
+const B = types.model("B", {
+  id: types.optional(types.identifier(types.number), () => idCounter++),
+  name: types.string
+  // ref: types.reference(types.late(() => B))
 });
 
-const A = types.model({
-  b: B,
-  ref: types.reference(B)
-});
+const A = types
+  .model({
+    id: types.refinement(types.identifier(types.string), id => id.length > 3),
+    b: B,
+    // ref: types.frozen
+    ref: types.maybe(types.reference(types.late(() => A)))
+  })
+  .actions(self => ({
+    setRef(b) {
+      self.ref = b;
+    }
+  }));
+
+const C = types.model({ as: types.map(A) });
 
 const a = A.create({
-  b: { id: 1, name: "rsttars", ref: 1 },
-  ref: 1
+  id: "smart",
+  b: { name: "fart" }
 });
 
-console.log(a.b.ref.name);
+const c = C.create({
+  as: {
+    aaaa: { id: "aaaa", b: { name: "sam" }, ref: "bbbbb" },
+    bbbbb: { id: "bbbbb", b: { name: "jam" } }
+  }
+});
 
-const test = x => y => z => x + y + z;
+console.log(c.as.get("aaaa").ref.b.name);
 
-console.log(test(1)(5)(7));
+const D = types.model("D", {
+  b: types.reference(B, id => ({ id, name: "flim flam" }))
+});
+
+const d = D.create({
+  b: 1
+});
