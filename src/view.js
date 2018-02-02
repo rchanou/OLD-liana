@@ -1,5 +1,5 @@
 import { types } from "mobx-state-tree";
-import { Pkg, ContextEngine } from "./core";
+import { Pkg, Engine } from "./core";
 import { ContextUser } from "./user";
 
 export const calcWidth = text =>
@@ -25,7 +25,7 @@ let cursorIdCounter = 0; // TODO: better way to determine IDs?
 const UI = types
   .model("BaseUI", {
     selectedCellIndex: 0,
-    engine: ContextEngine,
+    engine: Engine,
     user: ContextUser
   })
   .views(self => {

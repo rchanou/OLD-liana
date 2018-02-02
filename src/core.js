@@ -267,22 +267,25 @@ const Op = mixinModel(Named)("Op", {
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = types
   .model("Arg", {
-    arg: types.refinement(types.array(types.union(types.string, integerType)), path => {
-      const { length } = path;
-      if (typeof path[0] === "number" && typeof path[1] === "number") {
-        return length === 2;
-      }
-      for (let i = 0; i < length; i++) {
-        if (i === length - 1) {
-          if (typeof path[i] !== "number") {
+    arg: types.refinement(
+      types.array(types.union(types.string, integerType)),
+      path => {
+        const { length } = path;
+        if (typeof path[0] === "number" && typeof path[1] === "number") {
+          return length === 2;
+        }
+        for (let i = 0; i < length; i++) {
+          if (i === length - 1) {
+            if (typeof path[i] !== "number") {
+              return false;
+            }
+          } else if (typeof path[i] !== "string") {
             return false;
           }
-        } else if (typeof path[i] !== "string") {
-          return false;
         }
+        return true;
       }
-      return true;
-    }),
+    ),
     user: ContextUser
   })
   .views(self => ({
@@ -301,18 +304,21 @@ const Ref = types
   .model("Ref", {
     ref: types.union(
       types.string,
-      types.refinement(types.array(types.union(integerType, types.string)), ref => {
-        const { length } = ref;
-        if (typeof ref[0] === "number") {
-          return length === 2 && typeof ref[1] === "string";
-        }
-        for (let i = 0; i < length; i++) {
-          if (typeof ref[i] !== "string") {
-            return false;
+      types.refinement(
+        types.array(types.union(integerType, types.string)),
+        ref => {
+          const { length } = ref;
+          if (typeof ref[0] === "number") {
+            return length === 2 && typeof ref[1] === "string";
           }
+          for (let i = 0; i < length; i++) {
+            if (typeof ref[i] !== "string") {
+              return false;
+            }
+          }
+          return true;
         }
-        return true;
-      })
+      )
     ),
     user: ContextUser
   })
@@ -370,7 +376,7 @@ export const incrementLetterId = prev => {
   return next.join("");
 };
 
-export const Engine = types
+export const BaseEngine = types
   .model("Engine", {
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {})
@@ -460,7 +466,9 @@ export const Engine = types
                 return parseNode(casePairs[length - 1]);
               }
               // throwing for now, but maybe that's too strict
-              throw new Error("Switch case not matched. No default case defined.");
+              throw new Error(
+                "Switch case not matched. No default case defined."
+              );
               break;
           }
           // TODO: short-circuit "and", "or", and possibly "for"
@@ -494,4 +502,4 @@ export const Engine = types
     }
   }));
 
-export const ContextEngine = makeContext(Engine);
+export const Engine = makeContext(BaseEngine);
