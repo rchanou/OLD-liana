@@ -1,9 +1,10 @@
 import { strictEqual, deepStrictEqual } from "assert";
+import { types } from "mobx-state-tree";
 
-import { BaseEngine, Engine, incrementLetterId } from "../src/core";
 import { engine, user } from "./test-data";
-
+import { BaseEngine, Engine, incrementLetterId } from "../src/core";
 import { pack, unpack, inflate } from "../src/pack";
+import { privateModel } from "../src/context";
 
 const t = BaseEngine.create(engine);
 window.t = t;
@@ -33,3 +34,19 @@ strictEqual(incrementLetterId("a1"), "a2");
 strictEqual(incrementLetterId("zz"), "a00");
 strictEqual(incrementLetterId("a0z"), "a10");
 strictEqual(incrementLetterId("dog"), "doh");
+
+const B = types.model("B", { a: types.string, z: types.number });
+const PrivTest = privateModel("A", {
+  b: "default",
+  c: 3,
+  d: NaN,
+  e: types.optional(types.number, () => 7),
+  f: types.optional(types.array(types.string), ["a", "b", "c"]),
+  g: 0,
+  h: types.optional(types.string, ""),
+  i: types.optional(B, { z: 5, a: "what" })
+});
+const privStore = PrivTest.create({ d: 2 });
+const privSnapshot = privStore.toJSON();
+strictEqual(privStore.b, "default");
+deepStrictEqual(privSnapshot, { d: 2, e: 7 });

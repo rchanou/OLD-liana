@@ -1,4 +1,5 @@
 import { types } from "mobx-state-tree";
+import isEqual from "lodash.isequal";
 
 export const makeContext = Model => {
   if (typeof Model.name !== "string") {
@@ -50,3 +51,36 @@ export const makeSnapshotCleaner = (...keysToClear) => self => ({
     return snapshot;
   }
 });
+
+export const privateModel = (name, props, ...rest) => {
+  const defaults = {};
+  for (const propKey in props) {
+    const prop = props[propKey];
+    if (prop && typeof prop === "object") {
+      if (!("defaultValue" in prop)) {
+        throw new Error(
+          "All types declared in a private model must be optional."
+        );
+      }
+      defaults[propKey] = prop.defaultValue;
+    } else {
+      defaults[propKey] = prop;
+    }
+  }
+  const PreModel = types.model(name, props, ...rest);
+  return PreModel.actions(self => ({
+    postProcessSnapshot(snapshot) {
+      for (const key in defaults) {
+        // a function as default strongly implies that it's meant to generate a new value everytime
+        // so don't try to clean snapshot values for those properties
+        if (
+          !(typeof defaults[key] === "function") &&
+          isEqual(snapshot[key], defaults[key])
+        ) {
+          delete snapshot[key];
+        }
+      }
+      return snapshot;
+    }
+  }));
+};

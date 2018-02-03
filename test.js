@@ -1,4 +1,4 @@
-const { types, getSnapshot } = require("mobx-state-tree");
+const { types, getType, getSnapshot } = require("mobx-state-tree");
 
 let idCounter = 0;
 const B = types.model("B", {
@@ -37,9 +37,14 @@ const c = C.create({
 console.log(c.as.get("aaaa").ref.b.name);
 
 const D = types.model("D", {
-  b: types.reference(B, id => ({ id, name: "flim flam" }))
+  // b: types.reference(B, id => ({ id, name: "flim flam" }))
+  b: types.optional(B, { name: "fuf" }),
+  c: types.number
 });
 
-const d = D.create({
-  b: 1
-});
+const d = D.create({ c: 5 });
+
+const optionalTypeTest = getType(d.b);
+// console.log("le type", optionalTypeTest.properties);
+console.log(D.properties);
+console.log(types.optional(types.string, "abc"));

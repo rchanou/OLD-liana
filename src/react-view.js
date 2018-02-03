@@ -13,7 +13,7 @@ const boxStyle = {
   transition: "0.1s",
   position: "absolute",
   // height: unit - 3 * spacer,
-  height: unit,
+  height: unit - spacer,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -32,7 +32,7 @@ const cursorStyle = {
   border: "3px solid yellow",
   background: "none"
 };
-// const boxBorder = "1px solid rgba(0,0,0,0.3)";
+const rightBorder = "1px solid rgba(0,0,0,0.2)";
 const boxBorder = "1px solid #eee";
 const emptyObj = {};
 
@@ -129,8 +129,7 @@ const ReactBox = observer(({ box, onInput, store }) => {
     ...(cursor ? cursorStyle : emptyObj)
   };
   if (!cursor && fill) {
-    style.borderRight = boxBorder;
-    style.borderBottom = "4px solid #eee";
+    style.borderRight = rightBorder;
   } else {
     style.fontWeight = "550";
     style.color = "#333";
@@ -171,7 +170,12 @@ export const ReactView = observer(({ store }) => {
   const { activeCells, cells, onInput } = store;
   let throwawayIdCounter = 0;
   const cellBoxes = (activeCells || cells).map(cell => (
-    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} onInput={onInput} store={store} />
+    <ReactBox
+      key={cell ? cell.key : throwawayIdCounter++}
+      box={cell}
+      onInput={onInput}
+      store={store}
+    />
   ));
   return <div style={containerStyle}>{cellBoxes}</div>;
 });
