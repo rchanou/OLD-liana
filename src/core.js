@@ -3,7 +3,12 @@ import { isObservableArray } from "mobx";
 import produce from "immer";
 
 import { ContextUserReader } from "./user";
-import { makeContext, mixinModel, incrementLetterId } from "./model-utils";
+import {
+  makeContext,
+  mixinModel,
+  optionalModel,
+  incrementLetterId
+} from "./model-utils";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
 
@@ -135,12 +140,14 @@ const ops = [
   undef
 ];
 
-export const Pkg = types
-  .model("Pkg", {
-    id: types.identifier(types.string),
-    path: types.string,
+export const Pkg = mixinModel(
+  optionalModel({
     resolved: false
   })
+)("Pkg", {
+  id: types.identifier(types.string),
+  path: types.string
+})
   .actions(self => {
     const { system } = getEnv(self);
     return {
@@ -148,10 +155,7 @@ export const Pkg = types
         yield system.import(self.path);
         // TODO: error handling (retry?)
         self.resolved = true;
-      }),
-      postProcessSnapshot({ resolved, ...rest }) {
-        return rest;
-      }
+      })
     };
   })
   .views(self => ({
@@ -226,9 +230,8 @@ const Val = types
   }));
 
 const LocaleNameSet = types.map(types.string);
-const NameSet = types.optional(types.map(LocaleNameSet), {});
-const Named = types.model({
-  names: NameSet
+const Named = optionalModel({
+  names: types.optional(types.map(LocaleNameSet), {})
 });
 
 const defaultOpNames = {
