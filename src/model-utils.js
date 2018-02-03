@@ -43,7 +43,7 @@ export const mixinModel = (...Models) => (name, ...rest) => {
   return types.compose(name, ...modelsToCompose);
 };
 
-export const privateModel = (name, props, ...rest) => {
+export const optionalModel = (name, props, ...rest) => {
   const defaults = {};
   for (const propKey in props) {
     const prop = props[propKey];
@@ -74,4 +74,24 @@ export const privateModel = (name, props, ...rest) => {
       return snapshot;
     }
   }));
+};
+
+export const incrementLetterId = prev => {
+  const next = [...prev];
+  const addAtIndex = index => {
+    const val = prev[index];
+    if (val === "z") {
+      next[index] = 0;
+      if (index === 0) {
+        next.splice(0, 0, "a");
+      } else {
+        addAtIndex(index - 1);
+      }
+    } else {
+      const valAsInt = parseInt(val, 36);
+      next[index] = (valAsInt + 1).toString(36);
+    }
+  };
+  addAtIndex(prev.length - 1);
+  return next.join("");
 };

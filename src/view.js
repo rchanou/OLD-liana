@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
-import { Pkg, Engine } from "./core";
+import { Pkg, ContextEngine } from "./core";
 import { ContextUser } from "./user";
-import { privateModel } from "./context";
+import { optionalModel } from "./model-utils";
 
 export const calcWidth = text =>
   typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
@@ -23,9 +23,9 @@ export const formatOut = out => {
 
 let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
-const UI = privateModel("UI", {
+const UI = optionalModel("UI", {
   selectedCellIndex: 0,
-  engine: Engine,
+  engine: ContextEngine,
   user: ContextUser
 })
   .views(self => {

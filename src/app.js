@@ -1,9 +1,9 @@
 import { types, getEnv, destroy } from "mobx-state-tree";
 
-import { Engine } from "./core";
+import { ContextEngine } from "./core";
 import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
-import { mixinModel } from "./context";
+import { mixinModel } from "./model-utils";
 import { viewModel } from "./view";
 
 const keyLayout = {
@@ -50,7 +50,7 @@ export const App = types
     heldKeyCoords: types.maybe(HeldKeyCoords),
     mainEditor: types.optional(MainEditor, {}),
     user: ContextUser,
-    engine: Engine
+    engine: ContextEngine
   })
   .actions(self => {
     const { dom } = getEnv(self);

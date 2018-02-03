@@ -3,7 +3,7 @@ import { isObservableArray } from "mobx";
 import produce from "immer";
 
 import { ContextUserReader } from "./user";
-import { makeContext, mixinModel } from "./context";
+import { makeContext, mixinModel, incrementLetterId } from "./model-utils";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
 
@@ -350,27 +350,7 @@ const Param = types.model("Param", {
   type: types.maybe(types.string)
 });
 
-export const incrementLetterId = prev => {
-  const next = [...prev];
-  const addAtIndex = index => {
-    const val = prev[index];
-    if (val === "z") {
-      next[index] = 0;
-      if (index === 0) {
-        next.splice(0, 0, "a");
-      } else {
-        addAtIndex(index - 1);
-      }
-    } else {
-      const valAsInt = parseInt(val, 36);
-      next[index] = (valAsInt + 1).toString(36);
-    }
-  };
-  addAtIndex(prev.length - 1);
-  return next.join("");
-};
-
-export const BaseEngine = types
+export const Engine = types
   .model("Engine", {
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {})
@@ -496,4 +476,4 @@ export const BaseEngine = types
     }
   }));
 
-export const Engine = makeContext(BaseEngine);
+export const ContextEngine = makeContext(Engine);

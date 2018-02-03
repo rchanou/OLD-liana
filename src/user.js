@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { makeContext, privateModel } from "./context";
+import { makeContext, optionalModel } from "./model-utils";
 
 const NameSet = types
   .model("LabelSet", {
@@ -14,7 +14,7 @@ const NameSet = types
   }));
 
 const usLocale = "en-US";
-const User = privateModel("User", {
+const User = optionalModel("User", {
   nameSets: types.optional(types.map(NameSet), {
     [usLocale]: { id: usLocale }
   }),
@@ -36,6 +36,6 @@ const User = privateModel("User", {
 }));
 
 export const ContextUser = makeContext(User);
-export const ContextUserReader = privateModel("ContextUserReader", {
+export const ContextUserReader = optionalModel("ContextUserReader", {
   user: ContextUser
 });

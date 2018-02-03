@@ -3,11 +3,10 @@ import { action } from "@storybook/addon-actions";
 import React from "react";
 import { destroy } from "mobx-state-tree";
 
-import { engine, user } from "./test-data";
 import { ReactGUI } from "../src/react-gui";
 import { App } from "../src/app";
-import { pack, unpack, inflate } from "../src/pack";
-import "./tests";
+import { engine, user } from "../src/_test-data";
+import "../src/_tests"; // just importing these to run the tests
 
 const LOCAL_STORAGE_KEY = "LIANA";
 

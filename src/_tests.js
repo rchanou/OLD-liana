@@ -1,12 +1,12 @@
 import { strictEqual, deepStrictEqual } from "assert";
 import { types } from "mobx-state-tree";
 
-import { engine, user } from "./test-data";
-import { BaseEngine, Engine, incrementLetterId } from "../src/core";
-import { pack, unpack, inflate } from "../src/pack";
-import { privateModel } from "../src/context";
+import { ContextEngine } from "./core";
+import { pack, unpack, inflate } from "./pack";
+import { optionalModel, incrementLetterId } from "./model-utils";
+import { engine, user } from "./_test-data";
 
-const t = BaseEngine.create(engine);
+const t = ContextEngine.create(engine);
 window.t = t;
 strictEqual(t.run("c")(3), 5);
 strictEqual(t.run("e")(3)(5)(7), 15);
@@ -36,7 +36,7 @@ strictEqual(incrementLetterId("a0z"), "a10");
 strictEqual(incrementLetterId("dog"), "doh");
 
 const B = types.model("B", { a: types.string, z: types.number });
-const PrivTest = privateModel("A", {
+const PrivTest = optionalModel("A", {
   b: "default",
   c: 3,
   d: NaN,
