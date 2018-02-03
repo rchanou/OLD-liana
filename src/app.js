@@ -3,15 +3,16 @@ import { types, getEnv, destroy } from "mobx-state-tree";
 import { ContextEngine } from "./core";
 import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
-import { mixinModel } from "./model-utils";
+import { optionalModel } from "./model-utils";
 import { uiModel } from "./view";
+
+const LOCAL_STORAGE_KEY = "LIANA";
 
 const keyLayout = {
   // TODO: make customizable
   "65": [0, 2],
   "66": [4, 3],
   "67": [2, 3],
-  "68": [4, 2],
   "69": [7, 2],
   "70": [2, 1],
   "71": [4, 1],
@@ -45,13 +46,12 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
-export const App = types
-  .model("App", {
-    heldKeyCoords: types.maybe(HeldKeyCoords),
-    mainEditor: types.optional(MainEditor, {}),
-    user: ContextUser,
-    engine: ContextEngine
-  })
+export const App = optionalModel("App", {
+  heldKeyCoords: types.maybe(HeldKeyCoords),
+  mainEditor: types.optional(MainEditor, {}),
+  user: ContextUser,
+  engine: ContextEngine
+})
   .actions(self => {
     const { dom } = getEnv(self);
     return {
@@ -104,5 +104,3 @@ export const App = types
       return self.mainEditor.handleInput;
     }
   }));
-
-export default App;

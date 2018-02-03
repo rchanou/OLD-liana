@@ -44,7 +44,9 @@ const PrivTest = optionalModel("A", {
   f: types.optional(types.array(types.string), ["a", "b", "c"]),
   g: 0,
   h: types.optional(types.string, ""),
-  i: types.optional(B, { z: 5, a: "what" })
+  i: types.optional(B, { z: 5, a: "what" }),
+  j: false,
+  k: true
 });
 const privStore = PrivTest.create({ d: 2 });
 const privSnapshot = privStore.toJSON();

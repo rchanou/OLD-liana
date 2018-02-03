@@ -140,11 +140,7 @@ const ops = [
   undef
 ];
 
-export const Pkg = mixinModel(
-  optionalModel({
-    resolved: false
-  })
-)("Pkg", {
+export const Pkg = mixinModel(optionalModel({ resolved: false }))("Pkg", {
   id: types.identifier(types.string),
   path: types.string
 })
@@ -177,9 +173,7 @@ export const Pkg = mixinModel(
   }));
 
 const PkgRef = types
-  .model("PkgRef", {
-    pkg: types.reference(Pkg)
-  })
+  .model("PkgRef", { pkg: types.reference(Pkg) })
   .views(self => ({
     get out() {
       return self.pkg.out;

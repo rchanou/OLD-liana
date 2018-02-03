@@ -52,15 +52,16 @@ export const optionalModel = (name, props, ...rest) => {
     const prop = props[propKey];
     if (prop && typeof prop === "object") {
       if (!("defaultValue" in prop)) {
-        if (prop.name.endsWith(" | null")) {
+        if (prop.name.endsWith(" | null)")) {
           defaults[propKey] = null;
         } else {
           throw new Error(
-            `All types declared in a private model must be optional. Fix prop ${propKey}.`
+            `All properties in optionalModel must be optional. Fix prop ${propKey}.`
           );
         }
+      } else {
+        defaults[propKey] = prop.defaultValue;
       }
-      defaults[propKey] = prop.defaultValue;
     } else {
       defaults[propKey] = prop;
     }
@@ -76,6 +77,8 @@ export const optionalModel = (name, props, ...rest) => {
           isEqual(snapshot[key], defaults[key])
         ) {
           delete snapshot[key];
+        } else {
+          console.log(snapshot[key], defaults[key]);
         }
       }
       return snapshot;
