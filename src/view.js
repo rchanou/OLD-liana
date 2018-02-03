@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 import { Pkg, Engine } from "./core";
 import { ContextUser } from "./user";
-import { makeSnapshotCleaner } from "./context";
+import { privateModel } from "./context";
 
 export const calcWidth = text =>
   typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
@@ -23,13 +23,11 @@ export const formatOut = out => {
 
 let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
-const UI = types
-  .model("BaseUI", {
-    selectedCellIndex: 0,
-    engine: Engine,
-    user: ContextUser
-  })
-  .actions(makeSnapshotCleaner("engine", "user"))
+const UI = privateModel("UI", {
+  selectedCellIndex: 0,
+  engine: Engine,
+  user: ContextUser
+})
   .views(self => {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
     return {

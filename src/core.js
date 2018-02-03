@@ -2,12 +2,10 @@ import { types, flow } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 import produce from "immer";
 
-import { ContextUser } from "./user";
-import { makeContext, makeSnapshotCleaner, mixinModel } from "./context";
+import { ContextUserReader } from "./user";
+import { makeContext, mixinModel } from "./context";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
-
-const cleanContext = makeSnapshotCleaner("engine", "user");
 
 const gRef = "g";
 const dot = ".";
@@ -267,76 +265,69 @@ const Op = mixinModel(Named)("Op", {
 }));
 
 const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
-const Arg = types
-  .model("Arg", {
-    arg: types.refinement(
-      types.array(types.union(types.string, integerType)),
-      path => {
-        const { length } = path;
-        if (typeof path[0] === "number" && typeof path[1] === "number") {
-          return length === 2;
+const Arg = mixinModel(ContextUserReader)("Arg", {
+  arg: types.refinement(
+    types.array(types.union(types.string, integerType)),
+    path => {
+      const { length } = path;
+      if (typeof path[0] === "number" && typeof path[1] === "number") {
+        return length === 2;
+      }
+      for (let i = 0; i < length; i++) {
+        if (i === length - 1) {
+          if (typeof path[i] !== "number") {
+            return false;
+          }
+        } else if (typeof path[i] !== "string") {
+          return false;
+        }
+      }
+      return true;
+    }
+  )
+}).views(self => ({
+  get name() {
+    return self.user.pathName(self.arg);
+  },
+  get color() {
+    return Color.input;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
+  }
+}));
+
+const Ref = mixinModel(ContextUserReader)("Ref", {
+  ref: types.union(
+    types.string,
+    types.refinement(
+      types.array(types.union(integerType, types.string)),
+      ref => {
+        const { length } = ref;
+        if (typeof ref[0] === "number") {
+          return length === 2 && typeof ref[1] === "string";
         }
         for (let i = 0; i < length; i++) {
-          if (i === length - 1) {
-            if (typeof path[i] !== "number") {
-              return false;
-            }
-          } else if (typeof path[i] !== "string") {
+          if (typeof ref[i] !== "string") {
             return false;
           }
         }
         return true;
       }
-    ),
-    user: ContextUser
-  })
-  .actions(cleanContext)
-  .views(self => ({
-    get name() {
-      return self.user.pathName(self.arg);
-    },
-    get color() {
-      return Color.input;
-    },
-    get width() {
-      return Math.ceil((self.name.length + 3) / 6);
-    }
-  }));
-
-const Ref = types
-  .model("Ref", {
-    ref: types.union(
-      types.string,
-      types.refinement(
-        types.array(types.union(integerType, types.string)),
-        ref => {
-          const { length } = ref;
-          if (typeof ref[0] === "number") {
-            return length === 2 && typeof ref[1] === "string";
-          }
-          for (let i = 0; i < length; i++) {
-            if (typeof ref[i] !== "string") {
-              return false;
-            }
-          }
-          return true;
-        }
-      )
-    ),
-    user: ContextUser
-  })
-  .views(self => ({
-    get name() {
-      const { ref } = self;
-      return self.user.pathName(ref) || `(${ref.slice()})`;
-    },
-    get color() {
-      return Color.pending;
-    },
-    get width() {
-      return Math.ceil((self.name.length + 3) / 6);
-    }
-  }));
+    )
+  )
+}).views(self => ({
+  get name() {
+    const { ref } = self;
+    return self.user.pathName(ref) || `(${ref.slice()})`;
+  },
+  get color() {
+    return Color.pending;
+  },
+  get width() {
+    return Math.ceil((self.name.length + 3) / 6);
+  }
+}));
 
 const Node = types.union(Val, Op, Arg, PkgRef, Ref);
 

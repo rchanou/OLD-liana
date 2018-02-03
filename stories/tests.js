@@ -50,3 +50,4 @@ const privStore = PrivTest.create({ d: 2 });
 const privSnapshot = privStore.toJSON();
 strictEqual(privStore.b, "default");
 deepStrictEqual(privSnapshot, { d: 2, e: 7 });
+// TODO: assert throws for erroneous private models

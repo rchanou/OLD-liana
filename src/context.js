@@ -43,15 +43,6 @@ export const mixinModel = (...Models) => (name, ...rest) => {
   return types.compose(name, ...modelsToCompose);
 };
 
-export const makeSnapshotCleaner = (...keysToClear) => self => ({
-  postProcessSnapshot(snapshot) {
-    for (const key of keysToClear) {
-      delete snapshot[key];
-    }
-    return snapshot;
-  }
-});
-
 export const privateModel = (name, props, ...rest) => {
   const defaults = {};
   for (const propKey in props) {

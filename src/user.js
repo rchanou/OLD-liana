@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { makeContext } from "./context";
+import { makeContext, privateModel } from "./context";
 
 const NameSet = types
   .model("LabelSet", {
@@ -14,27 +14,28 @@ const NameSet = types
   }));
 
 const usLocale = "en-US";
-const User = types
-  .model("User", {
-    nameSets: types.optional(types.map(NameSet), {
-      [usLocale]: { id: usLocale }
-    }),
-    currentNameSet: types.optional(types.reference(NameSet), usLocale)
-  })
-  .views(self => ({
-    pathName(path) {
-      if (typeof path === "string") {
-        if (path === "R") {
-          return "←";
-        }
-        return self.currentNameSet.names.get(path) || path;
-      }
-      path = path.slice();
-      if (path[path.length - 1] === "R") {
+const User = privateModel("User", {
+  nameSets: types.optional(types.map(NameSet), {
+    [usLocale]: { id: usLocale }
+  }),
+  currentNameSet: types.optional(types.reference(NameSet), usLocale)
+}).views(self => ({
+  pathName(path) {
+    if (typeof path === "string") {
+      if (path === "R") {
         return "←";
       }
-      return self.currentNameSet.names.get(path) || `(${path})`;
+      return self.currentNameSet.names.get(path) || path;
     }
-  }));
+    path = path.slice();
+    if (path[path.length - 1] === "R") {
+      return "←";
+    }
+    return self.currentNameSet.names.get(path) || `(${path})`;
+  }
+}));
 
 export const ContextUser = makeContext(User);
+export const ContextUserReader = privateModel("ContextUserReader", {
+  user: ContextUser
+});
