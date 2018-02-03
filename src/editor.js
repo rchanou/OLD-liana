@@ -1,9 +1,10 @@
 import { types, destroy, getSnapshot } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 
-import { Chooser } from "./chooser";
-import { Tree } from "./tree";
-import { viewModel, cursorify, formatOut, calcWidth } from "./view";
+// import { Chooser } from "./chooser";
+// import { Tree } from "./tree";
+import { mixinModel, optionalModel } from "./model-utils";
+import { UI, cursorify, calcWidth } from "./view";
 import { pack } from "./pack";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -19,16 +20,19 @@ const NodeRef = types
     }
   }));
 
-export const MainEditor = viewModel("MainEditor", {
-  changeCellMode: false,
-  changeOpMode: false,
-  addNodeMode: false,
-  addOpMode: false,
-  chooser: types.maybe(Chooser),
-  editingNode: types.maybe(NodeRef),
-  editingNameForDec: types.maybe(types.array(types.string)),
-  tree: types.maybe(Tree)
-})
+export const MainEditor = mixinModel(
+  UI,
+  optionalModel({
+    changeCellMode: false,
+    changeOpMode: false,
+    addNodeMode: false,
+    addOpMode: false,
+    // chooser: types.maybe(Chooser),
+    editingNode: types.maybe(NodeRef),
+    editingNameForDec: types.maybe(types.array(types.string))
+    // tree: types.maybe(Tree)
+  })
+)("MainEditor")
   .views(self => ({
     get baseCells() {
       const { engine, user } = self;
@@ -205,7 +209,7 @@ export const MainEditor = viewModel("MainEditor", {
     setChoosingLink(forDec) {
       self.linkChooser = { forDec };
     },
-    toggleLabelEdit() {
+    toggleNameEdit() {
       if (self.editingNameForDec) {
         self.editingNameForDec = null;
       } else {
@@ -247,7 +251,7 @@ export const MainEditor = viewModel("MainEditor", {
               // self.moveRight();
             }
             if (self.editingNameForDec) {
-              self.toggleLabelEdit();
+              self.toggleNameEdit();
             }
           }
         };
@@ -415,7 +419,7 @@ export const MainEditor = viewModel("MainEditor", {
               while (--i) {
                 if (self.baseCells[i].nameForDec) {
                   self.selectCellIndex(i);
-                  self.toggleLabelEdit();
+                  self.toggleNameEdit();
                   return;
                 }
               }
@@ -442,7 +446,7 @@ export const MainEditor = viewModel("MainEditor", {
       if (selectedCell.nameForDec) {
         keyMap[2][6] = {
           label: "Change Label",
-          action: self.toggleLabelEdit
+          action: self.toggleNameEdit
         };
       }
 

@@ -4,7 +4,7 @@ import { ContextEngine } from "./core";
 import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
 import { mixinModel } from "./model-utils";
-import { viewModel } from "./view";
+import { uiModel } from "./view";
 
 const keyLayout = {
   // TODO: make customizable

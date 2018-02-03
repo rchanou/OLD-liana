@@ -1,13 +1,13 @@
 import { getType, types } from "mobx-state-tree";
 
 // import { ContextRepo, InputRef, Link, LinkRef, Fn, Op, DepRef, Val } from "./core";
-import { viewModel, formatOut } from "./view";
+import { uiModel, formatOut } from "./view";
 
 const optionalMap = type => types.optional(types.map(type), {});
 
 const Path = types.array(types.union(types.string, types.number));
 
-export const Tree = viewModel("ViewRepoTree", {
+export const Tree = uiModel("ViewRepoTree", {
   // rootLink: types.reference(Link),
   openPaths: optionalMap(types.boolean)
 }).views(self => {

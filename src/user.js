@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 
-import { makeContext, optionalModel } from "./model-utils";
+import { asContext, optionalModel } from "./model-utils";
 
 const NameSet = types
   .model("LabelSet", {
@@ -35,7 +35,7 @@ const User = optionalModel("User", {
   }
 }));
 
-export const ContextUser = makeContext(User);
+export const ContextUser = asContext(User);
 export const ContextUserReader = optionalModel("ContextUserReader", {
   user: ContextUser
 });

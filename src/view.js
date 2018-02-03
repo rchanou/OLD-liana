@@ -6,24 +6,24 @@ import { optionalModel } from "./model-utils";
 export const calcWidth = text =>
   typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
 
-export const formatOut = out => {
-  if (out instanceof Error) {
-    return out.message;
-  } else if (out === Pkg) {
-    return "...";
-  } else if (typeof out === "function") {
-    // TODO: more elegant display of functions and higher-order functions
-    return "func";
-  } else if (out === undefined || Number.isNaN(out)) {
-    return String(out);
-  } else {
-    return JSON.stringify(out);
-  }
-};
+// export const formatOut = out => {
+//   if (out instanceof Error) {
+//     return out.message;
+//   } else if (out === Pkg) {
+//     return "...";
+//   } else if (typeof out === "function") {
+//     // TODO: more elegant display of functions and higher-order functions
+//     return "func";
+//   } else if (out === undefined || Number.isNaN(out)) {
+//     return String(out);
+//   } else {
+//     return JSON.stringify(out);
+//   }
+// };
 
 let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
-const UI = optionalModel("UI", {
+export const UI = optionalModel("UI", {
   selectedCellIndex: 0,
   engine: ContextEngine,
   user: ContextUser
@@ -171,7 +171,15 @@ const UI = optionalModel("UI", {
     }
   }));
 
-export const viewModel = (...args) => types.compose(types.model(...args), UI);
+export const uiModel = (name, ...args) => {
+  if (args.length) {
+    return types.compose(types.model(name, ...args), UI);
+  }
+  if (name) {
+    return types.compose(name, UI);
+  }
+  return UI;
+};
 
 export const cursorify = (baseCell, key, input) => {
   const { x, y, width, forLink, nodeIndex, gotoCellKey } = baseCell;

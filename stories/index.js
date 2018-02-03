@@ -16,14 +16,7 @@ class Story extends React.Component {
   state = {};
   componentDidMount() {
     // const dom = findDOMNode(this);
-    window.s = App.create(
-      this.props.snapshot || {
-        engine,
-        user,
-        mainEditor: { selectedCellIndex: 62 }
-      },
-      env
-    );
+    window.s = App.create(this.props.snapshot, env);
     this.setState({ store: window.s });
   }
   // componentDidCatch() {

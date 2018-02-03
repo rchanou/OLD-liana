@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 import isEqual from "lodash.isequal";
 
-export const makeContext = Model => {
+export const asContext = Model => {
   if (typeof Model.name !== "string") {
     throw new Error("Name required for context model type!");
   }
@@ -40,7 +40,10 @@ export const mixinModel = (...Models) => (name, ...rest) => {
   if (rest.length) {
     modelsToCompose.push(types.model(...rest));
   }
-  return types.compose(name, ...modelsToCompose);
+  if (name) {
+    return types.compose(name, ...modelsToCompose);
+  }
+  return types.compose(...modelsToCompose);
 };
 
 export const optionalModel = (name, props, ...rest) => {
@@ -49,9 +52,13 @@ export const optionalModel = (name, props, ...rest) => {
     const prop = props[propKey];
     if (prop && typeof prop === "object") {
       if (!("defaultValue" in prop)) {
-        throw new Error(
-          "All types declared in a private model must be optional."
-        );
+        if (prop.name.endsWith(" | null")) {
+          defaults[propKey] = null;
+        } else {
+          throw new Error(
+            `All types declared in a private model must be optional. Fix prop ${propKey}.`
+          );
+        }
       }
       defaults[propKey] = prop.defaultValue;
     } else {

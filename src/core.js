@@ -4,7 +4,7 @@ import produce from "immer";
 
 import { ContextUserReader } from "./user";
 import {
-  makeContext,
+  asContext,
   mixinModel,
   optionalModel,
   incrementLetterId
@@ -479,4 +479,4 @@ export const Engine = types
     }
   }));
 
-export const ContextEngine = makeContext(Engine);
+export const ContextEngine = asContext(Engine);
