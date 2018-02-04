@@ -404,25 +404,15 @@ export const MainEditor = mixinModel(
             label: "Save",
             action() {
               const snapshot = getSnapshot(self.repo);
-              const minified = minify(snapshot);
-              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(minified));
+              const packed = pack(snapshot);
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packed));
               console.log(JSON.stringify(snapshot));
             }
           },
           5: {
             label: "New Line",
             action() {
-              self.engine.addDec(self.selectedCell.scopePath);
-              return;
-              // TODO: this logic to find the last-added name feels kinda hacky; improve?
-              let i = self.baseCells.length;
-              while (--i) {
-                if (self.baseCells[i].nameForDec) {
-                  self.selectCellIndex(i);
-                  self.toggleNameEdit();
-                  return;
-                }
-              }
+              const newId = self.engine.addDec(self.selectedCell.scopePath);
             }
           },
           6: { label: "Add", action: toggleAddNodeMode }

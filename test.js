@@ -1,4 +1,7 @@
 const { types, getType, getSnapshot } = require("mobx-state-tree");
+const { deepStrictEqual } = require("assert");
+
+const { strictCreate } = require("./src/_tests");
 
 let idCounter = 0;
 const B = types.model("B", {
@@ -43,13 +46,22 @@ const D = types.model("D", {
   e: types.maybe(types.string)
 });
 
-const d = D.create({ c: 5 });
+const preSnap = { c: 5, na: "bruv", oby: { a: 5 } };
+const d = D.create(preSnap);
+const postSnap = getSnapshot(d);
+for (const key in preSnap) {
+  if (!(key in postSnap)) {
+    console.warn(`Possibly invalid prop: ${key}`);
+  }
+}
+// deepStrictEqual(preSnap, postSnap);
 
 const optionalTypeTest = getType(d.b);
 // console.log("le type", optionalTypeTest.properties);
 // console.log(D.properties);
 // console.log(types.optional(types.string, "abc"));
-const maybeType = types.maybe(types.string);
-console.log(maybeType);
-const looksLikeMaybe = maybeType.name.endsWith(" | null)");
-console.log(looksLikeMaybe);
+// const maybeType = types.maybe(types.string);
+// console.log(maybeType);
+// const looksLikeMaybe = maybeType.name.endsWith(" | null)");
+// console.log(looksLikeMaybe);
+console.log(D);

@@ -34,7 +34,6 @@ const unpackWord = packed => {
   if (typeof packed === "string") {
     return { op: packed };
   }
-  // if (typeof packed === "number") {
   if ("a" in packed) {
     return { arg: packed.a };
   }

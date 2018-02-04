@@ -1,4 +1,4 @@
-import { types, getEnv, destroy } from "mobx-state-tree";
+import { types, getEnv, getSnapshot, destroy } from "mobx-state-tree";
 
 import { ContextEngine } from "./core";
 import { ContextUser } from "./user";
@@ -83,6 +83,8 @@ export const App = optionalModel("App", {
         }
       },
       afterCreate() {
+        // const saved = localStorage.getItem("LIANA");
+        // console.log(saved);
         document.addEventListener("keydown", self.handleKeyDown);
         document.addEventListener("keyup", self.handleKeyUp);
       },

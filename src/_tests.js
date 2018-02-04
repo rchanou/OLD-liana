@@ -1,10 +1,33 @@
 import { strictEqual, deepStrictEqual } from "assert";
-import { types } from "mobx-state-tree";
+import { types, getSnapshot } from "mobx-state-tree";
 
 import { ContextEngine } from "./core";
 import { pack, unpack, inflate } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
 import { engine, user } from "./_test-data";
+
+export const strictCreate = (Model, snapshot) => {
+  const store = Model.create(snapshot);
+  const postSnapshot = getSnapshot(store);
+  const validate = (preSnap, postSnap) => {
+    for (const prePropKey in preSnap) {
+      const subPreSnap = preSnap[prePropKey];
+      const subPostSnap = postSnap[prePropKey];
+      if (typeof subPreSnap !== "object") {
+        if (subPreSnap !== subPostSnap) {
+          console.warn(`Possibly invalid: ${prePropKey}: ${subPreSnap}`);
+        }
+        continue;
+      } else if (typeof subPostSnap !== "object") {
+        console.warn(`Invalid object: ${prePropKey}`);
+      } else {
+        validate(subPreSnap, subPostSnap);
+      }
+    }
+  };
+  validate(snapshot, postSnapshot);
+  return store;
+};
 
 const t = ContextEngine.create(engine);
 window.t = t;
@@ -26,6 +49,8 @@ const unpackTest = unpack(packTest);
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
+const unpackStore = ContextEngine.create({ main: unpackTest });
+window.u = unpackStore;
 
 strictEqual(incrementLetterId("a"), "b");
 strictEqual(incrementLetterId("z"), "a0");
@@ -53,3 +78,19 @@ const privSnapshot = privStore.toJSON();
 strictEqual(privStore.b, "default");
 deepStrictEqual(privSnapshot, { d: 2, e: 7 });
 // TODO: assert throws for erroneous private models
+
+let idCounter = 0;
+const DD = types.model("B", {
+  id: types.optional(types.identifier(types.number), () => idCounter++),
+  name: types.string
+  // ref: types.reference(types.late(() => B))
+});
+const D = types.model("D", {
+  // b: types.reference(B, id => ({ id, name: "flim flam" }))
+  b: types.optional(DD, { name: "fuf" }),
+  c: types.number,
+  e: types.maybe(types.string)
+});
+
+const preSnap = { c: 5, na: "bruv", badObj: { zoop: "poop" } };
+const d = strictCreate(D, preSnap);

@@ -6,17 +6,16 @@ import { destroy } from "mobx-state-tree";
 import { ReactGUI } from "../src/react-gui";
 import { App } from "../src/app";
 import { engine, user } from "../src/_test-data";
-import "../src/_tests"; // just importing these to run the tests
+import { strictCreate } from "../src/_tests"; // importing this file also runs its tests
 
-const LOCAL_STORAGE_KEY = "LIANA";
-
-const env = { system: SystemJS };
+// const LOCAL_STORAGE_KEY = "LIANA";
+// const env = { system: SystemJS };
 
 class Story extends React.Component {
   state = {};
   componentDidMount() {
     // const dom = findDOMNode(this);
-    window.s = App.create(this.props.snapshot, env);
+    window.s = strictCreate(App, this.props.snapshot);
     this.setState({ store: window.s });
   }
   // componentDidCatch() {
@@ -40,8 +39,8 @@ class Story extends React.Component {
   }
 }
 
-const storedRepo = localStorage.getItem(LOCAL_STORAGE_KEY);
-const repoToLoad = storedRepo ? JSON.parse(storedRepo) : defaultRepo;
+// const storedRepo = localStorage.getItem(LOCAL_STORAGE_KEY);
+// const repoToLoad = storedRepo ? JSON.parse(storedRepo) : defaultRepo;
 
 storiesOf("Liana", module).add("new repo test", () => (
   <Story

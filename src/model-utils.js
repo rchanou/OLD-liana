@@ -77,8 +77,6 @@ export const optionalModel = (name, props, ...rest) => {
           isEqual(snapshot[key], defaults[key])
         ) {
           delete snapshot[key];
-        } else {
-          console.log(snapshot[key], defaults[key]);
         }
       }
       return snapshot;
