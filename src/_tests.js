@@ -1,4 +1,4 @@
-import { strictEqual, deepStrictEqual } from "assert";
+import { strictEqual, deepStrictEqual, throws } from "assert";
 import { types, getSnapshot } from "mobx-state-tree";
 
 import { ContextEngine } from "./core";
@@ -15,11 +15,15 @@ export const strictCreate = (Model, snapshot) => {
       const subPostSnap = postSnap[prePropKey];
       if (typeof subPreSnap !== "object") {
         if (subPreSnap !== subPostSnap) {
-          console.warn(`Possibly invalid: ${prePropKey}: ${subPreSnap}`);
+          const message = `Possibly invalid: ${prePropKey}: ${subPreSnap}`;
+          throw new Error(message);
+          // console.warn(message);
         }
         continue;
       } else if (typeof subPostSnap !== "object") {
-        console.warn(`Invalid object: ${prePropKey}`);
+        const message = `Invalid object: ${prePropKey}`;
+        throw new Error(message);
+        // console.warn(message);
       } else {
         validate(subPreSnap, subPostSnap);
       }
@@ -83,14 +87,16 @@ let idCounter = 0;
 const DD = types.model("B", {
   id: types.optional(types.identifier(types.number), () => idCounter++),
   name: types.string
-  // ref: types.reference(types.late(() => B))
 });
 const D = types.model("D", {
-  // b: types.reference(B, id => ({ id, name: "flim flam" }))
   b: types.optional(DD, { name: "fuf" }),
   c: types.number,
   e: types.maybe(types.string)
 });
-
-const preSnap = { c: 5, na: "bruv", badObj: { zoop: "poop" } };
-const d = strictCreate(D, preSnap);
+throws(() => strictCreate(D, { c: 5, na: "bruv" }));
+throws(() => strictCreate(D, { c: 5, badObj: { zoop: "poop" } }));
+deepStrictEqual(strictCreate(D, { c: 7 }).toJSON(), {
+  b: { id: 3, name: "fuf" },
+  c: 7,
+  e: null
+});
