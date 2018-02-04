@@ -6,6 +6,8 @@ import { pack, unpack, inflate } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
 import { engine, user } from "./_test-data";
 
+export { engine, user } from "./_test-data";
+
 export const strictCreate = (Model, snapshot) => {
   const store = Model.create(snapshot);
   const postSnapshot = getSnapshot(store);
@@ -53,7 +55,8 @@ const unpackTest = unpack(packTest);
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
-const unpackStore = ContextEngine.create({ main: unpackTest });
+// const unpackStore = ContextEngine.create({ main: unpackTest });
+const unpackStore = strictCreate(ContextEngine, { main: unpackTest });
 window.u = unpackStore;
 
 strictEqual(incrementLetterId("a"), "b");

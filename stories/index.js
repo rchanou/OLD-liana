@@ -5,8 +5,7 @@ import { destroy } from "mobx-state-tree";
 
 import { ReactGUI } from "../src/react-gui";
 import { App } from "../src/app";
-import { engine, user } from "../src/_test-data";
-import { strictCreate } from "../src/_tests"; // importing this file also runs its tests
+import { engine, user, strictCreate } from "../src/_tests"; // importing this file also runs its tests
 
 // const LOCAL_STORAGE_KEY = "LIANA";
 // const env = { system: SystemJS };

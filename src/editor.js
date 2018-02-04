@@ -403,10 +403,11 @@ export const MainEditor = mixinModel(
           0: {
             label: "Save",
             action() {
-              const snapshot = getSnapshot(self.repo);
-              const packed = pack(snapshot);
-              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packed));
-              console.log(JSON.stringify(snapshot));
+              const snapshot = getSnapshot(self.engine);
+              // const packed = pack(snapshot);
+              // localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packed));
+              const serialized = JSON.stringify(snapshot);
+              console.log(serialized);
             }
           },
           5: {

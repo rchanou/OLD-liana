@@ -1,4 +1,4 @@
-const packWord = full => {
+const packNode = full => {
   if ("val" in full) {
     return [full.val];
   }
@@ -18,7 +18,7 @@ const packWord = full => {
 
 const packDec = full => {
   if (Array.isArray(full)) {
-    return full.map(packWord);
+    return full.map(packNode);
   }
   const packed = {};
   for (const id in full) {
@@ -27,7 +27,7 @@ const packDec = full => {
   return packed;
 };
 
-const unpackWord = packed => {
+const unpackNode = packed => {
   if (Array.isArray(packed)) {
     return { val: packed[0] };
   }
@@ -45,7 +45,7 @@ const unpackWord = packed => {
 
 const unpackDec = packed => {
   if (Array.isArray(packed)) {
-    return packed.map(unpackWord);
+    return packed.map(unpackNode);
   }
   const full = {};
   for (const id in packed) {

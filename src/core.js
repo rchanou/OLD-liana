@@ -343,7 +343,7 @@ const walkPath = (base, up, walk) => {
 
 const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 
-const Param = types.model("Param", {
+const Param = optionalModel("Param", {
   type: types.maybe(types.string)
 });
 
