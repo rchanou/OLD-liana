@@ -8,6 +8,8 @@ import { engine, user } from "./_test-data";
 
 export { engine, user } from "./_test-data";
 
+window.g = getSnapshot;
+
 export const strictCreate = (Model, snapshot) => {
   const store = Model.create(snapshot);
   const postSnapshot = getSnapshot(store);
@@ -55,6 +57,7 @@ const unpackTest = unpack(packTest);
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
+window.u = unpackTest;
 // const unpackStore = ContextEngine.create({ main: unpackTest });
 const unpackStore = strictCreate(ContextEngine, { main: unpackTest });
 window.u = unpackStore;
@@ -68,6 +71,7 @@ strictEqual(incrementLetterId("a0z"), "a10");
 strictEqual(incrementLetterId("dog"), "doh");
 
 const B = types.model("B", { a: types.string, z: types.number });
+let h = 0;
 const PrivTest = optionalModel("A", {
   b: "default",
   c: 3,
@@ -78,12 +82,13 @@ const PrivTest = optionalModel("A", {
   h: types.optional(types.string, ""),
   i: types.optional(B, { z: 5, a: "what" }),
   j: false,
-  k: true
+  k: true,
+  h: types.optional(types.number, () => h++)
 });
 const privStore = PrivTest.create({ d: 2 });
-const privSnapshot = privStore.toJSON();
+const privSnapshot = getSnapshot(privStore);
 strictEqual(privStore.b, "default");
-deepStrictEqual(privSnapshot, { d: 2, e: 7 });
+deepStrictEqual(privSnapshot, { d: 2, e: 7, h: 1 });
 // TODO: assert throws for erroneous private models
 
 let idCounter = 0;
