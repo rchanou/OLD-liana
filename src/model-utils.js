@@ -1,4 +1,4 @@
-import { types } from "mobx-state-tree";
+import { types, getSnapshot } from "mobx-state-tree";
 import isEqual from "lodash.isequal";
 
 export const asContext = Model => {
@@ -46,36 +46,40 @@ export const mixinModel = (...Models) => (name, ...rest) => {
   return types.compose(...modelsToCompose);
 };
 
-export const optionalModel = (name, props, ...rest) => {
+export const optionalModel = (name, propDefs, ...rest) => {
+  const PreModel = types.model(name, propDefs, ...rest);
+  const defaultSnapshot = getSnapshot(PreModel.create({}));
   const defaults = {};
-  for (const propKey in props) {
-    const prop = props[propKey];
-    if (prop && typeof prop === "object") {
-      if (!("defaultValue" in prop)) {
-        if (prop.name.endsWith(" | null)")) {
+  for (const propKey in propDefs) {
+    const propDef = propDefs[propKey];
+    if (propDef && typeof propDef === "object") {
+      if ("defaultValue" in propDef) {
+        // a function as default strongly implies that it's meant to generate a new value everytime
+        // so don't try to clean snapshot values for those properties
+        if (typeof propDef.defaultValue !== "function") {
+          defaults[propKey] = defaultSnapshot[propKey];
+        }
+      } else {
+        // hacky way of detecting maybe type
+        if (propDef.name.endsWith(" | null)")) {
           defaults[propKey] = null;
         } else {
           throw new Error(
             `All properties in optionalModel must be optional. Fix prop ${propKey}.`
           );
         }
-      } else {
-        defaults[propKey] = prop.defaultValue;
       }
     } else {
-      defaults[propKey] = prop;
+      defaults[propKey] = propDef;
     }
   }
-  const PreModel = types.model(name, props, ...rest);
   return PreModel.actions(self => ({
     postProcessSnapshot(snapshot) {
       for (const key in defaults) {
-        // a function as default strongly implies that it's meant to generate a new value everytime
-        // so don't try to clean snapshot values for those properties
-        if (
-          !(typeof defaults[key] === "function") &&
-          isEqual(snapshot[key], defaults[key])
-        ) {
+        if (key === "mainEditor") {
+          console.log(snapshot, defaults);
+        }
+        if (isEqual(snapshot[key], defaults[key])) {
           delete snapshot[key];
         }
       }

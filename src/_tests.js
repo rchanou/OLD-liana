@@ -71,7 +71,7 @@ strictEqual(incrementLetterId("a0z"), "a10");
 strictEqual(incrementLetterId("dog"), "doh");
 
 const B = types.model("B", { a: types.string, z: types.number });
-let h = 0;
+let l = 0;
 const PrivTest = optionalModel("A", {
   b: "default",
   c: 3,
@@ -83,12 +83,12 @@ const PrivTest = optionalModel("A", {
   i: types.optional(B, { z: 5, a: "what" }),
   j: false,
   k: true,
-  h: types.optional(types.number, () => h++)
+  l: types.optional(types.number, () => l++)
 });
 const privStore = PrivTest.create({ d: 2 });
 const privSnapshot = getSnapshot(privStore);
 strictEqual(privStore.b, "default");
-deepStrictEqual(privSnapshot, { d: 2, e: 7, h: 1 });
+deepStrictEqual(privSnapshot, { d: 2, e: 7, l: 2 });
 // TODO: assert throws for erroneous private models
 
 let idCounter = 0;
@@ -108,3 +108,5 @@ deepStrictEqual(strictCreate(D, { c: 7 }).toJSON(), {
   c: 7,
   e: null
 });
+
+console.log("ref type", types.reference(D), types.maybe(types.reference(D)));
