@@ -3,7 +3,7 @@ import { isObservableArray } from "mobx";
 
 // import { Chooser } from "./chooser";
 // import { Tree } from "./tree";
-import { mixinModel, optionalModel } from "./model-utils";
+import { optionalModel } from "./model-utils";
 import { UI, cursorify, calcWidth } from "./view";
 import { pack } from "./pack";
 
@@ -20,19 +20,21 @@ const NodeRef = types
     }
   }));
 
-export const MainEditor = mixinModel(
-  UI,
-  optionalModel({
-    changeCellMode: false,
-    changeOpMode: false,
-    addNodeMode: false,
-    addOpMode: false,
-    // chooser: types.maybe(Chooser),
-    editingNode: types.maybe(NodeRef),
-    editingNameForDec: types.maybe(types.array(types.string))
-    // tree: types.maybe(Tree)
-  })
-)("MainEditor")
+export const MainEditor = types
+  .compose(
+    "MainEditor",
+    UI,
+    optionalModel({
+      changeCellMode: false,
+      changeOpMode: false,
+      addNodeMode: false,
+      addOpMode: false,
+      // chooser: types.maybe(Chooser),
+      editingNode: types.maybe(NodeRef),
+      editingNameForDec: types.maybe(types.array(types.string))
+      // tree: types.maybe(Tree)
+    })
+  )
   .views(self => ({
     get baseCells() {
       const { engine, user } = self;
@@ -41,7 +43,7 @@ export const MainEditor = mixinModel(
         if (id !== undefined) {
           dec = parent.get(id);
         }
-        const scopePath = path.slice(0, -1);
+        const scopePath = isObservableArray(dec) ? path.slice(0, -1) : path;
         const procName = user.pathName(path);
         const width = calcWidth(procName);
         const cells = [
@@ -221,6 +223,25 @@ export const MainEditor = mixinModel(
         destroy(self.tree);
       } else {
         self.tree = { rootLink: self.selectedCell.forDec };
+      }
+    },
+    addToDec(item) {
+      const newId = self.engine.addToDec(
+        self.selectedCell.scopePath,
+        item || [{ op: "+" }]
+      );
+      const newKey = `CL-${newId}`;
+      console.log(newKey);
+      const { baseCells } = self;
+      let i = baseCells.length;
+      while (--i) {
+        if (baseCells[i].key === newKey) {
+          self.selectCellIndex(i);
+          // HACK: allows time for animation from above select action
+          // TODO: more elegant way to do this
+          setTimeout(self.toggleNameEdit, 222);
+          return;
+        }
       }
     }
   }))
@@ -413,26 +434,19 @@ export const MainEditor = mixinModel(
           5: {
             label: "New Line",
             action() {
-              const newId = self.engine.addDec(self.selectedCell.scopePath);
-              const newKey = `CL-${newId}`;
-              console.log(newKey);
-              const { baseCells } = self;
-              let i = baseCells.length;
-              while (--i) {
-                if (baseCells[i].key === newKey) {
-                  self.selectCellIndex(i);
-                  // HACK: allows time for animation from above select action
-                  // TODO: more elegant way to do this
-                  setTimeout(self.toggleNameEdit, 222);
-                  return;
-                }
-              }
+              self.addToDec([{ op: "+" }]);
             }
           },
           6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
           ...baseKeyMap[2],
+          5: {
+            label: "New Func",
+            action() {
+              self.addToDec({ R: [{ op: "+" }] });
+            }
+          },
           6: { label: "Change", action: toggleChangeCellMode },
           9: {
             label: "Delete",

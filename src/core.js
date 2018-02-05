@@ -456,22 +456,23 @@ export const Engine = types
       return gen(initialPath);
     }
   }))
-  .actions(self => ({
-    addDec(scopePath) {
-      let scope = self.main;
-      for (const id of scopePath) {
-        scope = scope.get(id);
+  .actions(self => {
+    return {
+      addToDec(scopePath, item) {
+        let scope = self.main;
+        for (const id of scopePath) {
+          scope = scope.get(id);
+        }
+        const ids = scope.keys();
+        const lastId = ids[ids.length - 1];
+        let newId = incrementLetterId(lastId);
+        while (scope.get(newId)) {
+          newId = incrementLetterId(newId);
+        }
+        scope.set(newId, item);
+        return [...scopePath, newId];
       }
-      const ids = scope.keys();
-      const lastId = ids[ids.length - 1];
-
-      let newId = incrementLetterId(lastId);
-      while (scope.get(newId)) {
-        newId = incrementLetterId(newId);
-      }
-      scope.set(newId, [{ op: add }]);
-      return [...scopePath, newId];
-    }
-  }));
+    };
+  });
 
 export const ContextEngine = asContext(Engine);
