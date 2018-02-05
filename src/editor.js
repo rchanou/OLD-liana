@@ -414,6 +414,19 @@ export const MainEditor = mixinModel(
             label: "New Line",
             action() {
               const newId = self.engine.addDec(self.selectedCell.scopePath);
+              const newKey = `CL-${newId}`;
+              console.log(newKey);
+              const { baseCells } = self;
+              let i = baseCells.length;
+              while (--i) {
+                if (baseCells[i].key === newKey) {
+                  self.selectCellIndex(i);
+                  // HACK: allows time for animation from above select action
+                  // TODO: more elegant way to do this
+                  setTimeout(self.toggleNameEdit, 222);
+                  return;
+                }
+              }
             }
           },
           6: { label: "Add", action: toggleAddNodeMode }
