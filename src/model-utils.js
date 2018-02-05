@@ -46,9 +46,12 @@ export const mixinModel = (...Models) => (name, ...rest) => {
   return types.compose(...modelsToCompose);
 };
 
-export const optionalModel = (name, propDefs, ...rest) => {
-  const PreModel = types.model(name, propDefs, ...rest);
-  const defaultSnapshot = getSnapshot(PreModel.create({}));
+export const optionalModel = (nameOrPropDefs, propDefs) => {
+  const PreModel =
+    typeof nameOrPropDefs === "object"
+      ? types.model(nameOrPropDefs)
+      : types.model(nameOrPropDefs, propDefs);
+  propDefs = typeof nameOrPropDefs === "object" ? nameOrPropDefs : propDefs;
   const defaults = {};
   for (const propKey in propDefs) {
     const propDef = propDefs[propKey];
@@ -57,7 +60,7 @@ export const optionalModel = (name, propDefs, ...rest) => {
         // a function as default strongly implies that it's meant to generate a new value everytime
         // so don't try to clean snapshot values for those properties
         if (typeof propDef.defaultValue !== "function") {
-          defaults[propKey] = defaultSnapshot[propKey];
+          defaults[propKey] = propDef.defaultValue;
         }
       } else {
         // hacky way of detecting maybe type
@@ -76,9 +79,6 @@ export const optionalModel = (name, propDefs, ...rest) => {
   return PreModel.actions(self => ({
     postProcessSnapshot(snapshot) {
       for (const key in defaults) {
-        if (key === "mainEditor") {
-          console.log(snapshot, defaults);
-        }
         if (isEqual(snapshot[key], defaults[key])) {
           delete snapshot[key];
         }

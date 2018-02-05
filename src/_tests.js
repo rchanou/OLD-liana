@@ -88,7 +88,7 @@ const PrivTest = optionalModel("A", {
 const privStore = PrivTest.create({ d: 2 });
 const privSnapshot = getSnapshot(privStore);
 strictEqual(privStore.b, "default");
-deepStrictEqual(privSnapshot, { d: 2, e: 7, l: 2 });
+deepStrictEqual(privSnapshot, { d: 2, e: 7, l: 1 });
 // TODO: assert throws for erroneous private models
 
 let idCounter = 0;
@@ -109,4 +109,9 @@ deepStrictEqual(strictCreate(D, { c: 7 }).toJSON(), {
   e: null
 });
 
-console.log("ref type", types.reference(D), types.maybe(types.reference(D)));
+// console.log(
+//   "ref type",
+//   types.reference(D),
+//   types.optional(types.reference(D), 0),
+//   types.optional(D, { c: 3 })
+// );
