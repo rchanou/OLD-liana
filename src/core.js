@@ -352,34 +352,6 @@ export const Engine = types
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {})
   })
-  // .preProcessSnapshot(snapshot =>
-  //   produce(snapshot, draft => {
-  //     if (!draft.params) {
-  //       draft.params = {};
-  //     }
-  //     const { main, params } = draft;
-  //     const getParams = dec => {
-  //       if (Array.isArray(dec)) {
-  //         for (const node of dec) {
-  //           if ("arg" in node) {
-  //             const { arg } = node;
-  //             const scopePath = arg.slice(0, -1);
-  //             const index = arg[arg.length - 1];
-  //             if (!params[scopePath]) {
-  //               params[scopePath] = [];
-  //             }
-  //             params[scopePath][index] = {};
-  //           }
-  //         }
-  //         return;
-  //       }
-  //       for (const id in dec) {
-  //         getParams(dec[id]);
-  //       }
-  //     };
-  //     getParams(main);
-  //   })
-  // )
   .views(self => ({
     get allParams() {
       const plainParams = getSnapshot(self.params);
@@ -399,13 +371,9 @@ export const Engine = types
             }
             return;
           }
-          // for (const id in dec) {
           dec.forEach((_, id) => {
-            console.log(id);
-            // fillParamsFrom(dec[id]);
             fillParamsFrom(dec.get(id));
           });
-          // }
         };
         fillParamsFrom(self.main);
       });

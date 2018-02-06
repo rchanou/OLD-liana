@@ -63,7 +63,6 @@ export const MainEditor = types
             isDec
           }
         ];
-        // const params = engine.allParams.get(path);
         const params = engine.allParams[path];
         if (params) {
           let paramX = x + width;
@@ -165,7 +164,6 @@ export const MainEditor = types
       }
       if (self.editingPathName) {
         return self.user.pathName(self.editingPathName);
-        // return self.editingPathName.name;
       }
       return null;
     }
@@ -182,7 +180,6 @@ export const MainEditor = types
 
       if (self.editingPathName) {
         self.user.currentNameSet.setName(self.editingPathName, e.target.value);
-        // self.editingPathName.setLabel(e.target.value);
       }
     },
     toggleChooser(forDec, nodeIndex) {
@@ -234,7 +231,6 @@ export const MainEditor = types
         item || [{ op: "+" }]
       );
       const newKey = `CL-${newId}`;
-      console.log(newKey);
       const { baseCells } = self;
       let i = baseCells.length;
       while (--i) {

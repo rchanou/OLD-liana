@@ -117,7 +117,7 @@ export const UI = optionalModel("UI", {
       const crossAxis = axis === "x" ? "y" : "x";
       const currentCell = { ...self.selectedCell };
       const crossSizeProp = crossAxis === "x" ? "width" : "height";
-      // TODO: center-finding can be improved (maybe try banker's rounding to prevent cursor "drift?")
+      // TODO: center-finding can likely be improved (maybe try banker's rounding to prevent cursor "drift?")
       const crossCenter = Math.ceil(
         currentCell[crossAxis] + (currentCell[crossSizeProp] - 1 || 0) / 2
       );
@@ -141,6 +141,21 @@ export const UI = optionalModel("UI", {
           self.selectCellIndex(foundIndex);
           return;
         }
+      }
+      if (axisPos > max) {
+        let foundCurrent = false;
+        for (const crossAxisPosKey in crossAxisMap) {
+          if (crossAxisPos === parseInt(crossAxisPosKey)) {
+            foundCurrent = true;
+          } else if (foundCurrent) {
+            const wrapCellIndex = Object.values(
+              crossAxisMap[crossAxisPosKey]
+            )[0];
+            self.selectCellIndex(wrapCellIndex);
+            return;
+          }
+        }
+      } else if (axisPos === min) {
       }
       // NOTE: Short-circuiting wraparound logic below at the moment (allow param to set?)
       return;
