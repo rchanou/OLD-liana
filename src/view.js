@@ -148,14 +148,25 @@ export const UI = optionalModel("UI", {
           if (crossAxisPos === parseInt(crossAxisPosKey)) {
             foundCurrent = true;
           } else if (foundCurrent) {
-            const wrapCellIndex = Object.values(
-              crossAxisMap[crossAxisPosKey]
-            )[0];
+            const posList = Object.values(crossAxisMap[crossAxisPosKey]);
+            // third-from-last item is actual last pos of row; last two items are min/max of row
+            const wrapCellIndex = posList[posList.length - 3];
             self.selectCellIndex(wrapCellIndex);
             return;
           }
         }
-      } else if (axisPos === min) {
+      }
+      if (axisPos < min) {
+        let prevKey = crossAxisPos;
+        for (const crossAxisPosKey in crossAxisMap) {
+          if (crossAxisPos === parseInt(crossAxisPosKey)) {
+            const wrapCellIndex = Object.values(crossAxisMap[prevKey])[0];
+            self.selectCellIndex(wrapCellIndex);
+            return;
+          } else {
+            prevKey = crossAxisPosKey;
+          }
+        }
       }
       // NOTE: Short-circuiting wraparound logic below at the moment (allow param to set?)
       return;
