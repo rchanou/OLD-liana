@@ -1,6 +1,8 @@
 export const engine = {
   main: {
     a: [{ op: "+" }, { val: 1 }, { val: 2 }],
+    a2: [{ op: "a" }, { val: false }, { val: false }],
+    a3: [{ op: "a" }, { val: true }, { val: 3 }],
     b: {
       R: [{ val: "fu" }]
     },

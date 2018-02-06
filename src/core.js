@@ -19,6 +19,9 @@ const object = "{";
 const mutate = "@";
 const identity = "#";
 
+const and = "a";
+const or = "r";
+
 const add = "+";
 const minus = "-";
 const times = "*";
@@ -47,7 +50,14 @@ const classOp = "c";
 const thisOp = "h";
 const undef = "u";
 
+const throwOp = () => {
+  throw new Error("Special-cased op...this shouldn't be run!");
+};
 const opFuncs = {
+  [ifOp]: throwOp,
+  [switchOp]: throwOp,
+  [and]: throwOp,
+  [or]: throwOp,
   [gRef]: typeof window !== "undefined" ? window : global,
   [undef]: undefined,
   [dot](obj, key) {
@@ -89,12 +99,6 @@ const opFuncs = {
     }
     return obj;
   },
-  [ifOp]() {
-    throw new Error("'If' is special-cased...this shouldn't be run!");
-  },
-  [switchOp]() {
-    throw new Error("'If' is special-cased...this shouldn't be run!");
-  },
   [lessThan](a, b) {
     return a < b;
   },
@@ -108,37 +112,10 @@ const opFuncs = {
   }
 };
 
-const ops = [
-  gRef,
-  dot,
-  array,
-  object,
-  add,
-  minus,
-  times,
-  divide,
-  mod,
-  ifOp,
-  switchOp,
-  forOp,
-  importOp,
-  newOp,
-  typeofOp,
-  instanceOfOp,
-  classOp,
-  thisOp,
-  lessThan,
-  greaterThan,
-  lessThanOrEqual,
-  greaterThanOrEqual,
-  equal,
-  strictEqual,
-  notEqual,
-  notStrictEqual,
-  mutate,
-  identity,
-  undef
-];
+const ops = [];
+for (const op in opFuncs) {
+  ops.push(op);
+}
 
 export const Pkg = mixinModel(optionalModel({ resolved: false }))("Pkg", {
   id: types.identifier(types.string),
@@ -233,6 +210,8 @@ const defaultOpNames = {
   [dot]: "•",
   [ifOp]: "IF",
   [switchOp]: "SW",
+  [and]: "&&",
+  [or]: "||",
   [strictEqual]: "===",
   [undef]: "U"
 };
@@ -409,7 +388,7 @@ export const Engine = types
           // special-case handling of conditional ops
           // for short-circuiting ("lazy evaluation") flow control behavior
           // as would be expected in plain JS
-          const { op } = dec[0];
+          const [{ op }] = dec;
           switch (op) {
             case ifOp:
               const cond = parseNode(dec[1]);
@@ -418,6 +397,18 @@ export const Engine = types
               } else {
                 return parseNode(dec[3]);
               }
+              break;
+            case and:
+              let result;
+              for (let i = 1; i < dec.length; i++) {
+                result = parseNode(dec[i]);
+                if (!result) {
+                  return result;
+                }
+              }
+              return result;
+              break;
+            case or:
               break;
             case switchOp:
               // TODO: try to generate a proper switch statement

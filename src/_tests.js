@@ -108,10 +108,3 @@ deepStrictEqual(strictCreate(D, { c: 7 }).toJSON(), {
   c: 7,
   e: null
 });
-
-// console.log(
-//   "ref type",
-//   types.reference(D),
-//   types.optional(types.reference(D), 0),
-//   types.optional(D, { c: 3 })
-// );
