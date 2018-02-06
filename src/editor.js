@@ -31,7 +31,9 @@ export const MainEditor = types
       addOpMode: false,
       // chooser: types.maybe(Chooser),
       editingNode: types.maybe(NodeRef),
-      editingNameForDec: types.maybe(types.array(types.string))
+      editingPathName: types.maybe(
+        types.array(types.union(types.string, types.number))
+      )
       // tree: types.maybe(Tree)
     })
   )
@@ -43,7 +45,7 @@ export const MainEditor = types
         if (id !== undefined) {
           dec = parent.get(id);
         }
-        const scopePath = isObservableArray(dec) ? path.slice(0, -1) : path;
+        const isDec = !isObservableArray(dec);
         const procName = user.pathName(path);
         const width = calcWidth(procName);
         const cells = [
@@ -56,8 +58,9 @@ export const MainEditor = types
             fill: "hsl(270,66%,88%)",
             color: "#333",
             selectable: true,
-            nameForDec: path,
-            scopePath
+            path,
+            editableName: true,
+            dec: isDec
           }
         ];
         const params = engine.params.get(path);
@@ -76,12 +79,13 @@ export const MainEditor = types
               fill: "hsl(30,66%,83%)",
               color: "#333",
               selectable: true,
-              scopePath
+              path: [...path, i],
+              editableName: true
             });
             paramX += width;
           }
         }
-        if (isObservableArray(dec)) {
+        if (!isDec) {
           x += width;
           dec.forEach((node, i) => {
             const { width = 2 } = node;
@@ -93,7 +97,7 @@ export const MainEditor = types
               selectable: true,
               fill: node.color,
               text: node.name || node.out,
-              scopePath
+              path
             };
             if ("ref" in node) {
               newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
@@ -158,9 +162,9 @@ export const MainEditor = types
       if (self.editingNode) {
         return self.editingNode.node.out;
       }
-      if (self.editingNameForDec) {
-        return self.user.pathName(self.editingNameForDec);
-        // return self.editingNameForDec.name;
+      if (self.editingPathName) {
+        return self.user.pathName(self.editingPathName);
+        // return self.editingPathName.name;
       }
       return null;
     }
@@ -175,12 +179,9 @@ export const MainEditor = types
         self.editingNode.node.select(e.target.value);
       }
 
-      if (self.editingNameForDec) {
-        self.user.currentNameSet.setName(
-          self.editingNameForDec,
-          e.target.value
-        );
-        // self.editingNameForDec.setLabel(e.target.value);
+      if (self.editingPathName) {
+        self.user.currentNameSet.setName(self.editingPathName, e.target.value);
+        // self.editingPathName.setLabel(e.target.value);
       }
     },
     toggleChooser(forDec, nodeIndex) {
@@ -212,10 +213,10 @@ export const MainEditor = types
       self.linkChooser = { forDec };
     },
     toggleNameEdit() {
-      if (self.editingNameForDec) {
-        self.editingNameForDec = null;
+      if (self.editingPathName) {
+        self.editingPathName = null;
       } else {
-        self.editingNameForDec = self.selectedCell.nameForDec;
+        self.editingPathName = self.selectedCell.path;
       }
     },
     toggleTree() {
@@ -226,8 +227,9 @@ export const MainEditor = types
       }
     },
     addToDec(item) {
+      const { dec, path } = self.selectedCell;
       const newId = self.engine.addToDec(
-        self.selectedCell.scopePath,
+        dec ? path : path.slice(0, -1),
         item || [{ op: "+" }]
       );
       const newKey = `CL-${newId}`;
@@ -239,7 +241,7 @@ export const MainEditor = types
           self.selectCellIndex(i);
           // HACK: allows time for animation from above select action
           // TODO: more elegant way to do this
-          setTimeout(self.toggleNameEdit, 222);
+          setTimeout(self.toggleNameEdit, 199);
           return;
         }
       }
@@ -271,7 +273,7 @@ export const MainEditor = types
               self.toggleEditingValMode();
               // self.moveRight();
             }
-            if (self.editingNameForDec) {
+            if (self.editingPathName) {
               self.toggleNameEdit();
             }
           }
@@ -451,19 +453,19 @@ export const MainEditor = types
           9: {
             label: "Delete",
             action() {
-              if (typeof nodeIndex === "number") {
-                selectedCell.forDec.deleteNode(nodeIndex);
-                self.selectCellIndex(self.selectedCellIndex - 1);
-              }
+              // if (typeof nodeIndex === "number") {
+              //   selectedCell.forDec.deleteNode(nodeIndex);
+              //   self.selectCellIndex(self.selectedCellIndex - 1);
+              // }
             }
           }
         },
         3: {}
       };
 
-      if (selectedCell.nameForDec) {
+      if (selectedCell.editableName) {
         keyMap[2][6] = {
-          label: "Change Label",
+          label: "Change Name",
           action: self.toggleNameEdit
         };
       }

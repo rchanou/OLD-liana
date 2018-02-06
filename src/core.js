@@ -457,12 +457,16 @@ export const Engine = types
     }
   }))
   .actions(self => {
+    const getDec = path => {
+      let dec = self.main;
+      for (const id of path) {
+        dec = dec.get(id);
+      }
+      return dec;
+    };
     return {
       addToDec(scopePath, item) {
-        let scope = self.main;
-        for (const id of scopePath) {
-          scope = scope.get(id);
-        }
+        const scope = getDec(scopePath);
         const ids = scope.keys();
         const lastId = ids[ids.length - 1];
         let newId = incrementLetterId(lastId);
