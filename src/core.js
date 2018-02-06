@@ -20,7 +20,7 @@ const mutate = "@";
 const identity = "#";
 
 const and = "a";
-const or = "r";
+const or = "o";
 
 const add = "+";
 const minus = "-";
@@ -399,16 +399,24 @@ export const Engine = types
               }
               break;
             case and:
-              let result;
+              let andResult;
               for (let i = 1; i < dec.length; i++) {
-                result = parseNode(dec[i]);
-                if (!result) {
-                  return result;
+                andResult = parseNode(dec[i]);
+                if (!andResult) {
+                  return andResult;
                 }
               }
-              return result;
+              return andResult;
               break;
             case or:
+              let orResult;
+              for (let i = 1; i < dec.length; i++) {
+                orResult = parseNode(dec[i]);
+                if (orResult) {
+                  return orResult;
+                }
+              }
+              return orResult;
               break;
             case switchOp:
               // TODO: try to generate a proper switch statement
@@ -430,7 +438,7 @@ export const Engine = types
               );
               break;
           }
-          // TODO: short-circuit "and", "or", and possibly "for"
+          // TODO: short-circuit "for"?
           const outs = dec.map(parseNode);
           const [head, ...args] = outs;
           return typeof head === "function" ? head(...args) : head;

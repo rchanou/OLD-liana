@@ -3,6 +3,8 @@ export const engine = {
     a: [{ op: "+" }, { val: 1 }, { val: 2 }],
     a2: [{ op: "a" }, { val: false }, { val: false }],
     a3: [{ op: "a" }, { val: true }, { val: 3 }],
+    a4: [{ op: "a" }, { val: 0 }, { ref: "INVALID" }],
+    a5: [{ op: "o" }, { val: 69 }, { ref: "INVALID" }],
     b: {
       R: [{ val: "fu" }]
     },
