@@ -60,10 +60,11 @@ export const MainEditor = types
             selectable: true,
             path,
             editableName: true,
-            dec: isDec
+            isDec
           }
         ];
-        const params = engine.params.get(path);
+        // const params = engine.allParams.get(path);
+        const params = engine.allParams[path];
         if (params) {
           let paramX = x + width;
           for (let i = 0; i < params.length; i++) {
@@ -227,9 +228,9 @@ export const MainEditor = types
       }
     },
     addToDec(item) {
-      const { dec, path } = self.selectedCell;
+      const { isDec, path } = self.selectedCell;
       const newId = self.engine.addToDec(
-        dec ? path : path.slice(0, -1),
+        isDec ? path : path.slice(0, -1),
         item || [{ op: "+" }]
       );
       const newKey = `CL-${newId}`;
