@@ -25,7 +25,7 @@ let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
 export const UI = optionalModel("UI", {
   selectedCellIndex: 0,
-  engine: ContextRepo,
+  repo: ContextRepo,
   user: ContextUser
 })
   .views(self => {

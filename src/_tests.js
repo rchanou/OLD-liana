@@ -5,7 +5,7 @@ import { ContextRepo } from "./core";
 import { pack, unpack, inflate } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
 import { fullApp } from "./_test-data";
-const { engine, user } = fullApp;
+const { repo, user } = fullApp;
 
 export * from "./_test-data";
 
@@ -38,7 +38,7 @@ export const strictCreate = (Model, snapshot) => {
   return store;
 };
 
-const t = ContextRepo.create(engine);
+const t = ContextRepo.create(repo);
 window.t = t;
 strictEqual(t.run("c")(3), 5);
 strictEqual(t.run("e")(3)(5)(7), 15);
@@ -50,16 +50,14 @@ strictEqual(counter(5, { type: "INCREMENT" }), 6);
 strictEqual(counter(5, { type: "DECREMENT" }), 4);
 strictEqual(counter(5, { type: "Invalid action!" }), 5);
 
-const packTest = pack(engine.main);
+const packTest = pack(repo.main);
 // console.log(packTest);
 const unpackTest = unpack(packTest);
 // console.log(unpackTest);
-// window.n = Engine.create({ main: unpackTest });
 const packLen = JSON.stringify(packTest).length;
 const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
 window.u = unpackTest;
-// const unpackStore = ContextEngine.create({ main: unpackTest });
 const unpackStore = strictCreate(ContextRepo, { main: unpackTest });
 window.u = unpackStore;
 

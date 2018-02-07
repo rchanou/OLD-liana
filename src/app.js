@@ -8,10 +8,10 @@ import { uiModel } from "./view";
 import { pack, unpack } from "./pack";
 
 export const packApp = snapshot => {
-  const { engine, ...appRest } = snapshot;
-  const { main, ...engineRest } = engine;
+  const { repo, ...appRest } = snapshot;
+  const { main, ...engineRest } = repo;
   const packed = {
-    engine: {
+    repo: {
       m: pack(main),
       ...engineRest
     },
@@ -21,10 +21,10 @@ export const packApp = snapshot => {
 };
 
 export const unpackApp = snapshot => {
-  const { engine, ...appRest } = snapshot;
-  const { m, ...engineRest } = engine;
+  const { repo, ...appRest } = snapshot;
+  const { m, ...engineRest } = repo;
   const unpacked = {
-    engine: {
+    repo: {
       main: unpack(m),
       ...engineRest
     },
@@ -77,7 +77,7 @@ export const App = optionalModel("App", {
   heldKeyCoords: types.maybe(HeldKeyCoords),
   mainEditor: types.optional(MainEditor, {}),
   user: ContextUser,
-  engine: ContextRepo
+  repo: ContextRepo
 })
   .actions(self => {
     const { dom } = getEnv(self);

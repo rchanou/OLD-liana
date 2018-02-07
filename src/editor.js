@@ -40,8 +40,25 @@ export const MainEditor = types
     })
   )
   .views(self => ({
+    get shownGroup() {
+      const { groupFilter } = self;
+      let foundGroup;
+      self.repo.groups.forEach((group, id) => {
+        if (group.get("name") === groupFilter) {
+          foundGroup = group;
+          return;
+        }
+      });
+      return foundGroup;
+    },
+    get shownDec() {
+      const { shownGroup } = self;
+      if (!shownGroup) {
+        return self.repo.main;
+      }
+    },
     get baseCells() {
-      const { engine, user } = self;
+      const { shownDec, repo, user } = self;
       const makeDecCells = (parent, id, path = [], x = 0, y = 0) => {
         let dec = parent;
         if (id !== undefined) {
@@ -65,7 +82,7 @@ export const MainEditor = types
             isDec
           }
         ];
-        const params = engine.allParams[path];
+        const params = repo.allParams[path];
         if (params) {
           let paramX = x + width;
           for (let i = 0; i < params.length; i++) {
@@ -111,7 +128,7 @@ export const MainEditor = types
             x += width;
           });
           if (!dec.some(node => "arg" in node)) {
-            const result = engine.run(path);
+            const result = repo.run(path);
             const text =
               typeof result === "function"
                 ? "f"
@@ -149,7 +166,7 @@ export const MainEditor = types
         });
         return cells;
       };
-      return makeDecCells(engine.main);
+      return makeDecCells(shownDec);
     },
     // get activeCells() {
     //   if (self.chooser) {
@@ -228,7 +245,7 @@ export const MainEditor = types
     },
     addToDec(item) {
       const { isDec, path } = self.selectedCell;
-      const newId = self.engine.addToDec(
+      const newId = self.repo.addToDec(
         isDec ? path : path.slice(0, -1),
         item || [{ op: "+" }]
       );
@@ -428,10 +445,6 @@ export const MainEditor = types
               const appStore = getParent(self);
               const snapshot = getSnapshot(appStore);
               const packed = packApp(snapshot);
-              // const packed = produce(snapshot, draft => {
-              //   draft.engine.m = pack(draft.engine.main);
-              //   delete draft.engine.main;
-              // });
               const serialized = JSON.stringify(packed);
               localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
               console.log(serialized);

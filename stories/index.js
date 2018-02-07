@@ -9,15 +9,14 @@ import * as T from "../src/_tests"; // importing this file also runs its tests
 
 const LOCAL_STORAGE_KEY = "LIANA";
 const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-let snapshotToUse;
-if (saved) {
-  snapshotToUse = JSON.parse(saved);
-  snapshotToUse.engine.groups = {};
-} else {
-  snapshotToUse = T.app;
-}
-
 try {
+  let snapshotToUse;
+  if (saved) {
+    snapshotToUse = JSON.parse(saved);
+    snapshotToUse.repo.groups = {};
+  } else {
+    snapshotToUse = T.app;
+  }
   window.s = T.strictCreate(App, unpackApp(snapshotToUse));
 } catch (ex) {
   console.error(ex);
