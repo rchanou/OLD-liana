@@ -320,11 +320,20 @@ const Param = optionalModel("Param", {
   type: types.maybe(types.string)
 });
 
-export const Engine = types
-  .model("Engine", {
+export const Group = mixinModel(
+  optionalModel({
+    name: types.maybe(types.string),
+    nodes: types.optional(types.array(types.string), [])
+  })
+)("Group", {
+  id: types.identifier(types.string)
+});
+
+export const Repo = types
+  .model("Repo", {
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {}),
-    tags: types.optional(types.map(types.array(types.string)), {}),
+    groups: types.optional(types.map(types.array(types.string)), {}),
     comments: types.optional(types.map(types.array(types.string)), {})
   })
   .views(self => ({
@@ -471,4 +480,4 @@ export const Engine = types
     };
   });
 
-export const ContextEngine = asContext(Engine);
+export const ContextRepo = asContext(Repo);

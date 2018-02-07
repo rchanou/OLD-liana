@@ -12,7 +12,7 @@ const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
 let snapshotToUse;
 if (saved) {
   snapshotToUse = JSON.parse(saved);
-  snapshotToUse.engine.tags = {};
+  snapshotToUse.engine.groups = {};
 } else {
   snapshotToUse = T.app;
 }
@@ -22,7 +22,7 @@ try {
 } catch (ex) {
   console.error(ex);
   console.warn("Loading default snapshot as backup...");
-  window.s = T.strictCreate(App, T.app);
+  window.s = T.strictCreate(App, T.fullApp);
 }
 
 storiesOf("Liana", module).add("new repo test", () => (

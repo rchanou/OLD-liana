@@ -1,5 +1,5 @@
 import { types } from "mobx-state-tree";
-import { Pkg, ContextEngine } from "./core";
+import { Pkg, ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { optionalModel } from "./model-utils";
 
@@ -25,7 +25,7 @@ let cursorIdCounter = 0; // TODO: better way to determine IDs?
 
 export const UI = optionalModel("UI", {
   selectedCellIndex: 0,
-  engine: ContextEngine,
+  engine: ContextRepo,
   user: ContextUser
 })
   .views(self => {

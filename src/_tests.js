@@ -1,12 +1,13 @@
 import { strictEqual, deepStrictEqual, throws } from "assert";
 import { types, getSnapshot } from "mobx-state-tree";
 
-import { ContextEngine } from "./core";
+import { ContextRepo } from "./core";
 import { pack, unpack, inflate } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
-import { engine, user } from "./_test-data";
+import { fullApp } from "./_test-data";
+const { engine, user } = fullApp;
 
-export { engine, user, app } from "./_test-data";
+export * from "./_test-data";
 
 window.g = getSnapshot;
 
@@ -37,7 +38,7 @@ export const strictCreate = (Model, snapshot) => {
   return store;
 };
 
-const t = ContextEngine.create(engine);
+const t = ContextRepo.create(engine);
 window.t = t;
 strictEqual(t.run("c")(3), 5);
 strictEqual(t.run("e")(3)(5)(7), 15);
@@ -59,7 +60,7 @@ const fullLen = JSON.stringify(unpackTest).length;
 console.log(fullLen, packLen, packLen / fullLen);
 window.u = unpackTest;
 // const unpackStore = ContextEngine.create({ main: unpackTest });
-const unpackStore = strictCreate(ContextEngine, { main: unpackTest });
+const unpackStore = strictCreate(ContextRepo, { main: unpackTest });
 window.u = unpackStore;
 
 strictEqual(incrementLetterId("a"), "b");

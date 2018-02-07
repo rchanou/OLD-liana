@@ -26,6 +26,7 @@ export const MainEditor = types
     "MainEditor",
     UI,
     optionalModel({
+      groupFilter: types.optional(types.string, "test"),
       changeCellMode: false,
       changeOpMode: false,
       addNodeMode: false,
@@ -433,7 +434,7 @@ export const MainEditor = types
               // });
               const serialized = JSON.stringify(packed);
               localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
-              console.log(packed);
+              console.log(serialized);
             }
           },
           5: {

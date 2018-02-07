@@ -1,6 +1,6 @@
 import { types, getEnv, getSnapshot, destroy } from "mobx-state-tree";
 
-import { ContextEngine } from "./core";
+import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
 import { optionalModel } from "./model-utils";
@@ -77,7 +77,7 @@ export const App = optionalModel("App", {
   heldKeyCoords: types.maybe(HeldKeyCoords),
   mainEditor: types.optional(MainEditor, {}),
   user: ContextUser,
-  engine: ContextEngine
+  engine: ContextRepo
 })
   .actions(self => {
     const { dom } = getEnv(self);
