@@ -17,7 +17,6 @@ const dot = ".";
 const array = "[";
 const object = "{";
 const mutate = "@";
-const identity = "#";
 
 const and = "a";
 const or = "o";
@@ -101,11 +100,6 @@ const opFuncs = {
   },
   [lessThan](a, b) {
     return a < b;
-  },
-  [identity](x) {
-    return function() {
-      return x;
-    };
   },
   [strictEqual](a, b) {
     return a === b;
@@ -330,6 +324,18 @@ export const Engine = types
   .model("Engine", {
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {})
+  })
+  .preProcessSnapshot(({ m, main, ...rest }) => {
+    if (m) {
+      if (main) {
+        console.warn('Both "m" and "main" are defined. Using "m".');
+      }
+      return {
+        ...rest,
+        main: unpack(m)
+      };
+    }
+    return { main, ...rest };
   })
   .views(self => ({
     get allParams() {

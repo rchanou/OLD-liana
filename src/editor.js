@@ -1,5 +1,6 @@
-import { types, destroy, getSnapshot } from "mobx-state-tree";
+import { types, destroy, getParent, getSnapshot } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
+import produce from "immer";
 
 // import { Chooser } from "./chooser";
 // import { Tree } from "./tree";
@@ -423,10 +424,14 @@ export const MainEditor = types
           0: {
             label: "Save",
             action() {
-              const snapshot = getSnapshot(self.engine);
-              // const packed = pack(snapshot);
-              // localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packed));
-              const serialized = JSON.stringify(snapshot);
+              const appStore = getParent(self);
+              const snapshot = getSnapshot(appStore);
+              const packed = produce(snapshot, draft => {
+                draft.engine.m = pack(draft.engine.main);
+                delete draft.engine.main;
+              });
+              const serialized = JSON.stringify(packed);
+              localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
               console.log(serialized);
             }
           },

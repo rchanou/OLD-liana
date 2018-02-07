@@ -58,32 +58,32 @@ const unpackDec = packed => {
 export const pack = packDec;
 export const unpack = unpackDec;
 
-export const inflate = (parent, path = [], flat = { args: {}, decs: {} }) => {
-  let dec = parent;
-  if (path.length) {
-    const id = path[path.length - 1];
-    dec = parent[id];
-  }
-  if (Array.isArray(dec)) {
-    flat.decs[path] = { id: String(path), eval: [] };
-    for (const node of dec) {
-      let newNode;
-      if ("arg" in node) {
-        newNode = { arg: String(node.arg) };
-        if (!flat.args[node.arg]) {
-          flat.args[node.arg] = { id: String(node.arg) };
-        }
-      } else if ("ref" in node) {
-        newNode = { ref: String(node.ref) };
-      } else {
-        newNode = node;
-      }
-      flat.decs[path].eval.push(newNode);
-    }
-  } else {
-    for (const id in dec) {
-      inflate(dec, [...path, id], flat);
-    }
-  }
-  return flat;
-};
+// export const inflate = (parent, path = [], flat = { args: {}, decs: {} }) => {
+//   let dec = parent;
+//   if (path.length) {
+//     const id = path[path.length - 1];
+//     dec = parent[id];
+//   }
+//   if (Array.isArray(dec)) {
+//     flat.decs[path] = { id: String(path), eval: [] };
+//     for (const node of dec) {
+//       let newNode;
+//       if ("arg" in node) {
+//         newNode = { arg: String(node.arg) };
+//         if (!flat.args[node.arg]) {
+//           flat.args[node.arg] = { id: String(node.arg) };
+//         }
+//       } else if ("ref" in node) {
+//         newNode = { ref: String(node.ref) };
+//       } else {
+//         newNode = node;
+//       }
+//       flat.decs[path].eval.push(newNode);
+//     }
+//   } else {
+//     for (const id in dec) {
+//       inflate(dec, [...path, id], flat);
+//     }
+//   }
+//   return flat;
+// };
