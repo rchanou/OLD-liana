@@ -323,20 +323,10 @@ const Param = optionalModel("Param", {
 export const Engine = types
   .model("Engine", {
     main: Dec,
-    params: types.optional(types.map(types.array(types.maybe(Param))), {})
+    params: types.optional(types.map(types.array(types.maybe(Param))), {}),
+    tags: types.optional(types.map(types.array(types.string)), {}),
+    comments: types.optional(types.map(types.array(types.string)), {})
   })
-  // .preProcessSnapshot(({ m, main, ...rest }) => {
-  //   if (m) {
-  //     if (main) {
-  //       console.warn('Both "m" and "main" are defined. Using "m".');
-  //     }
-  //     return {
-  //       ...rest,
-  //       main: unpack(m)
-  //     };
-  //   }
-  //   return { main, ...rest };
-  // })
   .views(self => ({
     get allParams() {
       const plainParams = getSnapshot(self.params);

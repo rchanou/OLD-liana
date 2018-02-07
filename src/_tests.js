@@ -6,7 +6,7 @@ import { pack, unpack, inflate } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
 import { engine, user } from "./_test-data";
 
-export { engine, user } from "./_test-data";
+export { engine, user, app } from "./_test-data";
 
 window.g = getSnapshot;
 
