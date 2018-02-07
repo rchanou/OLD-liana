@@ -325,18 +325,18 @@ export const Engine = types
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {})
   })
-  .preProcessSnapshot(({ m, main, ...rest }) => {
-    if (m) {
-      if (main) {
-        console.warn('Both "m" and "main" are defined. Using "m".');
-      }
-      return {
-        ...rest,
-        main: unpack(m)
-      };
-    }
-    return { main, ...rest };
-  })
+  // .preProcessSnapshot(({ m, main, ...rest }) => {
+  //   if (m) {
+  //     if (main) {
+  //       console.warn('Both "m" and "main" are defined. Using "m".');
+  //     }
+  //     return {
+  //       ...rest,
+  //       main: unpack(m)
+  //     };
+  //   }
+  //   return { main, ...rest };
+  // })
   .views(self => ({
     get allParams() {
       const plainParams = getSnapshot(self.params);

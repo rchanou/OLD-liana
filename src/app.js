@@ -5,6 +5,33 @@ import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
 import { optionalModel } from "./model-utils";
 import { uiModel } from "./view";
+import { pack, unpack } from "./pack";
+
+export const packApp = snapshot => {
+  const { engine, ...appRest } = snapshot;
+  const { main, ...engineRest } = engine;
+  const packed = {
+    engine: {
+      m: pack(main),
+      ...engineRest
+    },
+    ...appRest
+  };
+  return packed;
+};
+
+export const unpackApp = snapshot => {
+  const { engine, ...appRest } = snapshot;
+  const { m, ...engineRest } = engine;
+  const unpacked = {
+    engine: {
+      main: unpack(m),
+      ...engineRest
+    },
+    ...appRest
+  };
+  return unpacked;
+};
 
 const LOCAL_STORAGE_KEY = "LIANA";
 

@@ -6,7 +6,7 @@ import produce from "immer";
 // import { Tree } from "./tree";
 import { optionalModel } from "./model-utils";
 import { UI, cursorify, calcWidth } from "./view";
-import { pack } from "./pack";
+import { packApp } from "./app";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
@@ -426,13 +426,14 @@ export const MainEditor = types
             action() {
               const appStore = getParent(self);
               const snapshot = getSnapshot(appStore);
-              const packed = produce(snapshot, draft => {
-                draft.engine.m = pack(draft.engine.main);
-                delete draft.engine.main;
-              });
+              const packed = packApp(snapshot);
+              // const packed = produce(snapshot, draft => {
+              //   draft.engine.m = pack(draft.engine.main);
+              //   delete draft.engine.main;
+              // });
               const serialized = JSON.stringify(packed);
               localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
-              console.log(serialized);
+              console.log(packed);
             }
           },
           5: {
