@@ -512,13 +512,32 @@ export const MainEditor = types
           action() {
             const [topScopeId] = selectedCell.path;
             const groupIndex = self.shownGroup.decs.indexOf(topScopeId);
+            if (groupIndex === -1) {
+              return;
+            }
+            const selectedCellKey = self.selectedCell.key;
             self.shownGroup.moveUp(groupIndex);
-            // console.log(groupIndex);
+            const newCellIndex = self.baseCells.findIndex(
+              c => c.key === selectedCellKey
+            );
+            self.selectCellIndex(newCellIndex);
           }
         };
         keyMap[2][4] = {
           label: "Move Down",
-          action() {}
+          action() {
+            const [topScopeId] = selectedCell.path;
+            const groupIndex = self.shownGroup.decs.indexOf(topScopeId);
+            if (groupIndex === -1) {
+              return;
+            }
+            const selectedCellKey = self.selectedCell.key;
+            self.shownGroup.moveDown(groupIndex);
+            const newCellIndex = self.baseCells.findIndex(
+              c => c.key === selectedCellKey
+            );
+            self.selectCellIndex(newCellIndex);
+          }
         };
       }
       if ("index" in selectedCell) {
