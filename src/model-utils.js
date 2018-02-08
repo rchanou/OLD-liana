@@ -111,7 +111,10 @@ export const privateModel = (nameOrPropDefs, propDefs) => {
   return PreModel.preProcessSnapshot(snapshot => {
     const shallowClone = { ...snapshot };
     for (const key in propDefs) {
-      shallowClone[key] = null;
+      if (shallowClone[key] != null) {
+        console.warn(`Ignoring privateModel prop ${key}...`);
+      }
+      delete shallowClone[key];
     }
     return shallowClone;
   }).actions(self => ({

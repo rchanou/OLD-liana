@@ -2,13 +2,13 @@ import React from "react";
 import { observer } from "mobx-react";
 
 const border = "1px solid #eee";
-const hue = 177;
+const hue = 199;
 const wUnit = 10;
 const yUnit = 33;
 
 const baseStyle = {
   position: "fixed",
-  background: `hsl(${hue},88%,55%)`,
+  background: `hsl(${hue},77%,77%)`,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -73,10 +73,10 @@ export const ReactKeyboard = observer(({ store }) => {
         }
       };
       if (x === 4 || x === 5) {
-        newEl.style.background = `hsl(${hue},88%,77%)`;
+        newEl.style.background = `hsl(${hue},77%,82%)`;
       }
       if (heldKeyCoords && heldKeyCoords.x == x && heldKeyCoords.y == y) {
-        newEl.style.background = `hsl(${hue},77%,44%)`;
+        newEl.style.background = `hsl(${hue},77%,66%)`;
       }
       if (keySetAtY) {
         const thisKey = keySetAtY[x];

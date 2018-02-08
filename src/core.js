@@ -505,7 +505,14 @@ export const Repo = types
         scope.set(newId, item);
         return [...scopePath, newId];
       },
-      delete(path, index = 0) {
+      addNode(item, path, index) {
+        const dec = getDec(path);
+        if (index === undefined) {
+          index = dec.length - 1;
+        }
+        dec.splice(index, 0, item);
+      },
+      deleteNode(path, index) {
         const dec = getDec(path);
         dec.splice(index, 1);
       }

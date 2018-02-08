@@ -27,7 +27,7 @@ export const MainEditor = types
     "MainEditor",
     UI,
     optionalModel({
-      groupFilter: types.optional(types.string, "test"),
+      groupFilter: "test",
       editFilterMode: false,
       changeCellMode: false,
       chooseOpMode: false,
@@ -387,12 +387,15 @@ export const MainEditor = types
         const o = op => ({
           label: op,
           action() {
-            forDec.setNode(nodeIndex, { op });
-            // toggleChooseOpMode();
+            if (self.addNodeMode) {
+              self.repo.addNode({ op }, selectedCell.path, selectedCell.index);
+              self.toggleAddNodeMode();
+            }
           }
         });
         return {
           1: {
+            // TODO: use op enum constants
             0: o("@"),
             1: o("["),
             2: o("{"),
@@ -519,8 +522,10 @@ export const MainEditor = types
         typeof selectedCell.path[selectedCell.path.length - 1] === "string"
       ) {
         keyMap[1][6] = {
-          label: "Add Node",
-          action: self.toggleAddNodeMode
+          label: "Add Op",
+          action() {
+            self.toggleAddNodeMode();
+          }
         };
       }
       if (self.groupFilter) {
@@ -562,7 +567,7 @@ export const MainEditor = types
           label: "Delete",
           action() {
             self.selectCellIndex(self.selectedCellIndex - 1);
-            self.repo.delete(selectedCell.path, selectedCell.index);
+            self.repo.deleteNode(selectedCell.path, selectedCell.index);
           }
         };
       }
