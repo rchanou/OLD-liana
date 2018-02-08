@@ -487,10 +487,6 @@ export const MainEditor = types
             label: "Change Filter",
             action: self.toggleEditFilterMode
           },
-          4: {
-            label: "Move Up",
-            action() {}
-          },
           5: {
             label: "New Line",
             action() {
@@ -500,7 +496,6 @@ export const MainEditor = types
           6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
-          4: { label: "Move Down", action() {} },
           5: {
             label: "New Func",
             action() {
@@ -511,6 +506,21 @@ export const MainEditor = types
         },
         3: {}
       };
+      if (self.groupFilter) {
+        keyMap[1][4] = {
+          label: "Move Up",
+          action() {
+            const [topScopeId] = selectedCell.path;
+            const groupIndex = self.shownGroup.decs.indexOf(topScopeId);
+            self.shownGroup.moveUp(groupIndex);
+            // console.log(groupIndex);
+          }
+        };
+        keyMap[2][4] = {
+          label: "Move Down",
+          action() {}
+        };
+      }
       if ("index" in selectedCell) {
         keyMap[2][9] = {
           label: "Delete",

@@ -334,6 +334,16 @@ export const Group = mixinModel(
     if (current === undefined) {
       decs.push(decId);
     }
+  },
+  moveUp(index) {
+    const { decs } = self;
+    if (index < 1) {
+      return;
+    }
+    const swapIndex = index - 1;
+    const swapItem = decs[swapIndex];
+    decs[swapIndex] = decs[index];
+    decs[index] = swapItem;
   }
 }));
 
