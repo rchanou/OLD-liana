@@ -276,6 +276,9 @@ export const MainEditor = types
         isDec ? path : path.slice(0, -1),
         item || [{ op: "+" }]
       );
+      if (self.groupFilter && newId.length === 1) {
+        self.shownGroup.add(newId[0]);
+      }
       const newKey = `CL-${newId}`;
       const { baseCells } = self;
       let i = baseCells.length;
@@ -285,9 +288,10 @@ export const MainEditor = types
           // HACK: allows time for animation from above select action
           // TODO: more elegant way to do this
           setTimeout(self.toggleNameEdit, 199);
-          return;
+          return newId;
         }
       }
+      return newId;
     }
   }))
   .views(self => ({
@@ -482,6 +486,10 @@ export const MainEditor = types
             label: "Change Filter",
             action: self.toggleEditFilterMode
           },
+          4: {
+            label: "Move Up",
+            action() {}
+          },
           5: {
             label: "New Line",
             action() {
@@ -491,6 +499,7 @@ export const MainEditor = types
           6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
+          4: { label: "Move Down", action() {} },
           5: {
             label: "New Func",
             action() {

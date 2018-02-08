@@ -327,7 +327,15 @@ export const Group = mixinModel(
   })
 )("Group", {
   id: types.identifier(types.string)
-});
+}).actions(self => ({
+  add(decId) {
+    const { decs } = self;
+    const current = decs.find(d => d === decId);
+    if (current === undefined) {
+      decs.push(decId);
+    }
+  }
+}));
 
 export const Repo = types
   .model("Repo", {

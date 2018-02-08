@@ -82,6 +82,10 @@ export const App = optionalModel("App", {
   .actions(self => {
     const { dom } = getEnv(self);
     return {
+      // postProcessSnapshot(snapshot) {
+      //   delete snapshot.heldKeyCoords;
+      //   return snapshot;
+      // },
       handleKeyDown(e) {
         const { keyCode } = e;
         const { keyMap } = self;
