@@ -59,16 +59,10 @@ export const app = {
     },
     params: {},
     groups: {
-      a: {
-        id: "a",
-        decs: ["a", "a2", "a3", "a4", "a5", "d"],
-        name: "test"
-      }
+      a: { name: "test", decs: ["a", "a2", "a3", "a4", "a5", "d"], id: "a" }
     },
     comments: {}
   },
-  heldKeyCoords: { x: 0, y: 1 },
-  // mainEditor: { selectedCellIndex: 150 },
   user: {
     nameSets: {
       "en-US": {

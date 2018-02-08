@@ -88,6 +88,42 @@ export const optionalModel = (nameOrPropDefs, propDefs) => {
   }));
 };
 
+export const privateModel = (nameOrPropDefs, propDefs) => {
+  const PreModel =
+    typeof nameOrPropDefs === "object"
+      ? types.model(nameOrPropDefs)
+      : types.model(nameOrPropDefs, propDefs);
+  propDefs = typeof nameOrPropDefs === "object" ? nameOrPropDefs : propDefs;
+  for (const propKey in propDefs) {
+    const propDef = propDefs[propKey];
+    if (
+      propDef &&
+      typeof propDef === "object" &&
+      !("defaultValue" in propDef) &&
+      !propDef.name.endsWith(" | null)")
+    ) {
+      debugger;
+      throw new Error(
+        `All properties in privateModel must be optional. Fix prop ${propKey}.`
+      );
+    }
+  }
+  return PreModel.preProcessSnapshot(snapshot => {
+    const shallowClone = { ...snapshot };
+    for (const key in propDefs) {
+      shallowClone[key] = null;
+    }
+    return shallowClone;
+  }).actions(self => ({
+    postProcessSnapshot(snapshot) {
+      for (const key in propDefs) {
+        delete snapshot[key];
+      }
+      return snapshot;
+    }
+  }));
+};
+
 export const incrementLetterId = prev => {
   const next = [...prev];
   const addAtIndex = index => {

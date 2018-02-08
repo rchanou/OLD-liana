@@ -3,7 +3,7 @@ import { types, getEnv, getSnapshot, destroy } from "mobx-state-tree";
 import { ContextRepo } from "./core";
 import { ContextUser } from "./user";
 import { MainEditor } from "./editor";
-import { optionalModel } from "./model-utils";
+import { optionalModel, privateModel } from "./model-utils";
 import { uiModel } from "./view";
 import { pack, unpack } from "./pack";
 
@@ -74,19 +74,21 @@ const HeldKeyCoords = types.model("HeldKeyCoords", {
   y: types.number
 });
 
-export const App = optionalModel("App", {
-  heldKeyCoords: types.maybe(HeldKeyCoords),
-  mainEditor: types.optional(MainEditor, {}),
-  user: ContextUser,
-  repo: ContextRepo
-})
+export const App = types
+  .compose(
+    "App",
+    privateModel({
+      heldKeyCoords: types.maybe(HeldKeyCoords)
+    }),
+    optionalModel({
+      mainEditor: types.optional(MainEditor, {}),
+      user: ContextUser,
+      repo: ContextRepo
+    })
+  )
   .actions(self => {
     const { dom } = getEnv(self);
     return {
-      // postProcessSnapshot(snapshot) {
-      //   delete snapshot.heldKeyCoords;
-      //   return snapshot;
-      // },
       handleKeyDown(e) {
         const { keyCode } = e;
         const { keyMap } = self;

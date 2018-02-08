@@ -30,7 +30,7 @@ export const MainEditor = types
       groupFilter: types.optional(types.string, "test"),
       editFilterMode: false,
       changeCellMode: false,
-      changeOpMode: false,
+      chooseOpMode: false,
       addNodeMode: false,
       addOpMode: false,
       // chooser: types.maybe(Chooser),
@@ -248,10 +248,11 @@ export const MainEditor = types
         self.editingNode = { forDec, nodeIndex };
       }
     },
-    toggleChangeOpMode() {
-      self.changeOpMode = !self.changeOpMode;
-    },
+    // toggleChooseOpMode() {
+    //   self.chooseOpMode = !self.chooseOpMode;
+    // },
     toggleAddNodeMode() {
+      self.chooseOpMode = !self.addNodeMode;
       self.addNodeMode = !self.addNodeMode;
     },
     setChoosingLink(forDec) {
@@ -305,9 +306,9 @@ export const MainEditor = types
       }
       const {
         selectedCell,
-        toggleChangeCellMode,
-        toggleChangeOpMode,
-        toggleAddNodeMode
+        toggleChangeCellMode
+        // toggleChooseOpMode,
+        // toggleAddNodeMode
       } = self;
       const { forDec, nodeIndex } = selectedCell;
       if (self.editingPathName) {
@@ -347,7 +348,7 @@ export const MainEditor = types
               label: "Op",
               action() {
                 toggleChangeCellMode();
-                toggleChangeOpMode();
+                // toggleChooseOpMode();
               }
             }
           },
@@ -382,12 +383,12 @@ export const MainEditor = types
         }
         return keyMap;
       }
-      if (self.changeOpMode) {
+      if (self.chooseOpMode) {
         const o = op => ({
           label: op,
           action() {
             forDec.setNode(nodeIndex, { op });
-            toggleChangeOpMode();
+            // toggleChooseOpMode();
           }
         });
         return {
@@ -413,7 +414,15 @@ export const MainEditor = types
             9: o(">=")
           },
           3: {
-            0: { label: "Cancel", action: toggleChangeOpMode },
+            // 0: { label: "Cancel", action: toggleChooseOpMode },
+            0: {
+              label: "Cancel",
+              action() {
+                if (self.addNodeMode) {
+                  self.toggleAddNodeMode();
+                }
+              }
+            },
             6: o("=="),
             7: o("==="),
             8: o("!="),
@@ -429,7 +438,7 @@ export const MainEditor = types
           if (newSelectedCellIndex !== -1) {
             self.selectCellIndex(newSelectedCellIndex);
           }
-          toggleAddNodeMode();
+          self.toggleAddNodeMode();
         };
         return {
           1: {
@@ -463,11 +472,11 @@ export const MainEditor = types
               action() {
                 const lastNodeIndex = forDec.addNode({ op: "." });
                 selectNewCell(lastNodeIndex);
-                toggleChangeOpMode();
+                // toggleChooseOpMode();
               }
             }
           },
-          3: { 6: { label: "Cancel", action: toggleAddNodeMode } }
+          3: { 6: { label: "Cancel", action: self.toggleAddNodeMode } }
         };
       }
       const keyMap = {
@@ -492,8 +501,7 @@ export const MainEditor = types
             action() {
               self.addToDec([{ op: "+" }]);
             }
-          },
-          6: { label: "Add", action: toggleAddNodeMode }
+          }
         },
         2: {
           5: {
@@ -502,10 +510,19 @@ export const MainEditor = types
               self.addToDec({ R: [{ op: "+" }] });
             }
           },
-          6: { label: "Change", action: toggleChangeCellMode }
+          6: { label: "Change Node", action: toggleChangeCellMode }
         },
         3: {}
       };
+      if (
+        !selectedCell.isDec &&
+        typeof selectedCell.path[selectedCell.path.length - 1] === "string"
+      ) {
+        keyMap[1][6] = {
+          label: "Add Node",
+          action: self.toggleAddNodeMode
+        };
+      }
       if (self.groupFilter) {
         keyMap[1][4] = {
           label: "Move Up",

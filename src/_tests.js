@@ -26,7 +26,7 @@ export const strictCreate = (Model, snapshot) => {
         }
         continue;
       } else if (typeof subPostSnap !== "object") {
-        const message = `Invalid object: ${prePropKey}`;
+        const message = `Invalid object: ${prePropKey} - ${subPostSnap}`;
         throw new Error(message);
         // console.warn(message);
       } else {
