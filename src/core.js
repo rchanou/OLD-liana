@@ -484,6 +484,10 @@ export const Repo = types
         }
         scope.set(newId, item);
         return [...scopePath, newId];
+      },
+      delete(path, index = 0) {
+        const dec = getDec(path);
+        dec.splice(index, 1);
       }
     };
   });

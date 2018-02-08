@@ -132,7 +132,8 @@ export const MainEditor = types
                 selectable: true,
                 fill: node.color,
                 text: node.name || node.out,
-                path
+                path,
+                index: i
               };
               if ("ref" in node) {
                 newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
@@ -506,19 +507,19 @@ export const MainEditor = types
               self.addToDec({ R: [{ op: "+" }] });
             }
           },
-          6: { label: "Change", action: toggleChangeCellMode },
-          9: {
-            label: "Delete",
-            action() {
-              // if (typeof nodeIndex === "number") {
-              //   selectedCell.forDec.deleteNode(nodeIndex);
-              //   self.selectCellIndex(self.selectedCellIndex - 1);
-              // }
-            }
-          }
+          6: { label: "Change", action: toggleChangeCellMode }
         },
         3: {}
       };
+      if ("index" in selectedCell) {
+        keyMap[2][9] = {
+          label: "Delete",
+          action() {
+            self.selectCellIndex(self.selectedCellIndex - 1);
+            self.repo.delete(selectedCell.path, selectedCell.index);
+          }
+        };
+      }
       if (selectedCell.editableName) {
         keyMap[2][6] = {
           label: "Change Name",
