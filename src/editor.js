@@ -1,6 +1,7 @@
 import { types, destroy, getParent, getSnapshot } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 import produce from "immer";
+import merge from "deepmerge";
 
 // import { Chooser } from "./chooser";
 // import { Tree } from "./tree";
@@ -44,7 +45,7 @@ export const MainEditor = types
       const { groupFilter } = self;
       let foundGroup;
       self.repo.groups.forEach((group, id) => {
-        if (group.get("name") === groupFilter) {
+        if (group.name === groupFilter) {
           foundGroup = group;
           return;
         }
@@ -52,121 +53,139 @@ export const MainEditor = types
       return foundGroup;
     },
     get shownDec() {
-      const { shownGroup } = self;
+      const { shownGroup, repo } = self;
+      const { main } = repo;
       if (!shownGroup) {
-        return self.repo.main;
+        return main;
       }
+      const dec = new Map();
+      for (const decId of shownGroup.decs) {
+        dec.set(decId, main.get(decId));
+      }
+      return dec;
     },
     get baseCells() {
-      const { shownDec, repo, user } = self;
-      const makeDecCells = (parent, id, path = [], x = 0, y = 0) => {
-        let dec = parent;
-        if (id !== undefined) {
-          dec = parent.get(id);
-        }
-        const isDec = !isObservableArray(dec);
-        const procName = user.pathName(path);
-        const width = calcWidth(procName);
-        const cells = [
-          {
-            key: `CL-${path}`,
-            x,
-            y,
-            width,
-            text: procName,
-            fill: "hsl(270,66%,88%)",
-            color: "#333",
-            selectable: true,
-            path,
-            editableName: true,
-            isDec
+      const { groupFilter, shownDec, repo, user } = self;
+      const makeBaseCells = (x = 0, y = 0) => {
+        const groupCell = {
+          key: `CL-GROUP`,
+          x,
+          y: y++,
+          text: groupFilter,
+          width: calcWidth(groupFilter)
+        };
+        const makeDecCells = (parent, id, path = [], x = 0, y = 0) => {
+          let dec = parent;
+          if (id !== undefined) {
+            dec = parent.get(id);
           }
-        ];
-        const params = repo.allParams[path];
-        if (params) {
-          let paramX = x + width;
-          for (let i = 0; i < params.length; i++) {
-            const param = params[i];
-            const name = user.pathName([...path, i]);
-            const width = calcWidth(name);
-            cells.push({
-              key: `CL-P-${path},${i}`,
-              x: paramX,
+          const isDec = !isObservableArray(dec);
+          const procName = user.pathName(path);
+          const width = calcWidth(procName);
+          const cells = [
+            {
+              key: `CL-${path}`,
+              x,
               y,
               width,
-              text: name,
-              fill: "hsl(30,66%,83%)",
+              text: procName,
+              fill: "hsl(270,66%,88%)",
               color: "#333",
               selectable: true,
-              path: [...path, i],
-              editableName: true
-            });
-            paramX += width;
+              path,
+              editableName: true,
+              isDec
+            }
+          ];
+          const params = repo.allParams[path];
+          if (params) {
+            let paramX = x + width;
+            for (let i = 0; i < params.length; i++) {
+              const param = params[i];
+              const name = user.pathName([...path, i]);
+              const width = calcWidth(name);
+              cells.push({
+                key: `CL-P-${path},${i}`,
+                x: paramX,
+                y,
+                width,
+                text: name,
+                fill: "hsl(30,66%,83%)",
+                color: "#333",
+                selectable: true,
+                path: [...path, i],
+                editableName: true
+              });
+              paramX += width;
+            }
           }
-        }
-        if (!isDec) {
-          x += width;
-          dec.forEach((node, i) => {
-            const { width = 2 } = node;
-            const newCell = {
-              key: `CL-${path}-${i}`,
-              x,
-              y,
-              width,
-              selectable: true,
-              fill: node.color,
-              text: node.name || node.out,
-              path
-            };
-            if ("ref" in node) {
-              newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
-            }
-            if ("arg" in node) {
-              newCell.gotoCellKey = `CL-P-${node.arg.slice()}`;
-            }
-            cells.push(newCell);
+          if (!isDec) {
             x += width;
-          });
-          if (!dec.some(node => "arg" in node)) {
-            const result = repo.run(path);
-            const text =
-              typeof result === "function"
-                ? "f"
-                : typeof result === "object"
-                  ? JSON.stringify(result)
-                  : String(result);
-            cells.push({
-              key: `CL-${path}-out`,
-              x,
-              y,
-              text,
-              width: calcWidth(text)
+            dec.forEach((node, i) => {
+              const { width = 2 } = node;
+              const newCell = {
+                key: `CL-${path}-${i}`,
+                x,
+                y,
+                width,
+                selectable: true,
+                fill: node.color,
+                text: node.name || node.out,
+                path
+              };
+              if ("ref" in node) {
+                newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
+              }
+              if ("arg" in node) {
+                newCell.gotoCellKey = `CL-P-${node.arg.slice()}`;
+              }
+              cells.push(newCell);
+              x += width;
             });
+            if (!dec.some(node => "arg" in node)) {
+              const result = repo.run(path);
+              const text =
+                typeof result === "function"
+                  ? "f"
+                  : typeof result === "object"
+                    ? JSON.stringify(result)
+                    : String(result);
+              cells.push({
+                key: `CL-${path}-out`,
+                x,
+                y,
+                text,
+                width: calcWidth(text)
+              });
+            }
+            return cells;
           }
-          return cells;
-        }
-        if (id !== undefined) {
-          y++;
-        }
-        dec.forEach((_, subId) => {
-          // TODO: inline anonymous decs
-          const subX = id === undefined ? x : x + 1;
-          const subDecCells = makeDecCells(
-            dec,
-            subId,
-            [...path, subId],
-            subX,
-            y
-          );
-          cells.push(...subDecCells);
-          y = subDecCells[subDecCells.length - 1].y + 1;
-          if (id === undefined) {
+          if (id !== undefined) {
             y++;
           }
-        });
-        return cells;
+          dec.forEach((_, subId) => {
+            // TODO: inline anonymous decs
+            const subX = id === undefined ? x : x + 1;
+            const subDecCells = makeDecCells(
+              dec,
+              subId,
+              [...path, subId],
+              subX,
+              y
+            );
+            cells.push(...subDecCells);
+            y = subDecCells[subDecCells.length - 1].y + 1;
+            if (id === undefined) {
+              y++;
+            }
+          });
+          return cells;
+        };
+        return makeDecCells(shownDec, undefined, undefined, x, y).concat(
+          groupCell
+        );
       };
-      return makeDecCells(shownDec);
+      return makeBaseCells();
     },
     // get activeCells() {
     //   if (self.chooser) {
@@ -268,11 +287,9 @@ export const MainEditor = types
       if (self.chooser) {
         return self.chooser.keyMap(self.toggleChooser);
       }
-
       if (self.tree) {
         return self.tree.keyMap(self.toggleTree);
       }
-
       const {
         selectedCell,
         setInput,
@@ -281,21 +298,25 @@ export const MainEditor = types
         toggleAddNodeMode
       } = self;
       const { forDec, nodeIndex } = selectedCell;
-
       if (self.input != null) {
-        return keyCode => {
-          if (keyCode == 13) {
-            if (self.editingNode) {
-              self.toggleEditingValMode();
-              // self.moveRight();
-            }
-            if (self.editingPathName) {
-              self.toggleNameEdit();
+        return {
+          title: "Type to Change Name",
+          enter: "Save",
+          esc: "Cancel",
+          tab: "Save and Move Right",
+          onKey(e) {
+            if (e.keyCode == 13) {
+              if (self.editingNode) {
+                self.toggleEditingValMode();
+                // self.moveRight();
+              }
+              if (self.editingPathName) {
+                self.toggleNameEdit();
+              }
             }
           }
         };
       }
-
       if (self.changeCellMode) {
         const keyMap = {
           2: {
@@ -309,7 +330,6 @@ export const MainEditor = types
           },
           3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
         };
-
         if (nodeIndex) {
           keyMap[1] = {
             7: {
@@ -337,10 +357,8 @@ export const MainEditor = types
             }
           };
         }
-
         return keyMap;
       }
-
       if (self.changeOpMode) {
         const o = op => ({
           label: op,
@@ -349,7 +367,6 @@ export const MainEditor = types
             toggleChangeOpMode();
           }
         });
-
         return {
           1: {
             0: o("@"),
@@ -381,19 +398,16 @@ export const MainEditor = types
           }
         };
       }
-
       if (self.addNodeMode) {
         const selectNewCell = () => {
           const newSelectedCellIndex = self.baseCells.findIndex(
             cell => cell.key === `CL-${forDec.id}-${forDec.nodes.length - 1}`
           );
-
           if (newSelectedCellIndex !== -1) {
             self.selectCellIndex(newSelectedCellIndex);
           }
           toggleAddNodeMode();
         };
-
         return {
           1: {
             7: {
@@ -433,12 +447,9 @@ export const MainEditor = types
           3: { 6: { label: "Cancel", action: toggleAddNodeMode } }
         };
       }
-
       const { baseKeyMap } = self;
-
       const keyMap = {
         1: {
-          ...baseKeyMap[1],
           0: {
             label: "Save",
             action() {
@@ -459,7 +470,6 @@ export const MainEditor = types
           6: { label: "Add", action: toggleAddNodeMode }
         },
         2: {
-          ...baseKeyMap[2],
           5: {
             label: "New Func",
             action() {
@@ -479,14 +489,12 @@ export const MainEditor = types
         },
         3: {}
       };
-
       if (selectedCell.editableName) {
         keyMap[2][6] = {
           label: "Change Name",
           action: self.toggleNameEdit
         };
       }
-
       if (selectedCell.forDec) {
         keyMap[2][5] = {
           label: "Chooser",
@@ -497,7 +505,6 @@ export const MainEditor = types
           action: self.toggleTree
         };
       }
-
       if (selectedCell.gotoCellKey) {
         keyMap[2][7] = {
           label: "Go To Def",
@@ -514,7 +521,6 @@ export const MainEditor = types
           }
         };
       }
-
-      return keyMap;
+      return merge(baseKeyMap, keyMap);
     }
   }));

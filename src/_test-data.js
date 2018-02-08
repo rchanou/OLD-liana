@@ -58,11 +58,17 @@ export const app = {
       R: [{ a: [0] }]
     },
     params: {},
-    groups: {},
+    groups: {
+      a: {
+        id: "a",
+        decs: ["a", "a2", "a3", "a4", "a5"],
+        name: "test"
+      }
+    },
     comments: {}
   },
   heldKeyCoords: { x: 0, y: 1 },
-  mainEditor: { selectedCellIndex: 150 },
+  // mainEditor: { selectedCellIndex: 150 },
   user: {
     nameSets: {
       "en-US": {

@@ -86,7 +86,11 @@ export const App = optionalModel("App", {
         const { keyCode } = e;
         const { keyMap } = self;
         if (typeof keyMap === "function") {
-          keyMap(keyCode);
+          keyMap(e);
+          return;
+        }
+        if (keyMap.onKey) {
+          keyMap.onKey(e);
           return;
         }
         const coords = keyLayout[keyCode]; // TODO: make key layout editable

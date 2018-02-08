@@ -323,7 +323,7 @@ const Param = optionalModel("Param", {
 export const Group = mixinModel(
   optionalModel({
     name: types.maybe(types.string),
-    nodes: types.optional(types.array(types.string), [])
+    decs: types.optional(types.array(types.string), [])
   })
 )("Group", {
   id: types.identifier(types.string)
@@ -333,7 +333,7 @@ export const Repo = types
   .model("Repo", {
     main: Dec,
     params: types.optional(types.map(types.array(types.maybe(Param))), {}),
-    groups: types.optional(types.map(types.array(types.string)), {}),
+    groups: types.optional(types.map(Group), {}),
     comments: types.optional(types.map(types.array(types.string)), {})
   })
   .views(self => ({

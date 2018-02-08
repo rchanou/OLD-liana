@@ -21,7 +21,7 @@ const baseStyle = {
 
 const totalHeight = yUnit * 4;
 
-const inputModeEl = (
+const FullDisplay = ({ children = "Input Mode" }) => (
   <div
     style={{
       ...baseStyle,
@@ -30,19 +30,37 @@ const inputModeEl = (
       top: `calc(100vh - ${yUnit * 3}px)`
     }}
   >
-    Input Mode
+    {children}
   </div>
 );
 
+const defaultInputModeEl = <FullDisplay />;
+
+const fullDisplayStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center"
+};
+
 export const ReactKeyboard = observer(({ store }) => {
   const { keyMap, heldKeyCoords } = store;
-
   if (typeof keyMap === "function") {
-    return inputModeEl;
+    return defaultInputModeEl;
   }
-
+  const { title, enter } = keyMap;
+  if (title) {
+    const children = [<div>{title}</div>];
+    if (enter) {
+      children.push(<div>Press Enter to {enter}</div>);
+    }
+    // TODO: display actions for esc, tab if given
+    return (
+      <FullDisplay>
+        <div style={fullDisplayStyle}>{children}</div>
+      </FullDisplay>
+    );
+  }
   const els = [];
-
   for (let y = 1; y <= 3; y++) {
     const keySetAtY = keyMap[y];
     for (let x = 0; x <= 9; x++) {
@@ -54,25 +72,20 @@ export const ReactKeyboard = observer(({ store }) => {
           left: `${x * wUnit}vw`
         }
       };
-
       if (x === 4 || x === 5) {
         newEl.style.background = `hsl(${hue},88%,77%)`;
       }
-
       if (heldKeyCoords && heldKeyCoords.x == x && heldKeyCoords.y == y) {
         newEl.style.background = `hsl(${hue},77%,44%)`;
       }
-
       if (keySetAtY) {
         const thisKey = keySetAtY[x];
         if (thisKey && thisKey.label) {
           newEl.children = thisKey.label;
         }
       }
-
       els.push(<div {...newEl} />);
     }
   }
-
   return els;
 });
