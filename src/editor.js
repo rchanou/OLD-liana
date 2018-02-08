@@ -28,6 +28,7 @@ export const MainEditor = types
     UI,
     optionalModel({
       groupFilter: types.optional(types.string, "test"),
+      editFilterMode: false,
       changeCellMode: false,
       changeOpMode: false,
       addNodeMode: false,
@@ -203,6 +204,9 @@ export const MainEditor = types
       if (self.editingPathName) {
         return self.user.pathName(self.editingPathName);
       }
+      if (self.editFilterMode) {
+        return self.groupFilter;
+      }
       return null;
     }
   }))
@@ -211,14 +215,18 @@ export const MainEditor = types
       if (self.chooser) {
         self.chooser.handleInput(e);
       }
-
       if (self.editingNode) {
         self.editingNode.node.select(e.target.value);
       }
-
       if (self.editingPathName) {
         self.user.currentNameSet.setName(self.editingPathName, e.target.value);
       }
+      if (self.editFilterMode) {
+        self.groupFilter = e.target.value;
+      }
+    },
+    toggleEditFilterMode() {
+      self.editFilterMode = !self.editFilterMode;
     },
     toggleChooser(forDec, nodeIndex) {
       if (self.chooser) {
@@ -292,13 +300,12 @@ export const MainEditor = types
       }
       const {
         selectedCell,
-        setInput,
         toggleChangeCellMode,
         toggleChangeOpMode,
         toggleAddNodeMode
       } = self;
       const { forDec, nodeIndex } = selectedCell;
-      if (self.input != null) {
+      if (self.editingPathName) {
         return {
           title: "Type to Change Name",
           enter: "Save",
@@ -306,13 +313,24 @@ export const MainEditor = types
           tab: "Save and Move Right",
           onKey(e) {
             if (e.keyCode == 13) {
-              if (self.editingNode) {
-                self.toggleEditingValMode();
-                // self.moveRight();
-              }
-              if (self.editingPathName) {
-                self.toggleNameEdit();
-              }
+              // if (self.editingNode) {
+              //   self.toggleEditingValMode();
+              //   // self.moveRight();
+              // }
+              // if (self.editingPathName) {
+              self.toggleNameEdit();
+              // }
+            }
+          }
+        };
+      }
+      if (self.editFilterMode) {
+        return {
+          title: "Type to Change Filter",
+          enter: "Finish",
+          onKey(e) {
+            if (e.keyCode == 13) {
+              self.toggleEditFilterMode();
             }
           }
         };
@@ -447,7 +465,6 @@ export const MainEditor = types
           3: { 6: { label: "Cancel", action: toggleAddNodeMode } }
         };
       }
-      const { baseKeyMap } = self;
       const keyMap = {
         1: {
           0: {
@@ -460,6 +477,10 @@ export const MainEditor = types
               localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
               console.log(serialized);
             }
+          },
+          3: {
+            label: "Change Filter",
+            action: self.toggleEditFilterMode
           },
           5: {
             label: "New Line",
@@ -512,15 +533,12 @@ export const MainEditor = types
             const gotoCellIndex = self.baseCells.findIndex(
               cell => cell.key === selectedCell.gotoCellKey
             );
-
             if (gotoCellIndex !== -1) {
               self.selectCellIndex(gotoCellIndex);
             }
-
-            return;
           }
         };
       }
-      return merge(baseKeyMap, keyMap);
+      return merge(self.baseKeyMap, keyMap);
     }
   }));

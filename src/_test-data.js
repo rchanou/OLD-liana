@@ -61,7 +61,7 @@ export const app = {
     groups: {
       a: {
         id: "a",
-        decs: ["a", "a2", "a3", "a4", "a5"],
+        decs: ["a", "a2", "a3", "a4", "a5", "d"],
         name: "test"
       }
     },

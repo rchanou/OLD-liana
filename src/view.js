@@ -32,7 +32,12 @@ export const UI = optionalModel("UI", {
     const cursorId = `CURSOR-${cursorIdCounter++}`;
     return {
       get selectedCell() {
-        return self.baseCells[self.selectedCellIndex];
+        const { baseCells } = self;
+        const selectedCell = baseCells[self.selectedCellIndex];
+        if (!selectedCell) {
+          return baseCells[baseCells.length - 1];
+        }
+        return selectedCell;
       },
       get cursorCell() {
         const { input, selectedCell } = self;
