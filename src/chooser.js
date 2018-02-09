@@ -1,6 +1,5 @@
 import { types } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
-// import { UI, cursorify, formatOut } from "./view";
 import { UI, formatOut } from "./view";
 import { optionalModel } from "./model-utils";
 import { RefPath } from "./core";
@@ -35,9 +34,6 @@ export const Chooser = types
     }
   }))
   .views(self => ({
-    // get currentNode() {
-    //   return self.forLink.nodes[self.nodeIndex];
-    // },
     get input() {
       return self.inputMode ? self.filter : null;
     },
@@ -83,23 +79,9 @@ export const Chooser = types
         }
       }
       return cells;
-      // return (
-      //   makeSelectCells(repo.main, 0, 1)
-      // .concat(makeSearchCells(inputs, 5))
-      // .concat(makeSearchCells(dependencies, 10))
-      //     .concat({
-      //       key: "FILTER",
-      //       x: 0,
-      //       y: 0,
-      //       width: 5,
-      //       text: self.filter,
-      //       selectable: true
-      //     })
-      // );
       // if (!subDec.label) {
       //   return;
       // }
-      // // HACK: key-finding logic seems hella dirty but simplest way for now
       // let key, text;
       // if (subDec.linkId !== undefined) {
       //   key = `SCL-${subDec.linkId}`;
@@ -128,13 +110,7 @@ export const Chooser = types
       //     text
       //   });
       // }
-      // });
-      // };
-      // return cells;
-      // };
-      // const { links, inputs, dependencies } = repo;
     },
-    // keyMap(exit = () => {}) {
     get keyMap() {
       if (self.inputMode) {
         return e => {
@@ -162,18 +138,6 @@ export const Chooser = types
                   self.toggleInputMode();
                   return;
                 }
-                // const chosenRec = self.selectedCell.record;
-                // const newNode = {};
-                // if (chosenRec.linkId) {
-                //   newNode.ref = chosenRec.linkId;
-                // } else if (chosenRec.inputId) {
-                //   newNode.input = chosenRec.inputId;
-                // } else if (chosenRec.depId) {
-                //   newNode.dep = chosenRec.depId;
-                // }
-                // const { forLink, nodeIndex } = self;
-                // forLink.setNode(nodeIndex, newNode);
-                // exit();
                 self.toggle();
               }
             ]
@@ -183,9 +147,6 @@ export const Chooser = types
           6: {
             label: "Cancel",
             action: self.toggle
-            // action() {
-            //   exit();
-            // }
           }
         }
       };

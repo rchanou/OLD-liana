@@ -36,7 +36,6 @@ export const MainEditor = types
         types.array(types.union(types.string, types.number))
       )
       // changeCellMode: false,
-      // addOpMode: false,
       // editingNode: types.maybe(NodeRef),
       // tree: types.maybe(Tree)
     })
@@ -248,12 +247,8 @@ export const MainEditor = types
       self.chooseOpMode = !self.chooseOpMode;
     },
     toggleAddNodeMode() {
-      // self.chooseOpMode = !self.addNodeMode;
       self.addNodeMode = !self.addNodeMode;
     },
-    // setChoosingLink(forDec) {
-    //   self.linkChooser = { forDec };
-    // },
     toggleNameEdit() {
       if (self.editingPathName) {
         self.editingPathName = null;
@@ -291,13 +286,16 @@ export const MainEditor = types
   }))
   .views(self => ({
     get keyMap() {
+      const {
+        selectedCell
+        // toggleChangeCellMode
+      } = self;
       if (self.chooser.show) {
         return merge(self.chooser.keyMap, {
           2: {
             6: {
               action: [
                 () => {
-                  // console.log("dat merge doe");
                   if (self.addNodeMode) {
                     self.toggleAddNodeMode();
                     const ref = self.chooser.selectedCell.path;
@@ -314,23 +312,10 @@ export const MainEditor = types
             }
           }
         });
-        // return self.chooser.keyMap(() => {
-        //   self.toggleChooser();
-        //   if (self.addNodeMode) {
-        //     self.toggleAddNodeMode();
-        //   }
-        // });
       }
       if (self.tree) {
         return self.tree.keyMap(self.toggleTree);
       }
-      const {
-        selectedCell
-        // toggleChangeCellMode
-        // toggleChooseOpMode,
-        // toggleAddNodeMode
-      } = self;
-      // const { forDec, nodeIndex } = selectedCell;
       if (self.editingPathName) {
         return {
           title: "Type to Change Name",
@@ -339,13 +324,7 @@ export const MainEditor = types
           tab: "Save and Move Right",
           onKey(e) {
             if (e.keyCode == 13) {
-              // if (self.editingNode) {
-              //   self.toggleEditingValMode();
-              //   // self.moveRight();
-              // }
-              // if (self.editingPathName) {
               self.toggleNameEdit();
-              // }
             }
           }
         };
@@ -440,7 +419,6 @@ export const MainEditor = types
             9: o(">=")
           },
           3: {
-            // 0: { label: "Cancel", action: toggleChooseOpMode },
             0: {
               label: "Cancel",
               action() {
@@ -556,7 +534,6 @@ export const MainEditor = types
           label: "Add Ref",
           action() {
             self.toggleAddNodeMode();
-            // self.toggleChooser(selectedCell.path, selectedCell.index);
             self.chooser.toggle(selectedCell.path, selectedCell.index);
           }
         };
@@ -595,7 +572,6 @@ export const MainEditor = types
           }
         };
       }
-      // if ("index" in selectedCell) {
       keyMap[2][9] = {
         label: "Delete",
         action() {
@@ -603,7 +579,6 @@ export const MainEditor = types
           self.repo.deleteFromDec(selectedCell.path, selectedCell.index);
         }
       };
-      // }
       if (selectedCell.editableName) {
         keyMap[2][6] = {
           label: "Change Name",
@@ -611,10 +586,6 @@ export const MainEditor = types
         };
       }
       // if (selectedCell.forDec) {
-      //   keyMap[2][5] = {
-      //     label: "Chooser",
-      //     action: self.toggleChooser
-      //   };
       //   keyMap[3][5] = {
       //     label: "Tree",
       //     action: self.toggleTree
