@@ -146,3 +146,8 @@ export const incrementLetterId = prev => {
   addAtIndex(prev.length - 1);
   return next.join("");
 };
+
+export const IndexType = types.refinement(
+  types.number,
+  n => n >= 0 && !(n % 1)
+);

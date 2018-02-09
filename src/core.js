@@ -7,6 +7,7 @@ import {
   asContext,
   mixinModel,
   optionalModel,
+  IndexType,
   incrementLetterId
 } from "./model-utils";
 import { pack, unpack } from "./pack";
@@ -234,10 +235,9 @@ const Op = mixinModel(Named)("Op", {
   }
 }));
 
-const integerType = types.refinement(types.number, n => n >= 0 && !(n % 1));
 const Arg = mixinModel(ContextUserReader)("Arg", {
   arg: types.refinement(
-    types.array(types.union(types.string, integerType)),
+    types.array(types.union(types.string, IndexType)),
     path => {
       const { length } = path;
       if (typeof path[0] === "number" && typeof path[1] === "number") {
@@ -267,9 +267,9 @@ const Arg = mixinModel(ContextUserReader)("Arg", {
   }
 }));
 
-const RefPath = types.union(
+export const RefPath = types.union(
   types.string,
-  types.refinement(types.array(types.union(integerType, types.string)), ref => {
+  types.refinement(types.array(types.union(IndexType, types.string)), ref => {
     const { length } = ref;
     if (typeof ref[0] === "number") {
       return length === 2 && typeof ref[1] === "string";

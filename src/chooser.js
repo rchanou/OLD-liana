@@ -1,13 +1,16 @@
 import { types } from "mobx-state-tree";
-
-import { UI, cursorify, formatOut } from "./view";
+// import { UI, cursorify, formatOut } from "./view";
+import { UI } from "./view";
 import { optionalModel } from "./model-utils";
+import { RefPath } from "./core";
 
 export const Chooser = types
   .compose(
     "Chooser",
     UI,
     optionalModel({
+      path: types.optional(RefPath, []),
+      index: types.maybe(types.number),
       filter: "",
       inputMode: true
     }),
@@ -24,15 +27,12 @@ export const Chooser = types
     },
     get baseCells() {
       const { filter, repo, currentNode, forLink } = self;
-
       const makeSearchCells = (records, x = 0, y = 0) => {
         const cells = [];
-
         records.forEach(record => {
           if (!record.label) {
             return;
           }
-
           // HACK: key-finding logic seems hella dirty but simplest way for now
           let key, text;
           if (record.linkId !== undefined) {
@@ -45,10 +45,8 @@ export const Chooser = types
             key = `SCD-${record.depId}`;
             text = record.label;
           }
-
           const selectable =
             !record.equivalent(currentNode) && !record.equivalent(forLink);
-
           if (
             record.label.includes(filter) ||
             formatOut(record.out).includes(filter)
@@ -65,12 +63,9 @@ export const Chooser = types
             });
           }
         });
-
         return cells;
       };
-
       const { links, inputs, dependencies } = repo;
-
       return [
         {
           key: "FILTER",
@@ -96,7 +91,6 @@ export const Chooser = types
           }
         };
       }
-
       return {
         1: {
           2: { label: "▲", action: self.moveUp }
@@ -112,9 +106,7 @@ export const Chooser = types
                 self.toggleInputMode();
                 return;
               }
-
               const chosenRec = self.selectedCell.record;
-
               const newNode = {};
               if (chosenRec.linkId) {
                 newNode.ref = chosenRec.linkId;
@@ -123,7 +115,6 @@ export const Chooser = types
               } else if (chosenRec.depId) {
                 newNode.dep = chosenRec.depId;
               }
-
               const { forLink, nodeIndex } = self;
               forLink.setNode(nodeIndex, newNode);
               exit();
@@ -149,4 +140,3 @@ export const Chooser = types
       self.filter = e.target.value;
     }
   }));
-// TODO: check if this and any subscriptions cause memory leaks and try to handle those

@@ -12,6 +12,7 @@ const baseStyle = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
+  textAlign: "center",
   borderRight: border,
   borderBottom: border,
   width: `${wUnit}vw`,
@@ -64,7 +65,7 @@ export const ReactKeyboard = observer(({ store }) => {
   for (let y = 1; y <= 3; y++) {
     const keySetAtY = keyMap[y];
     for (let x = 0; x <= 9; x++) {
-      const newEl = {
+      const newElProps = {
         key: x + "." + y,
         style: {
           ...baseStyle,
@@ -73,18 +74,18 @@ export const ReactKeyboard = observer(({ store }) => {
         }
       };
       if (x === 4 || x === 5) {
-        newEl.style.background = `hsl(${hue},77%,82%)`;
+        newElProps.style.background = `hsl(${hue},77%,82%)`;
       }
       if (heldKeyCoords && heldKeyCoords.x == x && heldKeyCoords.y == y) {
-        newEl.style.background = `hsl(${hue},77%,66%)`;
+        newElProps.style.background = `hsl(${hue},77%,66%)`;
       }
       if (keySetAtY) {
         const thisKey = keySetAtY[x];
         if (thisKey && thisKey.label) {
-          newEl.children = thisKey.label;
+          newElProps.children = thisKey.label;
         }
       }
-      els.push(<div {...newEl} />);
+      els.push(<div {...newElProps} />);
     }
   }
   return els;

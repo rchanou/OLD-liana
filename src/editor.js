@@ -6,7 +6,7 @@ import merge from "deepmerge";
 import { Chooser } from "./chooser";
 // import { Tree } from "./tree";
 import { optionalModel } from "./model-utils";
-import { UI, cursorify, calcWidth } from "./view";
+import { UI, calcWidth } from "./view";
 import { packApp } from "./app";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -29,15 +29,15 @@ export const MainEditor = types
     optionalModel({
       groupFilter: "test",
       editFilterMode: false,
-      // changeCellMode: false,
       chooseOpMode: false,
       addNodeMode: false,
-      // addOpMode: false,
       chooser: types.maybe(Chooser),
-      // editingNode: types.maybe(NodeRef),
       editingPathName: types.maybe(
         types.array(types.union(types.string, types.number))
       )
+      // changeCellMode: false,
+      // addOpMode: false,
+      // editingNode: types.maybe(NodeRef),
       // tree: types.maybe(Tree)
     })
   )
