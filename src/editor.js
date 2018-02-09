@@ -189,15 +189,15 @@ export const MainEditor = types
       };
       return makeBaseCells();
     },
-    // get activeCells() {
-    //   if (self.chooser) {
-    //     return self.chooser.allCells;
-    //   }
-    //   if (self.tree) {
-    //     return self.tree.allCells;
-    //   }
-    //   return self.allCells;
-    // },
+    get activeCells() {
+      if (self.chooser) {
+        return self.chooser.cells;
+      }
+      if (self.tree) {
+        return self.tree.allCells;
+      }
+      return self.cells;
+    },
     get input() {
       if (self.editingNode) {
         return self.editingNode.node.out;
@@ -229,6 +229,14 @@ export const MainEditor = types
     toggleEditFilterMode() {
       self.editFilterMode = !self.editFilterMode;
     },
+    toggleChooser(path, index) {
+      if (self.chooser) {
+        destroy(self.chooser);
+      } else {
+        self.chooser = { path, index };
+      }
+    },
+
     // toggleChooser(forDec, nodeIndex) {
     //   if (self.chooser) {
     //     destroy(self.chooser);
@@ -541,7 +549,7 @@ export const MainEditor = types
           label: "Add Ref",
           action() {
             self.toggleAddNodeMode();
-            self.toggleChooser();
+            self.toggleChooser(selectedCell.path, selectedCell.index);
           }
         };
       }

@@ -134,7 +134,7 @@ export const App = types
   })
   .views(self => ({
     get cells() {
-      return self.mainEditor.cells;
+      return self.mainEditor.activeCells;
       // return self.mainEditor.cells.concat(self.chooser ? self.chooser.cells : []);
     },
     get keyMap() {
