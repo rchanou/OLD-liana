@@ -375,13 +375,9 @@ export const Group = mixinModel(
   }
 }));
 
-export const Repo = types
-  .model("Repo", {
-    main: Dec,
-    params: types.optional(types.map(types.array(types.maybe(Param))), {}),
-    groups: types.optional(types.map(Group), {}),
-    comments: types.optional(types.map(types.array(types.string)), {})
-  })
+export const ParamSet = optionalModel("ParamSet", {
+  params: types.optional(types.map(types.array(types.maybe(Param))), {})
+})
   .views(self => ({
     get allParams() {
       const plainParams = getSnapshot(self.params);
@@ -407,7 +403,25 @@ export const Repo = types
         };
         fillParamsFrom(self.main);
       });
-    },
+    }
+  }))
+  .actions(self => ({
+    addParam(path) {
+      const pathKey = path.join(",");
+      const { params } = self;
+      if (!params.has(pathKey)) {
+        params.set(pathKey, []);
+      }
+      params.get(pathKey).splice(0, 0, {});
+    }
+  }));
+
+export const Repo = mixinModel(ParamSet)("Repo", {
+  main: Dec,
+  groups: types.optional(types.map(Group), {}),
+  comments: types.optional(types.map(types.array(types.string)), {})
+})
+  .views(self => ({
     get out() {
       return self.run();
     },

@@ -299,7 +299,7 @@ export const MainEditor = types
                   if (self.addNodeMode) {
                     self.toggleAddNodeMode();
                     const ref = self.chooser.selectedCell.path;
-                    const { path, index } = self.selectedCell;
+                    const { path, index } = selectedCell;
                     self.repo.addNode(
                       { ref },
                       path,
@@ -516,11 +516,16 @@ export const MainEditor = types
             }
           }
           // 6: { label: "Change Node", action: toggleChangeCellMode }
-        },
-        3: {}
+        }
       };
-      if (
-        !selectedCell.isDec &&
+      if (selectedCell.isDec) {
+        keyMap[1][6] = {
+          label: "Add Param",
+          action() {
+            self.repo.addParam(selectedCell.path);
+          }
+        };
+      } else if (
         typeof selectedCell.path[selectedCell.path.length - 1] === "string"
       ) {
         keyMap[1][6] = {
@@ -547,7 +552,7 @@ export const MainEditor = types
             if (groupIndex === -1) {
               return;
             }
-            const selectedCellKey = self.selectedCell.key;
+            const selectedCellKey = selectedCell.key;
             self.shownGroup.moveUp(groupIndex);
             const newCellIndex = self.baseCells.findIndex(
               c => c.key === selectedCellKey
@@ -563,7 +568,7 @@ export const MainEditor = types
             if (groupIndex === -1) {
               return;
             }
-            const selectedCellKey = self.selectedCell.key;
+            const selectedCellKey = selectedCell.key;
             self.shownGroup.moveDown(groupIndex);
             const newCellIndex = self.baseCells.findIndex(
               c => c.key === selectedCellKey
