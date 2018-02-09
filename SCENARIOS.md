@@ -159,3 +159,4 @@ Anything not idempotent can be called "unbounded".
 * add package source
 * set param type def(s)
 * set param validator (enum or ref)
+* detect hoistable refs

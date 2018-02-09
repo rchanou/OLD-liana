@@ -110,8 +110,15 @@ export const App = types
         const YKeyMap = keyMap[y];
         if (YKeyMap) {
           const thisKey = YKeyMap[x];
-          if (thisKey && thisKey.action) {
-            thisKey.action();
+          if (thisKey) {
+            const { action } = thisKey;
+            if (typeof action === "function") {
+              action();
+            } else if (Array.isArray(action)) {
+              for (const subAction of action) {
+                subAction();
+              }
+            }
           }
         }
       },

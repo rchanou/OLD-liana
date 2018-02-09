@@ -10,16 +10,34 @@ export const Chooser = types
     "Chooser",
     UI,
     optionalModel({
+      show: false,
       path: types.optional(RefPath, []),
       index: types.maybe(types.number),
       filter: "",
       inputMode: false
     })
   )
-  .views(self => ({
-    get currentNode() {
-      return self.forLink.nodes[self.nodeIndex];
+  .actions(self => ({
+    toggle(path, index) {
+      if (path != null) {
+        self.path = path;
+      }
+      if (index != null) {
+        self.index = index;
+      }
+      self.show = !self.show;
     },
+    toggleInputMode() {
+      self.inputMode = !self.inputMode;
+    },
+    handleInput(e) {
+      self.filter = e.target.value;
+    }
+  }))
+  .views(self => ({
+    // get currentNode() {
+    //   return self.forLink.nodes[self.nodeIndex];
+    // },
     get input() {
       return self.inputMode ? self.filter : null;
     },
@@ -38,16 +56,17 @@ export const Chooser = types
           selectable: true
         }
       ];
-      const pushDecRefCells = (dec, path = []) => {
+      const pushDecRefCells = (dec, prePath = []) => {
         dec.forEach((subDec, subId) => {
-          const subPath = [...path, subId];
+          const path = [...prePath, subId];
           cells.push({
-            key: `CHS-${subPath}`,
+            key: `CHS-${path}`,
             x,
             y: y++,
             width: 5,
-            text: `${user.pathName(subPath)} = ${formatOut(repo, subPath)}`,
+            text: `${user.pathName(path)} = ${formatOut(repo, path)}`,
             selectable: true,
+            path,
             fill: "orchid"
           });
         });
@@ -57,8 +76,10 @@ export const Chooser = types
       const runningPath = [];
       for (const id of path) {
         currentDec = currentDec.get(id);
-        if (!isObservableArray(currentDec)) {
-          pushDecRefCells(currentDec);
+        if (currentDec && !isObservableArray(currentDec)) {
+          //TODO: warn, throw if not?
+          runningPath.push(id);
+          pushDecRefCells(currentDec, runningPath);
         }
       }
       return cells;
@@ -113,7 +134,8 @@ export const Chooser = types
       // };
       // const { links, inputs, dependencies } = repo;
     },
-    keyMap(exit = () => {}) {
+    // keyMap(exit = () => {}) {
+    get keyMap() {
       if (self.inputMode) {
         return e => {
           if (e.keyCode == 13) {
@@ -134,42 +156,38 @@ export const Chooser = types
           3: { label: "▶", action: self.moveRight },
           6: {
             label: "Choose",
-            action() {
-              if (self.selectedCell.key === "FILTER") {
-                self.toggleInputMode();
-                return;
+            action: [
+              () => {
+                if (self.selectedCell.key === "FILTER") {
+                  self.toggleInputMode();
+                  return;
+                }
+                // const chosenRec = self.selectedCell.record;
+                // const newNode = {};
+                // if (chosenRec.linkId) {
+                //   newNode.ref = chosenRec.linkId;
+                // } else if (chosenRec.inputId) {
+                //   newNode.input = chosenRec.inputId;
+                // } else if (chosenRec.depId) {
+                //   newNode.dep = chosenRec.depId;
+                // }
+                // const { forLink, nodeIndex } = self;
+                // forLink.setNode(nodeIndex, newNode);
+                // exit();
+                self.toggle();
               }
-              const chosenRec = self.selectedCell.record;
-              const newNode = {};
-              if (chosenRec.linkId) {
-                newNode.ref = chosenRec.linkId;
-              } else if (chosenRec.inputId) {
-                newNode.input = chosenRec.inputId;
-              } else if (chosenRec.depId) {
-                newNode.dep = chosenRec.depId;
-              }
-              const { forLink, nodeIndex } = self;
-              forLink.setNode(nodeIndex, newNode);
-              exit();
-            }
+            ]
           }
         },
         3: {
           6: {
             label: "Cancel",
-            action() {
-              exit();
-            }
+            action: self.toggle
+            // action() {
+            //   exit();
+            // }
           }
         }
       };
-    }
-  }))
-  .actions(self => ({
-    toggleInputMode() {
-      self.inputMode = !self.inputMode;
-    },
-    handleInput(e) {
-      self.filter = e.target.value;
     }
   }));

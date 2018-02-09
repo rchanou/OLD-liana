@@ -31,7 +31,7 @@ export const MainEditor = types
       editFilterMode: false,
       chooseOpMode: false,
       addNodeMode: false,
-      chooser: types.maybe(Chooser),
+      chooser: types.optional(Chooser, {}),
       editingPathName: types.maybe(
         types.array(types.union(types.string, types.number))
       )
@@ -194,7 +194,7 @@ export const MainEditor = types
       return makeBaseCells();
     },
     get activeCells() {
-      if (self.chooser) {
+      if (self.chooser.show) {
         return self.chooser.cells;
       }
       if (self.tree) {
@@ -217,7 +217,7 @@ export const MainEditor = types
   }))
   .actions(self => ({
     handleInput(e) {
-      if (self.chooser) {
+      if (self.chooser.show) {
         self.chooser.handleInput(e);
       }
       if (self.editingNode) {
@@ -233,22 +233,6 @@ export const MainEditor = types
     toggleEditFilterMode() {
       self.editFilterMode = !self.editFilterMode;
     },
-    toggleChooser(path, index) {
-      if (self.chooser) {
-        destroy(self.chooser);
-      } else {
-        self.chooser = { path, index };
-      }
-    },
-
-    // toggleChooser(forDec, nodeIndex) {
-    //   if (self.chooser) {
-    //     destroy(self.chooser);
-    //   } else {
-    //     const { forDec, nodeIndex } = self.selectedCell;
-    //     self.chooser = { forDec, nodeIndex };
-    //   }
-    // },
     // toggleChangeCellMode() {
     //   self.changeCellMode = !self.changeCellMode;
     // },
@@ -307,13 +291,35 @@ export const MainEditor = types
   }))
   .views(self => ({
     get keyMap() {
-      if (self.chooser) {
-        return self.chooser.keyMap(() => {
-          self.toggleChooser();
-          if (self.addNodeMode) {
-            self.toggleAddNodeMode();
+      if (self.chooser.show) {
+        return merge(self.chooser.keyMap, {
+          2: {
+            6: {
+              action: [
+                () => {
+                  // console.log("dat merge doe");
+                  if (self.addNodeMode) {
+                    self.toggleAddNodeMode();
+                    const ref = self.chooser.selectedCell.path;
+                    const { path, index } = self.selectedCell;
+                    self.repo.addNode(
+                      { ref },
+                      path,
+                      index == null ? 0 : index + 1
+                    );
+                    self.selectCellIndex(self.selectedCellIndex + 1);
+                  }
+                }
+              ]
+            }
           }
         });
+        // return self.chooser.keyMap(() => {
+        //   self.toggleChooser();
+        //   if (self.addNodeMode) {
+        //     self.toggleAddNodeMode();
+        //   }
+        // });
       }
       if (self.tree) {
         return self.tree.keyMap(self.toggleTree);
@@ -404,7 +410,8 @@ export const MainEditor = types
             if (self.addNodeMode) {
               self.toggleChooseOpMode();
               self.toggleAddNodeMode();
-              self.repo.addNode({ op }, selectedCell.path, selectedCell.index);
+              const { path, index } = selectedCell;
+              self.repo.addNode({ op }, path, index == null ? 0 : index + 1);
               self.selectCellIndex(self.selectedCellIndex + 1);
             }
           }
@@ -549,7 +556,8 @@ export const MainEditor = types
           label: "Add Ref",
           action() {
             self.toggleAddNodeMode();
-            self.toggleChooser(selectedCell.path, selectedCell.index);
+            // self.toggleChooser(selectedCell.path, selectedCell.index);
+            self.chooser.toggle(selectedCell.path, selectedCell.index);
           }
         };
       }
