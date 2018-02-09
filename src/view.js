@@ -248,3 +248,14 @@ export const cursorify = (baseCell, key, input) => {
     key: `CURSOR-${key}`
   };
 };
+
+export const formatOut = (repo, path) => {
+  const result = repo.run(path);
+  if (typeof result === "function") {
+    return "f";
+  }
+  if (typeof result === "object") {
+    return JSON.stringify(result);
+  }
+  return String(result);
+};

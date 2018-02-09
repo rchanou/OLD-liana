@@ -6,7 +6,7 @@ import merge from "deepmerge";
 import { Chooser } from "./chooser";
 // import { Tree } from "./tree";
 import { optionalModel } from "./model-utils";
-import { UI, calcWidth } from "./view";
+import { UI, calcWidth, formatOut } from "./view";
 import { packApp } from "./app";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -145,13 +145,7 @@ export const MainEditor = types
               x += width;
             });
             if (!dec.some(node => "arg" in node)) {
-              const result = repo.run(path);
-              const text =
-                typeof result === "function"
-                  ? "f"
-                  : typeof result === "object"
-                    ? JSON.stringify(result)
-                    : String(result);
+              const text = formatOut(repo, path);
               cells.push({
                 key: `CL-${path}-out`,
                 x,

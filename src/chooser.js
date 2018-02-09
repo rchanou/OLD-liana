@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 // import { UI, cursorify, formatOut } from "./view";
-import { UI } from "./view";
+import { UI, formatOut } from "./view";
 import { optionalModel } from "./model-utils";
 import { RefPath } from "./core";
 
@@ -24,10 +24,8 @@ export const Chooser = types
       return self.inputMode ? self.filter : null;
     },
     get baseCells() {
-      // const { filter, repo, currentNode, forLink } = self;
       const { filter, repo, user, path, index } = self;
       const { main } = repo;
-      // const makeSelectCells = (x = 0, y = 0) => {
       let x = 0;
       let y = 0;
       const cells = [
@@ -40,38 +38,29 @@ export const Chooser = types
           selectable: true
         }
       ];
-      const pushDecRefCells = dec => {
+      const pushDecRefCells = (dec, path = []) => {
         dec.forEach((subDec, subId) => {
+          const subPath = [...path, subId];
           cells.push({
-            key: `CHS-${subId}`,
+            key: `CHS-${subPath}`,
             x,
             y: y++,
             width: 5,
-            text: subId,
-            selectable: true
+            text: `${user.pathName(subPath)} = ${formatOut(repo, subPath)}`,
+            selectable: true,
+            fill: "orchid"
           });
-          // if (isObservableArray(subDec)) {
-          //   return;
-          // }
-          // pushDecRefCells(subDec);
         });
       };
       let currentDec = repo.main;
       pushDecRefCells(currentDec);
+      const runningPath = [];
       for (const id of path) {
         currentDec = currentDec.get(id);
         if (!isObservableArray(currentDec)) {
           pushDecRefCells(currentDec);
         }
       }
-      // const pushDecCells = dec => {
-      //   if (isObservableArray(dec)) {
-      //     cells.push();
-      //     return;
-      //   }
-      //   dec.forEach(subDec => {});
-      // };
-      // pushDecCells(main);
       return cells;
       // return (
       //   makeSelectCells(repo.main, 0, 1)
@@ -126,8 +115,8 @@ export const Chooser = types
     },
     keyMap(exit = () => {}) {
       if (self.inputMode) {
-        return keyCode => {
-          if (keyCode == 13) {
+        return e => {
+          if (e.keyCode == 13) {
             self.toggleInputMode();
             if (self.baseCells.length > 1) {
               self.selectCellIndex(self.selectedCellIndex + 1);

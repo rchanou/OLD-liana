@@ -267,6 +267,7 @@ const Arg = mixinModel(ContextUserReader)("Arg", {
   }
 }));
 
+// TODO: cleanup, refine this type definition
 export const RefPath = types.union(
   types.string,
   types.refinement(types.array(types.union(IndexType, types.string)), ref => {
@@ -430,7 +431,7 @@ export const Repo = types
               }
             } else if ("arg" in node) {
               const { arg } = node;
-              const scopePath = arg.slice(0, -1);
+              const scopePath = arg.length === 1 ? "" : arg.slice(0, -1);
               const index = arg[arg.length - 1];
               return scopes[scopePath][index];
             }
