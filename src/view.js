@@ -33,9 +33,10 @@ export const UI = optionalModel("UI", {
     return {
       get selectedCell() {
         const { baseCells } = self;
-        const selectedCell = baseCells[self.selectedCellIndex];
-        if (!selectedCell) {
-          return baseCells[baseCells.length - 1];
+        let i = self.selectedCellIndex;
+        let selectedCell = baseCells[i];
+        while ((!selectedCell || !selectedCell.selectable) && i) {
+          selectedCell = baseCells[i--];
         }
         return selectedCell;
       },

@@ -122,8 +122,6 @@ export const MainEditor = types
           }
           if (!isDec) {
             x += width;
-            // dec.forEach((node, i) => {
-
             let params;
             let i = 0;
             for (i; i < dec.length; i++) {
@@ -589,15 +587,15 @@ export const MainEditor = types
           }
         };
       }
-      if ("index" in selectedCell) {
-        keyMap[2][9] = {
-          label: "Delete",
-          action() {
-            self.selectCellIndex(self.selectedCellIndex - 1);
-            self.repo.deleteNode(selectedCell.path, selectedCell.index);
-          }
-        };
-      }
+      // if ("index" in selectedCell) {
+      keyMap[2][9] = {
+        label: "Delete",
+        action() {
+          self.selectCellIndex(self.selectedCellIndex - 1);
+          self.repo.deleteFromDec(selectedCell.path, selectedCell.index);
+        }
+      };
+      // }
       if (selectedCell.editableName) {
         keyMap[2][6] = {
           label: "Change Name",

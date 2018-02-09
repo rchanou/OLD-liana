@@ -533,7 +533,12 @@ export const Repo = types
         }
         dec.splice(index, 0, item);
       },
-      deleteNode(path, index) {
+      deleteFromDec(path, index) {
+        if (index === undefined) {
+          const scope = getDec(path.slice(0, -1));
+          scope.delete(path[path.length - 1]);
+          return;
+        }
         const dec = getDec(path);
         dec.splice(index, 1);
       }

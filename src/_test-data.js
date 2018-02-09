@@ -58,7 +58,7 @@ export const app = {
       // R: [{ a: [0] }]
     },
     params: {
-      c: []
+      c: [{}]
     },
     groups: {
       a: { name: "test", decs: ["a", "a2", "a3", "a4", "a5", "d"], id: "a" }
