@@ -144,3 +144,18 @@ Anything not idempotent can be called "unbounded".
 * Link/Input/Dep edit comment mode, comment selected
   * Enter edit mode - TEXT
   * Delete
+
+### Misc Actions + Feats
+
+* show slots
+
+* choose ref
+* choose num
+* choose text
+* checkbox
+* filter refs by search
+* add comment
+* add sample
+* add package source
+* set param type def(s)
+* set param validator (enum or ref)

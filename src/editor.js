@@ -122,7 +122,12 @@ export const MainEditor = types
           }
           if (!isDec) {
             x += width;
-            dec.forEach((node, i) => {
+            // dec.forEach((node, i) => {
+
+            let params;
+            let i = 0;
+            for (i; i < dec.length; i++) {
+              const node = dec[i];
               const { width = 2 } = node;
               const newCell = {
                 key: `CL-${path}-${i}`,
@@ -137,13 +142,19 @@ export const MainEditor = types
               };
               if ("ref" in node) {
                 newCell.gotoCellKey = `CL-${node.ref.slice()}-0`;
+                if (!i) {
+                  params = repo.params.get(path);
+                  if (params) {
+                    console.log("par", params);
+                  }
+                }
               }
               if ("arg" in node) {
                 newCell.gotoCellKey = `CL-P-${node.arg.slice()}`;
               }
               cells.push(newCell);
               x += width;
-            });
+            }
             if (!dec.some(node => "arg" in node)) {
               const text = formatOut(repo, path);
               cells.push({
@@ -156,6 +167,7 @@ export const MainEditor = types
             }
             return cells;
           }
+
           if (id !== undefined) {
             y++;
           }
@@ -274,12 +286,9 @@ export const MainEditor = types
     //     self.tree = { rootLink: self.selectedCell.forDec };
     //   }
     // },
-    addToDec(item) {
+    addToDec(item = []) {
       const { isDec, path } = self.selectedCell;
-      const newId = self.repo.addToDec(
-        isDec ? path : path.slice(0, -1),
-        item || [{ op: "+" }]
-      );
+      const newId = self.repo.addToDec(isDec ? path : path.slice(0, -1), item);
       if (self.groupFilter && newId.length === 1) {
         self.shownGroup.add(newId[0]);
       }
@@ -305,9 +314,6 @@ export const MainEditor = types
           self.toggleChooser();
           if (self.addNodeMode) {
             self.toggleAddNodeMode();
-          }
-          if (self.chooseOpMode) {
-            self.toggleChooseOpMode();
           }
         });
       }
@@ -398,8 +404,10 @@ export const MainEditor = types
           label: op,
           action() {
             if (self.addNodeMode) {
-              self.repo.addNode({ op }, selectedCell.path, selectedCell.index);
+              self.toggleChooseOpMode();
               self.toggleAddNodeMode();
+              self.repo.addNode({ op }, selectedCell.path, selectedCell.index);
+              self.selectCellIndex(self.selectedCellIndex + 1);
             }
           }
         });
@@ -511,17 +519,17 @@ export const MainEditor = types
             action: self.toggleEditFilterMode
           },
           5: {
-            label: "New Line",
+            label: "Add Line",
             action() {
-              self.addToDec([{ op: "+" }]);
+              self.addToDec();
             }
           }
         },
         2: {
           5: {
-            label: "New Func",
+            label: "Add Func",
             action() {
-              self.addToDec({ R: [{ op: "+" }] });
+              self.addToDec({ R: [] });
             }
           }
           // 6: { label: "Change Node", action: toggleChangeCellMode }

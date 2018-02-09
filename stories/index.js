@@ -12,7 +12,7 @@ const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
 let snapshotToUse;
 if (saved) {
   snapshotToUse = JSON.parse(saved);
-  snapshotToUse.repo.groups = T.app.repo.groups;
+  snapshotToUse.repo.params = T.app.repo.params;
 } else {
   snapshotToUse = T.app;
 }

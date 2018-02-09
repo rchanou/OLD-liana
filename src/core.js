@@ -301,7 +301,7 @@ const Ref = mixinModel(ContextUserReader)("Ref", {
 
 const Node = types.union(Val, Op, Arg, PkgRef, Ref);
 
-const Line = types.refinement(types.array(Node), l => l.length);
+const Line = types.array(Node);
 
 const walkPath = (base, up, walk) => {
   const finalPath = [...base];
@@ -419,6 +419,9 @@ export const Repo = types
           dec = dec.get(id);
         }
         if (isObservableArray(dec)) {
+          if (!dec.length) {
+            return undefined; // maybe return some special "pending" symbol instead?
+          }
           const parseNode = node => {
             if ("out" in node) {
               return node.out;
@@ -512,7 +515,7 @@ export const Repo = types
       return dec;
     };
     return {
-      addToDec(scopePath, item) {
+      addToDec(scopePath, item = []) {
         const scope = getDec(scopePath);
         const ids = scope.keys();
         const lastId = ids[ids.length - 1];
