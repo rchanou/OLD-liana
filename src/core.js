@@ -267,25 +267,24 @@ const Arg = mixinModel(ContextUserReader)("Arg", {
   }
 }));
 
-const Ref = mixinModel(ContextUserReader)("Ref", {
-  ref: types.union(
-    types.string,
-    types.refinement(
-      types.array(types.union(integerType, types.string)),
-      ref => {
-        const { length } = ref;
-        if (typeof ref[0] === "number") {
-          return length === 2 && typeof ref[1] === "string";
-        }
-        for (let i = 0; i < length; i++) {
-          if (typeof ref[i] !== "string") {
-            return false;
-          }
-        }
-        return true;
+const RefPath = types.union(
+  types.string,
+  types.refinement(types.array(types.union(integerType, types.string)), ref => {
+    const { length } = ref;
+    if (typeof ref[0] === "number") {
+      return length === 2 && typeof ref[1] === "string";
+    }
+    for (let i = 0; i < length; i++) {
+      if (typeof ref[i] !== "string") {
+        return false;
       }
-    )
-  )
+    }
+    return true;
+  })
+);
+
+const Ref = mixinModel(ContextUserReader)("Ref", {
+  ref: RefPath
 }).views(self => ({
   get name() {
     const { ref } = self;
@@ -316,8 +315,26 @@ const walkPath = (base, up, walk) => {
 
 const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
 
+const paramTypeEnum = {
+  any: "A",
+  num: "N",
+  string: "S",
+  bool: "B"
+};
+
+const paramTypeEnumList = [];
+for (const enumKey in paramTypeEnum) {
+  paramTypeEnumList.push(paramTypeEnum[enumKey]);
+}
+
+const ParamType = types.maybe(
+  types.enumeration("ParamType", paramTypeEnumList)
+);
+
 const Param = optionalModel("Param", {
-  type: types.maybe(types.string)
+  type: types.maybe(types.string),
+  validator: types.maybe(RefPath),
+  rest: false
 });
 
 export const Group = mixinModel(

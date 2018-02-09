@@ -63,9 +63,31 @@ export const UI = optionalModel("UI", {
             2: { label: "▲", action: self.moveUp }
           },
           2: {
+            0: {
+              label: "Jump to Top",
+              action() {
+                self.selectCellIndex(0);
+              }
+            },
             1: { label: "◀", action: self.moveLeft },
             2: { label: "▼", action: self.moveDown },
             3: { label: "▶", action: self.moveRight }
+          },
+          3: {
+            0: {
+              label: "Jump to End",
+              action() {
+                const { baseCells } = self;
+                let i = baseCells.length;
+                let toCellIndex;
+                while (toCellIndex === undefined && --i) {
+                  if (self.baseCells[i].selectable) {
+                    toCellIndex = i;
+                  }
+                }
+                self.selectCellIndex(i);
+              }
+            }
           }
         };
       },

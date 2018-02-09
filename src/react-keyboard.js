@@ -8,7 +8,7 @@ const yUnit = 33;
 
 const baseStyle = {
   position: "fixed",
-  background: `hsl(${hue},77%,77%)`,
+  background: `hsl(${hue},77%,72%)`,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
