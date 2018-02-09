@@ -1,14 +1,20 @@
 import { types } from "mobx-state-tree";
 
-// import { Link, Input, Dependency } from "./core";
-import { viewModel, cursorify, formatOut } from "./view";
+import { UI, cursorify, formatOut } from "./view";
+import { optionalModel } from "./model-utils";
 
-export const Chooser = viewModel("Chooser", {
-  // forLink: types.reference(Link),
-  nodeIndex: types.number,
-  filter: types.optional(types.string, ""),
-  inputMode: types.optional(types.boolean, true)
-})
+export const Chooser = types
+  .compose(
+    "Chooser",
+    UI,
+    optionalModel({
+      filter: "",
+      inputMode: true
+    }),
+    types.model({
+      nodeIndex: types.number
+    })
+  )
   .views(self => ({
     get currentNode() {
       return self.forLink.nodes[self.nodeIndex];

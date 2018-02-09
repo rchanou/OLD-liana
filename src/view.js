@@ -225,13 +225,13 @@ export const UI = optionalModel("UI", {
   }));
 
 export const uiModel = (name, ...args) => {
+  if (typeof name === "object") {
+    return types.compose(types.model(name), UI);
+  }
   if (args.length) {
     return types.compose(types.model(name, ...args), UI);
   }
-  if (name) {
-    return types.compose(name, UI);
-  }
-  return UI;
+  return types.compose(name, UI);
 };
 
 export const cursorify = (baseCell, key, input) => {

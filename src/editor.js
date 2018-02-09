@@ -3,7 +3,7 @@ import { isObservableArray } from "mobx";
 import produce from "immer";
 import merge from "deepmerge";
 
-// import { Chooser } from "./chooser";
+import { Chooser } from "./chooser";
 // import { Tree } from "./tree";
 import { optionalModel } from "./model-utils";
 import { UI, cursorify, calcWidth } from "./view";
@@ -11,16 +11,16 @@ import { packApp } from "./app";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 
-const NodeRef = types
-  .model("NodeRef", {
-    // forDec: types.reference(Declaration),
-    nodeIndex: types.maybe(types.number)
-  })
-  .views(self => ({
-    get node() {
-      return self.forDec.nodes[self.nodeIndex];
-    }
-  }));
+// const NodeRef = types
+//   .model("NodeRef", {
+//     // forDec: types.reference(Declaration),
+//     nodeIndex: types.maybe(types.number)
+//   })
+//   .views(self => ({
+//     get node() {
+//       return self.forDec.nodes[self.nodeIndex];
+//     }
+//   }));
 
 export const MainEditor = types
   .compose(
@@ -29,12 +29,12 @@ export const MainEditor = types
     optionalModel({
       groupFilter: "test",
       editFilterMode: false,
-      changeCellMode: false,
+      // changeCellMode: false,
       chooseOpMode: false,
       addNodeMode: false,
-      addOpMode: false,
-      // chooser: types.maybe(Chooser),
-      editingNode: types.maybe(NodeRef),
+      // addOpMode: false,
+      chooser: types.maybe(Chooser),
+      // editingNode: types.maybe(NodeRef),
       editingPathName: types.maybe(
         types.array(types.union(types.string, types.number))
       )
@@ -229,35 +229,35 @@ export const MainEditor = types
     toggleEditFilterMode() {
       self.editFilterMode = !self.editFilterMode;
     },
-    toggleChooser(forDec, nodeIndex) {
-      if (self.chooser) {
-        destroy(self.chooser);
-      } else {
-        const { forDec, nodeIndex } = self.selectedCell;
-        self.chooser = { forDec, nodeIndex };
-      }
-    },
-    toggleChangeCellMode() {
-      self.changeCellMode = !self.changeCellMode;
-    },
-    toggleEditingValMode() {
-      if (self.editingNode) {
-        destroy(self.editingNode);
-      } else {
-        const { forDec, nodeIndex } = self.selectedCell;
-        self.editingNode = { forDec, nodeIndex };
-      }
-    },
-    // toggleChooseOpMode() {
-    //   self.chooseOpMode = !self.chooseOpMode;
+    // toggleChooser(forDec, nodeIndex) {
+    //   if (self.chooser) {
+    //     destroy(self.chooser);
+    //   } else {
+    //     const { forDec, nodeIndex } = self.selectedCell;
+    //     self.chooser = { forDec, nodeIndex };
+    //   }
     // },
+    // toggleChangeCellMode() {
+    //   self.changeCellMode = !self.changeCellMode;
+    // },
+    // toggleEditingValMode() {
+    //   if (self.editingNode) {
+    //     destroy(self.editingNode);
+    //   } else {
+    //     const { forDec, nodeIndex } = self.selectedCell;
+    //     self.editingNode = { forDec, nodeIndex };
+    //   }
+    // },
+    toggleChooseOpMode() {
+      self.chooseOpMode = !self.chooseOpMode;
+    },
     toggleAddNodeMode() {
-      self.chooseOpMode = !self.addNodeMode;
+      // self.chooseOpMode = !self.addNodeMode;
       self.addNodeMode = !self.addNodeMode;
     },
-    setChoosingLink(forDec) {
-      self.linkChooser = { forDec };
-    },
+    // setChoosingLink(forDec) {
+    //   self.linkChooser = { forDec };
+    // },
     toggleNameEdit() {
       if (self.editingPathName) {
         self.editingPathName = null;
@@ -265,13 +265,13 @@ export const MainEditor = types
         self.editingPathName = self.selectedCell.path;
       }
     },
-    toggleTree() {
-      if (self.tree) {
-        destroy(self.tree);
-      } else {
-        self.tree = { rootLink: self.selectedCell.forDec };
-      }
-    },
+    // toggleTree() {
+    //   if (self.tree) {
+    //     destroy(self.tree);
+    //   } else {
+    //     self.tree = { rootLink: self.selectedCell.forDec };
+    //   }
+    // },
     addToDec(item) {
       const { isDec, path } = self.selectedCell;
       const newId = self.repo.addToDec(
@@ -299,18 +299,26 @@ export const MainEditor = types
   .views(self => ({
     get keyMap() {
       if (self.chooser) {
-        return self.chooser.keyMap(self.toggleChooser);
+        return self.chooser.keyMap(() => {
+          self.toggleChooser();
+          if (self.addNodeMode) {
+            self.toggleAddNodeMode();
+          }
+          if (self.chooseOpMode) {
+            self.toggleChooseOpMode();
+          }
+        });
       }
       if (self.tree) {
         return self.tree.keyMap(self.toggleTree);
       }
       const {
-        selectedCell,
-        toggleChangeCellMode
+        selectedCell
+        // toggleChangeCellMode
         // toggleChooseOpMode,
         // toggleAddNodeMode
       } = self;
-      const { forDec, nodeIndex } = selectedCell;
+      // const { forDec, nodeIndex } = selectedCell;
       if (self.editingPathName) {
         return {
           title: "Type to Change Name",
@@ -341,48 +349,48 @@ export const MainEditor = types
           }
         };
       }
-      if (self.changeCellMode) {
-        const keyMap = {
-          2: {
-            6: {
-              label: "Op",
-              action() {
-                toggleChangeCellMode();
-                // toggleChooseOpMode();
-              }
-            }
-          },
-          3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
-        };
-        if (nodeIndex) {
-          keyMap[1] = {
-            7: {
-              label: "Num",
-              action() {
-                forDec.setNode(nodeIndex, { val: 0 });
-                toggleChangeCellMode();
-                self.toggleEditingValMode();
-              }
-            },
-            8: {
-              label: "Text",
-              action() {
-                forDec.setNode(nodeIndex, { val: "" });
-                toggleChangeCellMode();
-                self.toggleEditingValMode();
-              }
-            },
-            9: {
-              label: "Bool",
-              action() {
-                forDec.setNode(nodeIndex, { val: false });
-                toggleChangeCellMode();
-              }
-            }
-          };
-        }
-        return keyMap;
-      }
+      // if (self.changeCellMode) {
+      //   const keyMap = {
+      //     2: {
+      //       6: {
+      //         label: "Op",
+      //         action() {
+      //           toggleChangeCellMode();
+      //           // toggleChooseOpMode();
+      //         }
+      //       }
+      //     },
+      //     3: { 6: { label: "Cancel", action: toggleChangeCellMode } }
+      //   };
+      //   if (nodeIndex) {
+      //     keyMap[1] = {
+      //       7: {
+      //         label: "Num",
+      //         action() {
+      //           forDec.setNode(nodeIndex, { val: 0 });
+      //           toggleChangeCellMode();
+      //           self.toggleEditingValMode();
+      //         }
+      //       },
+      //       8: {
+      //         label: "Text",
+      //         action() {
+      //           forDec.setNode(nodeIndex, { val: "" });
+      //           toggleChangeCellMode();
+      //           self.toggleEditingValMode();
+      //         }
+      //       },
+      //       9: {
+      //         label: "Bool",
+      //         action() {
+      //           forDec.setNode(nodeIndex, { val: false });
+      //           toggleChangeCellMode();
+      //         }
+      //       }
+      //     };
+      //   }
+      //   return keyMap;
+      // }
       if (self.chooseOpMode) {
         const o = op => ({
           label: op,
@@ -423,6 +431,7 @@ export const MainEditor = types
               action() {
                 if (self.addNodeMode) {
                   self.toggleAddNodeMode();
+                  self.toggleChooseOpMode();
                 }
               }
             },
@@ -433,55 +442,55 @@ export const MainEditor = types
           }
         };
       }
-      if (self.addNodeMode) {
-        const selectNewCell = () => {
-          const newSelectedCellIndex = self.baseCells.findIndex(
-            cell => cell.key === `CL-${forDec.id}-${forDec.nodes.length - 1}`
-          );
-          if (newSelectedCellIndex !== -1) {
-            self.selectCellIndex(newSelectedCellIndex);
-          }
-          self.toggleAddNodeMode();
-        };
-        return {
-          1: {
-            7: {
-              label: "Num",
-              action() {
-                const lastNodeIndex = forDec.addNode({ val: 0 });
-                selectNewCell(lastNodeIndex);
-                self.toggleEditingValMode();
-              }
-            },
-            8: {
-              label: "Text",
-              action() {
-                const lastNodeIndex = forDec.addNode({ val: "" });
-                selectNewCell(lastNodeIndex);
-                self.toggleEditingValMode();
-              }
-            },
-            9: {
-              label: "Bool",
-              action() {
-                const lastNodeIndex = forDec.addNode({ val: false });
-                selectNewCell(lastNodeIndex);
-              }
-            }
-          },
-          2: {
-            6: {
-              label: "Op",
-              action() {
-                const lastNodeIndex = forDec.addNode({ op: "." });
-                selectNewCell(lastNodeIndex);
-                // toggleChooseOpMode();
-              }
-            }
-          },
-          3: { 6: { label: "Cancel", action: self.toggleAddNodeMode } }
-        };
-      }
+      // if (self.addNodeMode) {
+      //   const selectNewCell = () => {
+      //     const newSelectedCellIndex = self.baseCells.findIndex(
+      //       cell => cell.key === `CL-${forDec.id}-${forDec.nodes.length - 1}`
+      //     );
+      //     if (newSelectedCellIndex !== -1) {
+      //       self.selectCellIndex(newSelectedCellIndex);
+      //     }
+      //     self.toggleAddNodeMode();
+      //   };
+      //   return {
+      //     1: {
+      //       7: {
+      //         label: "Num",
+      //         action() {
+      //           const lastNodeIndex = forDec.addNode({ val: 0 });
+      //           selectNewCell(lastNodeIndex);
+      //           self.toggleEditingValMode();
+      //         }
+      //       },
+      //       8: {
+      //         label: "Text",
+      //         action() {
+      //           const lastNodeIndex = forDec.addNode({ val: "" });
+      //           selectNewCell(lastNodeIndex);
+      //           self.toggleEditingValMode();
+      //         }
+      //       },
+      //       9: {
+      //         label: "Bool",
+      //         action() {
+      //           const lastNodeIndex = forDec.addNode({ val: false });
+      //           selectNewCell(lastNodeIndex);
+      //         }
+      //       }
+      //     },
+      //     2: {
+      //       6: {
+      //         label: "Op",
+      //         action() {
+      //           const lastNodeIndex = forDec.addNode({ op: "." });
+      //           selectNewCell(lastNodeIndex);
+      //           // toggleChooseOpMode();
+      //         }
+      //       }
+      //     },
+      //     3: { 6: { label: "Cancel", action: self.toggleAddNodeMode } }
+      //   };
+      // }
       const keyMap = {
         1: {
           0: {
@@ -512,8 +521,8 @@ export const MainEditor = types
             action() {
               self.addToDec({ R: [{ op: "+" }] });
             }
-          },
-          6: { label: "Change Node", action: toggleChangeCellMode }
+          }
+          // 6: { label: "Change Node", action: toggleChangeCellMode }
         },
         3: {}
       };
@@ -525,6 +534,14 @@ export const MainEditor = types
           label: "Add Op",
           action() {
             self.toggleAddNodeMode();
+            self.toggleChooseOpMode();
+          }
+        };
+        keyMap[1][7] = {
+          label: "Add Ref",
+          action() {
+            self.toggleAddNodeMode();
+            self.toggleChooser();
           }
         };
       }
@@ -577,16 +594,16 @@ export const MainEditor = types
           action: self.toggleNameEdit
         };
       }
-      if (selectedCell.forDec) {
-        keyMap[2][5] = {
-          label: "Chooser",
-          action: self.toggleChooser
-        };
-        keyMap[3][5] = {
-          label: "Tree",
-          action: self.toggleTree
-        };
-      }
+      // if (selectedCell.forDec) {
+      //   keyMap[2][5] = {
+      //     label: "Chooser",
+      //     action: self.toggleChooser
+      //   };
+      //   keyMap[3][5] = {
+      //     label: "Tree",
+      //     action: self.toggleTree
+      //   };
+      // }
       if (selectedCell.gotoCellKey) {
         keyMap[2][7] = {
           label: "Go To Def",
