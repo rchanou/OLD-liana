@@ -516,7 +516,8 @@ export const MainEditor = types
             }
           }
           // 6: { label: "Change Node", action: toggleChangeCellMode }
-        }
+        },
+        3: {}
       };
       if (selectedCell.isDec) {
         keyMap[1][6] = {
@@ -577,7 +578,7 @@ export const MainEditor = types
           }
         };
       }
-      keyMap[2][9] = {
+      keyMap[3][9] = {
         label: "Delete",
         action() {
           self.selectCellIndex(self.selectedCellIndex - 1);

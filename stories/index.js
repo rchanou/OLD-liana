@@ -1,7 +1,7 @@
 import { storiesOf } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
 import React from "react";
-import { destroy } from "mobx-state-tree";
+import { isAlive, destroy } from "mobx-state-tree";
 
 import { ReactGUI } from "../src/react-gui";
 import { App, unpackApp } from "../src/app";
@@ -18,6 +18,7 @@ if (saved) {
 }
 
 class Story extends React.Component {
+  state = {};
   constructor() {
     super();
     try {
@@ -30,9 +31,19 @@ class Story extends React.Component {
     window.s = this.store;
   }
   componentWillUnmount() {
+    if (isAlive(this.store)) {
+      destroy(this.store);
+    }
+  }
+  componentDidCatch(error) {
     destroy(this.store);
+    this.setState({ error });
   }
   render() {
+    const { error } = this.state;
+    if (error) {
+      return `${error}`;
+    }
     return <ReactGUI store={this.store} />;
   }
 }
