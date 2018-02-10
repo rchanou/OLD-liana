@@ -42,7 +42,7 @@ class Story extends React.Component {
   render() {
     const { error } = this.state;
     if (error) {
-      return `${error}`;
+      return <div style={{ color: "red", fontSize: 42 }}>{`${error}`}</div>;
     }
     return <ReactGUI store={this.store} />;
   }

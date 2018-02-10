@@ -97,7 +97,7 @@ export const MainEditor = types
               isDec
             }
           ];
-          const params = repo.allParams[path];
+          const params = repo.fullParams[path];
           if (params) {
             let paramX = x + width;
             for (let i = 0; i < params.length; i++) {
@@ -298,10 +298,18 @@ export const MainEditor = types
                 () => {
                   if (self.addNodeMode) {
                     self.toggleAddNodeMode();
-                    const ref = self.chooser.selectedCell.path;
+                    let newItem;
+                    {
+                      const { path } = self.chooser.selectedCell;
+                      if (typeof path[path.length - 1] === "number") {
+                        newItem = { arg: path };
+                      } else {
+                        newItem = { ref: path };
+                      }
+                    }
                     const { path, index } = selectedCell;
                     self.repo.addNode(
-                      { ref },
+                      newItem,
                       path,
                       index == null ? 0 : index + 1
                     );
@@ -489,6 +497,7 @@ export const MainEditor = types
           0: {
             label: "Save",
             action() {
+              // this feels wrong, but it was the easiest way to do it
               const appStore = getParent(self);
               const snapshot = getSnapshot(appStore);
               const packed = packApp(snapshot);

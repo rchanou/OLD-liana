@@ -375,11 +375,15 @@ export const Group = mixinModel(
   }
 }));
 
-export const ParamSet = optionalModel("ParamSet", {
-  params: types.optional(types.map(types.array(types.maybe(Param))), {})
-})
+export const ParamSet = types
+  .compose(
+    ContextUserReader,
+    optionalModel("ParamSet", {
+      params: types.optional(types.map(types.array(types.maybe(Param))), {})
+    })
+  )
   .views(self => ({
-    get allParams() {
+    get fullParams() {
       const plainParams = getSnapshot(self.params);
       return produce(plainParams, draft => {
         const fillParamsFrom = dec => {
@@ -392,7 +396,10 @@ export const ParamSet = optionalModel("ParamSet", {
                 if (!draft[scopePath]) {
                   draft[scopePath] = [];
                 }
-                draft[scopePath][index] = {};
+                if (!draft[scopePath][index]) {
+                  draft[scopePath][index] = {};
+                  draft[scopePath][index].name = self.user.pathName(arg);
+                }
               }
             }
             return;

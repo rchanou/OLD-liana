@@ -42,6 +42,8 @@ export const Chooser = types
       const { main } = repo;
       let x = 0;
       let y = 0;
+      let paramX = x + 5;
+      let paramY = y + 1;
       const cells = [
         {
           key: "FILTER",
@@ -52,20 +54,37 @@ export const Chooser = types
           selectable: true
         }
       ];
+      const paramCells = [];
       const pushDecRefCells = (dec, prePath = []) => {
         dec.forEach((subDec, subId) => {
           const path = [...prePath, subId];
           cells.push({
+            path,
             key: `CHS-${path}`,
             x,
             y: y++,
             width: 5,
             text: `${user.pathName(path)} = ${formatOut(repo, path)}`,
             selectable: true,
-            path,
             fill: "orchid"
           });
         });
+        const decParams = repo.fullParams[prePath];
+        if (decParams) {
+          for (let i = 0; i < decParams.length; i++) {
+            const decParam = decParams[i];
+            paramCells.push({
+              path: [...prePath, i],
+              key: `CHS-P-${prePath},${i}`,
+              x: paramX,
+              y: paramY++,
+              width: 5,
+              text: decParam.name,
+              selectable: true,
+              fill: "goldenrod"
+            });
+          }
+        }
       };
       let currentDec = repo.main;
       pushDecRefCells(currentDec);
@@ -78,7 +97,7 @@ export const Chooser = types
           pushDecRefCells(currentDec, runningPath);
         }
       }
-      return cells;
+      return cells.concat(paramCells);
       // if (!subDec.label) {
       //   return;
       // }

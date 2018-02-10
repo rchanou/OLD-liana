@@ -2,6 +2,7 @@ import { unpackApp } from "./app";
 
 export const app = {
   repo: {
+    packages: {},
     m: {
       a: ["+", [1], [2]],
       a2: ["a", [false], [false]],
