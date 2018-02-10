@@ -132,11 +132,15 @@ export const Chooser = types
     },
     get keyMap() {
       if (self.inputMode) {
-        return e => {
-          if (e.keyCode == 13) {
-            self.toggleInputMode();
-            if (self.baseCells.length > 1) {
-              self.selectCellIndex(self.selectedCellIndex + 1);
+        return {
+          title: "Search",
+          enter: "Finish",
+          onKey(e) {
+            if (e.keyCode == 13) {
+              self.toggleInputMode();
+              if (self.baseCells.length > 1) {
+                self.selectCellIndex(self.selectedCellIndex + 1);
+              }
             }
           }
         };

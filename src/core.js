@@ -1,4 +1,4 @@
-import { types, getSnapshot, flow } from "mobx-state-tree";
+import { types, getEnv, getSnapshot, flow } from "mobx-state-tree";
 import { isObservableArray } from "mobx";
 import produce from "immer";
 
@@ -117,7 +117,7 @@ export const Pkg = mixinModel(optionalModel({ resolved: false }))("Pkg", {
   path: types.string
 })
   .actions(self => {
-    const { system } = getEnv(self);
+    const { system = SystemJS } = getEnv(self);
     return {
       afterCreate: flow(function*() {
         yield system.import(self.path);
@@ -299,7 +299,7 @@ const Ref = mixinModel(ContextUserReader)("Ref", {
   }
 }));
 
-const Node = types.union(Val, Op, Arg, PkgRef, Ref);
+const Node = types.union(Val, Op, Arg, Ref, PkgRef);
 
 const Line = types.array(Node);
 
@@ -425,6 +425,7 @@ export const ParamSet = types
 
 export const Repo = mixinModel(ParamSet)("Repo", {
   main: Dec,
+  packages: types.optional(types.map(Pkg), {}),
   groups: types.optional(types.map(Group), {}),
   comments: types.optional(types.map(types.array(types.string)), {})
 })

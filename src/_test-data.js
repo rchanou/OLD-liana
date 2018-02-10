@@ -2,7 +2,12 @@ import { unpackApp } from "./app";
 
 export const app = {
   repo: {
-    packages: {},
+    packages: {
+      a: {
+        id: "a",
+        path: "https://unpkg.com/redux@3.7.2/dist/redux.min.js"
+      }
+    },
     m: {
       a: ["+", [1], [2]],
       a2: ["a", [false], [false]],
