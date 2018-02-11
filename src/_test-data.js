@@ -60,11 +60,15 @@ export const app = {
         c: [".", { a: ["o", 1] }, ["type"]],
         d: ["+", { a: ["o", 0] }, [1]],
         e: ["+", { a: ["o", 0] }, [-1]]
-      }
+      },
+      o1: ["{", ["type"], ["INCREMENT"]]
       // R: [{ a: [0] }]
     },
     params: {
       c: [{}]
+    },
+    sampleLists: {
+      o: [[{ val: 5 }, { ref: ["o1"] }]]
     },
     groups: {
       a: { name: "test", decs: ["a", "a2", "a3", "a4", "a5", "d"], id: "a" }

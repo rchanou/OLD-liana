@@ -1,5 +1,5 @@
 import { types, getEnv, getSnapshot, flow } from "mobx-state-tree";
-import { isObservableArray } from "mobx";
+import { isObservableArray, observable } from "mobx";
 import produce from "immer";
 
 import { ContextUserReader } from "./user";
@@ -375,10 +375,11 @@ export const Group = mixinModel(
   }
 }));
 
-export const ParamSet = types
+export const ParamAspect = types
   .compose(
+    "ParamAspect",
     ContextUserReader,
-    optionalModel("ParamSet", {
+    optionalModel({
       params: types.optional(types.map(types.array(types.maybe(Param))), {})
     })
   )
@@ -423,13 +424,73 @@ export const ParamSet = types
     }
   }));
 
-export const Repo = mixinModel(ParamSet)("Repo", {
+export const SampleAspect = optionalModel("SampleAspect", {
+  sampleLists: types.optional(
+    types.map(types.array(types.array(types.union(Val, Ref, Op, PkgRef)))),
+    {}
+  )
+}).views(self => ({
+  fullSample(path, sampleIndex = 0) {
+    const { getDec, sampleLists } = self;
+    const sampleList = sampleLists.get(path.join(","));
+    if (!sampleList) {
+      return null;
+    }
+    const sample = sampleList[sampleIndex];
+    const copyFromDec = (parent, sampleParent, id) => {
+      let thisDec;
+      if (id == null) {
+        thisDec = parent;
+        // sampleParent = sampleParent || new Map();
+        sampleParent = sampleParent || observable.map();
+      } else {
+        thisDec = parent.get(id);
+        sampleParent.set(id, observable.map());
+      }
+      if (isObservableArray(thisDec)) {
+        if (id == null) {
+          throw new Error("naw girl");
+        }
+        sampleParent.set(id, []);
+        for (let i = 0; i < thisDec.length; i++) {
+          const node = thisDec[i];
+          if ("arg" in node) {
+            const { arg } = node;
+            if (arg.slice(0, -1).join(",") === path.join(",")) {
+              sampleParent.get(id)[i] = sample[arg[arg.length - 1]];
+            }
+          } else {
+            sampleParent.get(id)[i] = node;
+          }
+        }
+        return;
+      }
+      // sampleParent.set(id, new Map());
+      thisDec.forEach((_, subId) => {
+        copyFromDec(thisDec, sampleParent, subId);
+      });
+      return sampleParent;
+    };
+    const decToCopy = getDec(path);
+    console.log("copying dec", decToCopy.toJSON());
+    return copyFromDec(decToCopy);
+  }
+}));
+
+export const Repo = mixinModel(ParamAspect, SampleAspect)("Repo", {
   main: Dec,
   packages: types.optional(types.map(Pkg), {}),
   groups: types.optional(types.map(Group), {}),
   comments: types.optional(types.map(types.array(types.string)), {})
 })
   .views(self => ({
+    getDec(path) {
+      let dec = self.main;
+      for (const id of path) {
+        dec = dec.get(id);
+      }
+      return dec;
+    },
     get out() {
       return self.run();
     },
@@ -529,13 +590,7 @@ export const Repo = mixinModel(ParamSet)("Repo", {
     }
   }))
   .actions(self => {
-    const getDec = path => {
-      let dec = self.main;
-      for (const id of path) {
-        dec = dec.get(id);
-      }
-      return dec;
-    };
+    const { getDec } = self;
     return {
       addToDec(scopePath, item = []) {
         const scope = getDec(scopePath);
