@@ -1,5 +1,5 @@
 import { types, getEnv, getSnapshot, flow } from "mobx-state-tree";
-import { isObservableArray, observable } from "mobx";
+import { isObservableArray, observable, toJS } from "mobx";
 import produce from "immer";
 
 import { ContextUserReader } from "./user";
@@ -424,55 +424,66 @@ export const ParamAspect = types
     }
   }));
 
+window.j = toJS;
 export const SampleAspect = optionalModel("SampleAspect", {
   sampleLists: types.optional(
     types.map(types.array(types.array(types.union(Val, Ref, Op, PkgRef)))),
     {}
   )
 }).views(self => ({
-  fullSample(path, sampleIndex = 0) {
-    const { getDec, sampleLists } = self;
-    const sampleList = sampleLists.get(path.join(","));
+  fullSample(mainId, sampleIndex = 0) {
+    const { getDec, main, sampleLists } = self;
+    const sampleList = sampleLists.get(mainId);
     if (!sampleList) {
       return null;
     }
     const sample = sampleList[sampleIndex];
-    const copyFromDec = (parent, sampleParent, id) => {
-      let thisDec;
-      if (id == null) {
-        thisDec = parent;
-        // sampleParent = sampleParent || new Map();
-        sampleParent = sampleParent || observable.map();
-      } else {
-        thisDec = parent.get(id);
-        sampleParent.set(id, observable.map());
-      }
-      if (isObservableArray(thisDec)) {
+    const sampleKey = `${mainId}-${sampleIndex}`;
+    const copyFromDec = decToCopy => {
+      const subCopyFromDec = (parent, sampleParent, id) => {
+        // const sampleMainKey = `${id}${sampleKey}`;
+        let thisDec;
         if (id == null) {
-          throw new Error("naw girl");
+          thisDec = parent;
+        } else {
+          thisDec = parent.get(id);
         }
-        sampleParent.set(id, []);
-        for (let i = 0; i < thisDec.length; i++) {
-          const node = thisDec[i];
-          if ("arg" in node) {
-            const { arg } = node;
-            if (arg.slice(0, -1).join(",") === path.join(",")) {
-              sampleParent.get(id)[i] = sample[arg[arg.length - 1]];
-            }
-          } else {
-            sampleParent.get(id)[i] = node;
+        if (isObservableArray(thisDec)) {
+          if (id == null) {
+            throw new Error("naw girl");
           }
+          sampleParent.set(id, []);
+          const sampleDec = sampleParent.get(id);
+          for (let i = 0; i < thisDec.length; i++) {
+            const node = thisDec[i];
+            if ("arg" in node) {
+              const { arg } = node;
+              // if (arg.slice(0, -1).join(",") === mainId.join(",")) {
+              if (arg[0] === mainId) {
+                sampleDec[i] = sample[arg[arg.length - 1]];
+              }
+            } else if ("ref" in node && node.ref[0] === mainId) {
+              sampleDec[i] = { ref: [sampleKey, ...node.ref.slice(1)] };
+            } else {
+              sampleDec[i] = node;
+            }
+          }
+          return;
         }
-        return;
-      }
-      // sampleParent.set(id, new Map());
-      thisDec.forEach((_, subId) => {
-        copyFromDec(thisDec, sampleParent, subId);
-      });
-      return sampleParent;
+        // sampleParent.set(id, new Map());
+        if (id != null) {
+          sampleParent.set(id, observable.map());
+        }
+        thisDec.forEach((_, subId) => {
+          subCopyFromDec(thisDec, sampleParent, subId);
+        });
+      };
+      const sampleResult = observable.map();
+      subCopyFromDec(decToCopy, sampleResult);
+      return sampleResult;
     };
-    const decToCopy = getDec(path);
-    console.log("copying dec", decToCopy.toJSON());
+    const decToCopy = getDec(mainId);
+    // console.log("copying dec", decToCopy.toJSON());
     return copyFromDec(decToCopy);
   }
 }));
@@ -484,6 +495,13 @@ export const Repo = mixinModel(ParamAspect, SampleAspect)("Repo", {
   comments: types.optional(types.map(types.array(types.string)), {})
 })
   .views(self => ({
+    get full() {
+      const { main, fullSample } = self;
+      const testSample = fullSample("o");
+      const full = observable.map(main);
+      full.set("o-0", testSample);
+      return full;
+    },
     getDec(path) {
       let dec = self.main;
       for (const id of path) {

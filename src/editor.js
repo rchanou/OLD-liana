@@ -54,13 +54,13 @@ export const MainEditor = types
     },
     get shownDec() {
       const { shownGroup, repo } = self;
-      const { main } = repo;
+      const { full } = repo;
       if (!shownGroup) {
-        return main;
+        return full;
       }
       const dec = new Map();
       for (const decId of shownGroup.decs) {
-        dec.set(decId, main.get(decId));
+        dec.set(decId, full.get(decId));
       }
       return dec;
     },
