@@ -1,5 +1,4 @@
 import { types, destroy, getParent, getSnapshot } from "mobx-state-tree";
-import { isObservableArray } from "mobx";
 import produce from "immer";
 import merge from "deepmerge";
 
@@ -79,7 +78,7 @@ export const MainEditor = types
           if (id !== undefined) {
             dec = parent.get(id);
           }
-          const isDec = !isObservableArray(dec);
+          const isDec = !(dec instanceof Array);
           const procName = user.pathName(path);
           const width = calcWidth(procName);
           const cells = [

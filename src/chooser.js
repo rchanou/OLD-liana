@@ -1,5 +1,4 @@
 import { types } from "mobx-state-tree";
-import { isObservableArray } from "mobx";
 import { UI, formatOut } from "./view";
 import { optionalModel } from "./model-utils";
 import { RefPath } from "./core";
@@ -91,7 +90,7 @@ export const Chooser = types
       const runningPath = [];
       for (const id of path) {
         currentDec = currentDec.get(id);
-        if (currentDec && !isObservableArray(currentDec)) {
+        if (currentDec && !(currentDec instanceof Array)) {
           //TODO: warn, throw if not?
           runningPath.push(id);
           pushDecRefCells(currentDec, runningPath);

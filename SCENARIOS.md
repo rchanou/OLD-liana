@@ -160,3 +160,12 @@ Anything not idempotent can be called "unbounded".
 * set param type def(s)
 * set param validator (enum or ref)
 * detect hoistable refs
+
+### new pseudo-model
+
+* dec
+  * array dec
+  * array samples
+    * array args
+      --
+* map dec

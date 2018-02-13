@@ -1,6 +1,7 @@
 import { types, getEnv, getSnapshot, flow } from "mobx-state-tree";
-import { isObservableArray, observable, toJS } from "mobx";
-import produce from "immer";
+import { observable, toJS } from "mobx";
+import produce, { setAutoFreeze } from "immer";
+setAutoFreeze(false);
 
 import { ContextUserReader } from "./user";
 import {
@@ -388,7 +389,7 @@ export const ParamAspect = types
       const plainParams = getSnapshot(self.params);
       return produce(plainParams, draft => {
         const fillParamsFrom = dec => {
-          if (isObservableArray(dec)) {
+          if (dec instanceof Array) {
             for (const node of dec) {
               if ("arg" in node) {
                 const { arg } = node;
@@ -448,7 +449,7 @@ export const SampleAspect = optionalModel("SampleAspect", {
         } else {
           thisDec = parent.get(id);
         }
-        if (isObservableArray(thisDec)) {
+        if (thisDec instanceof Array) {
           if (id == null) {
             throw new Error("naw girl");
           }
@@ -519,7 +520,7 @@ export const Repo = mixinModel(ParamAspect, SampleAspect)("Repo", {
         for (const id of path) {
           dec = dec.get(id);
         }
-        if (isObservableArray(dec)) {
+        if (dec instanceof Array) {
           if (!dec.length) {
             return undefined; // maybe return some special "pending" symbol instead?
           }

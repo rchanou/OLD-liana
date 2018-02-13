@@ -6,7 +6,6 @@ import { pack, unpack, inflate } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
 import { fullApp } from "./_test-data";
 const { repo, user } = fullApp;
-
 export * from "./_test-data";
 
 window.g = getSnapshot;
