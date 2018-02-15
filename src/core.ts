@@ -123,7 +123,7 @@ interface PkgRef {
 
 interface Arg {
   scope: string[];
-  index: number;
+  index?: number;
 }
 
 interface Ref {
@@ -192,15 +192,31 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
     if (!scopeArgs) {
       return; // TODO: fill in defaults (or some other behavior?)
     }
-    return scopeArgs[index];
+    return scopeArgs[index || 0];
   }
   console.warn("how dis happen");
 };
 
-export const gen = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
+export const gen: any = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
   const decKey = path.join(",");
   const line: Line = repoDict[decKey];
+  if (!line) {
+    // return gen(repoDict, [...path, "R"], scopes);
+    return function(...params: any[]): any {
+      scopes[decKey] = params;
+      console.log(path, scopes);
+      const func = gen(repoDict, [...path, "R"], scopes);
+      return func;
+      // const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
+      // const [head, ...tail] = outs;
+      // if (typeof head === "function") {
+      //   return head(...tail);
+      // }
+      // return head;
+    };
+  }
   if (!path || path.length < 2) {
+    // if (path && path.length === 1) {
     const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
     const [head, ...tail] = outs;
     if (typeof head === "function") {
@@ -210,7 +226,7 @@ export const gen = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
   }
   const scopeKey = path.slice(0, -1).join(",");
   const pathKey = path.join(",");
-  const func = function(...params: any[]) {
+  return function(...params: any[]) {
     scopes[scopeKey] = params;
     const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
     const [head, ...tail] = outs;
@@ -219,7 +235,6 @@ export const gen = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
     }
     return head;
   };
-  return func;
 };
 
 const Dec = (initial: Dec) => {
