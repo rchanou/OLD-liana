@@ -11,3 +11,14 @@ const b = observable({
   a
 });
 se(a, b.a);
+
+const d = {
+  a: [{ val: 1 }],
+  b: [{ op: C.OpEnum.Add }, { val: 2 }, { val: 3 }]
+};
+
+const e = C.gen(d, ["a"]);
+se(e, 1);
+
+const f = C.gen(d, ["b"]);
+se(f, 5);

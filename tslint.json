@@ -7,7 +7,7 @@
     "comment-format": [true, "check-space"],
     "curly": true,
     "eofline": false,
-    "forin": true,
+    "forin": false,
     "indent": [true, "spaces"],
     "interface-name": [true, "never-prefix"],
     "jsdoc-format": true,
@@ -15,25 +15,11 @@
     "jsx-no-multiline-js": false,
     "label-position": true,
     "max-line-length": [true, 120],
-    "member-ordering": [
-      true,
-      "public-before-private",
-      "static-before-instance",
-      "variables-before-functions"
-    ],
+    "member-ordering": [true, "public-before-private", "static-before-instance", "variables-before-functions"],
     "no-any": true,
     "no-arg": true,
     "no-bitwise": true,
-    "no-console": [
-      true,
-      "log",
-      "error",
-      "debug",
-      "info",
-      "time",
-      "timeEnd",
-      "trace"
-    ],
+    "no-console": [true, "log", "error", "debug", "info", "time", "timeEnd", "trace"],
     "no-consecutive-blank-lines": true,
     "no-construct": true,
     "no-debugger": true,
@@ -47,8 +33,8 @@
     "no-unused-expression": true,
     "no-unused-variable": true,
     "no-use-before-declare": true,
-    "one-line": [true, "check-catch", "check-else", "check-open-brace"],
-    "quotemark": [true, "double", "jsx-double"],
+    "one-line": [true, "check-catch", "check-else", "check-open-brace", "check-whitespace"],
+    "quotemark": [false, "double", "jsx-double"],
     "radix": true,
     "semicolon": [true, "always"],
     "switch-default": true,
@@ -67,12 +53,16 @@
         "variable-declaration": "nospace"
       }
     ],
-    "variable-name": [
-      true,
-      "ban-keywords",
-      "check-format",
-      "allow-leading-underscore",
-      "allow-pascal-case"
+    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore", "allow-pascal-case"],
+    "whitespace": [
+      false,
+      "check-branch",
+      "check-decl",
+      "check-module",
+      "check-operator",
+      "check-separator",
+      "check-type",
+      "check-typecast"
     ]
   },
   "compilerOptions": {

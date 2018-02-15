@@ -4,7 +4,7 @@ interface Val {
   val?: string | number | boolean;
 }
 
-enum OpEnum {
+export enum OpEnum {
   Global = "g",
   Dot = ".",
   Add = "+",
@@ -144,14 +144,18 @@ function isRef(node: Node): node is Ref {
   return (node as Ref).ref != null;
 }
 
-type Line = Node[] | Dec[];
-// type Line = (Node | Dec)[];
+// type Line = Node[] | Dec[];
+type Line = (Node | Dec)[];
 
 interface Dec {
   path: string[];
   line: Line;
   getRepo: { (): Repo };
-  mainDict: Object;
+  repoDict: DecDict;
+}
+
+interface DecDict {
+  [id: string]: Line;
 }
 
 function isDec(node: Node | Dec): node is Dec {
@@ -164,10 +168,10 @@ function isDecList(line: Line): line is Dec[] {
 
 interface Repo {
   main: Dec[];
-  dict: Object;
+  dict: DecDict;
 }
 
-const parseNode = (mainDict: Object, node: Node, scopes: Object = {}) => {
+const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
   if (isVal(node)) {
     return node.val;
   }
@@ -177,9 +181,9 @@ const parseNode = (mainDict: Object, node: Node, scopes: Object = {}) => {
   if (isRef(node)) {
     const { ref } = node;
     if (typeof ref === "string") {
-      return gen(mainDict, ref, scopes);
+      return gen(repoDict, ref, scopes);
     } else {
-      return gen(mainDict, ref.join(","), scopes);
+      return gen(repoDict, ref, scopes);
     }
   }
   if (isArg(node)) {
@@ -189,17 +193,22 @@ const parseNode = (mainDict: Object, node: Node, scopes: Object = {}) => {
   console.warn("how dis happen");
 };
 
-const gen = (mainDict: Object, decKey: string, scopes: Object = {}) => {
-  const dec: Dec = mainDict[decKey];
-  const { path, line } = dec;
-  if (!path || !path.length) {
+export const gen = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
+  const decKey = path.join(",");
+  const line: Line = repoDict[decKey];
+  const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
+  if (!path || path.length < 2) {
+    const [head, ...tail] = outs;
+    if (typeof head === "function") {
+      return head(...tail);
+    }
+    return head;
   }
-  const outs = (line as Node[]).map(node => parseNode(mainDict, node, scopes));
   const scopeKey = path.slice(0, -1).join(",");
   const pathKey = path.join(",");
   const func = function(...params: any[]) {
     scopes[scopeKey] = params;
-    return gen(mainDict, decKey, scopes);
+    return gen(repoDict, path, scopes);
   };
 };
 
@@ -210,7 +219,7 @@ const Dec = (initial: Dec) => {
       return initial.getRepo().dict;
     },
     get out() {
-      return gen(store.mainDict, store.path.join(","));
+      return gen(store.repoDict, store.path);
     }
   });
   return store;
@@ -227,7 +236,7 @@ export const fillDict = (decList: Dec[], dict = {}) => {
   return dict;
 };
 
-const Repo = (initial: Repo) => {
+export const Repo = (initial: Repo) => {
   const store: Repo = observable({
     main: initial.main.map(dec => Dec({ getRepo: () => store, ...dec })),
     get dict() {
