@@ -8,16 +8,16 @@ const g = window as any;
 dse(1, 1);
 
 const a = observable({ a: 1 });
-const b = observable({
+g.b = observable({
   b: 2,
   a
 });
-se(a, b.a);
+se(a, g.b.a);
 
 const glob = { op: C.OpEnum.Global };
 const add = { op: C.OpEnum.Add };
 
-const d = {
+g.d = {
   a: [{ val: 1 }],
   b: [add, { val: 2 }, { val: 3 }],
   "c,R": [add, { scope: "c" }, { val: 7 }],
@@ -33,7 +33,7 @@ const d = {
   k: [{ ref: "j" }, { val: 2 }]
 };
 
-g.ge = (path: string[]) => C.gen(d, path);
+g.ge = (path: string[]) => C.gen(g.d, path);
 const { ge } = g;
 
 g.e = ge("a");
@@ -56,3 +56,24 @@ se(ge("f"), 3);
 se(ge("g"), 28);
 
 g.h = ge("h");
+se(g.h(-3)(-7), -10);
+
+const i: C.Repo = {
+  main: [
+    {
+      id: "a",
+      line: [add, { val: 1 }, { val: 2 }]
+    },
+    {
+      id: "b",
+      line: [
+        {
+          id: "R",
+          line: [add, { scope: "b" }, { val: 3 }]
+        }
+      ]
+    }
+  ]
+};
+
+g.h = i.main.map(dec => C.fillDec(dec));
