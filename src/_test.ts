@@ -14,11 +14,17 @@ se(a, b.a);
 
 const d = {
   a: [{ val: 1 }],
-  b: [{ op: C.OpEnum.Add }, { val: 2 }, { val: 3 }]
+  b: [{ op: C.OpEnum.Add }, { val: 2 }, { val: 3 }],
+  "c,R": [{ op: C.OpEnum.Add }, { scope: ["c"], index: 0 }, { val: 7 }]
 };
 
-const e = C.gen(d, ["a"]);
+const ge = (path: string[]) => C.gen(d, path);
+
+const e = ge(["a"]);
 se(e, 1);
 
-const f = C.gen(d, ["b"]);
+const f = ge(["b"]);
 se(f, 5);
+
+const g = ge(["c", "R"]);
+se(g(2), 9);

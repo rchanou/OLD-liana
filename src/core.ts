@@ -188,7 +188,11 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
   }
   if (isArg(node)) {
     const { scope, index } = node;
-    return scopes[scope.join(",")][index];
+    const scopeArgs = scopes[scope.join(",")];
+    if (!scopeArgs) {
+      return; // TODO: fill in defaults (or some other behavior?)
+    }
+    return scopeArgs[index];
   }
   console.warn("how dis happen");
 };
@@ -196,8 +200,8 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
 export const gen = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
   const decKey = path.join(",");
   const line: Line = repoDict[decKey];
-  const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
   if (!path || path.length < 2) {
+    const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
     const [head, ...tail] = outs;
     if (typeof head === "function") {
       return head(...tail);
@@ -208,8 +212,14 @@ export const gen = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
   const pathKey = path.join(",");
   const func = function(...params: any[]) {
     scopes[scopeKey] = params;
-    return gen(repoDict, path, scopes);
+    const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
+    const [head, ...tail] = outs;
+    if (typeof head === "function") {
+      return head(...tail);
+    }
+    return head;
   };
+  return func;
 };
 
 const Dec = (initial: Dec) => {
