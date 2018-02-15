@@ -122,7 +122,7 @@ interface PkgRef {
 }
 
 interface Arg {
-  scope: string[];
+  scope: string | string[];
   index?: number;
 }
 
@@ -150,12 +150,12 @@ type Line = (Node | Dec)[];
 interface Dec {
   path: string[];
   line: Line;
-  getRepo: { (): Repo };
-  repoDict: DecDict;
+  readonly getRepo: { (): Repo };
+  readonly repoDict: DecDict;
 }
 
 interface DecDict {
-  [id: string]: Line;
+  [id: string]: Node[];
 }
 
 function isDec(node: Node | Dec): node is Dec {
@@ -168,7 +168,7 @@ function isDecList(line: Line): line is Dec[] {
 
 interface Repo {
   main: Dec[];
-  dict: DecDict;
+  readonly dict: DecDict;
 }
 
 const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
@@ -179,16 +179,18 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
     return opFuncs[node.op];
   }
   if (isRef(node)) {
-    const { ref } = node;
-    if (typeof ref === "string") {
-      return gen(repoDict, [ref], scopes);
-    } else {
-      return gen(repoDict, ref, scopes);
-    }
+    return gen(repoDict, node.ref, scopes);
+    // const { ref } = node;
+    // if (ref instanceof Array) {
+    //   return gen(repoDict, ref, scopes);
+    // } else {
+    //   return gen(repoDict, [ref], scopes);
+    // }
   }
   if (isArg(node)) {
     const { scope, index } = node;
-    const scopeArgs = scopes[scope.join(",")];
+    const scopeKey = scope instanceof Array ? scope.join(",") : scope;
+    const scopeArgs = scopes[scopeKey];
     if (!scopeArgs) {
       return; // TODO: fill in defaults (or some other behavior?)
     }
@@ -197,20 +199,27 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
   console.warn("how dis happen");
 };
 
-export const gen: any = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
-  const decKey = path.join(",");
+export const gen: any = (
+  repoDict: DecDict,
+  path: string | string[],
+  scopes: Object = {}
+) => {
+  const decKey = path instanceof Array ? path.join(",") : path;
   const line: Line = repoDict[decKey];
   if (line) {
-    const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
+    const outs: any[] = line.map((node: Node) =>
+      parseNode(repoDict, node, scopes)
+    );
     const [head, ...tail] = outs;
     if (typeof head === "function") {
       return head(...tail);
     }
     return head;
   }
+  const returnPath = path instanceof Array ? [...path, "R"] : [path, "R"];
   return function(...params: any[]) {
-    scopes[path.join(",")] = params;
-    return gen(repoDict, [...path, "R"], scopes);
+    scopes[decKey] = params;
+    return gen(repoDict, returnPath, scopes);
   };
 };
 
