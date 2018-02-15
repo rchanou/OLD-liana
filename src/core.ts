@@ -1,4 +1,4 @@
-import { observable, IObservableObject } from "mobx";
+import { observable } from "mobx";
 
 interface Val {
   val?: string | number | boolean;
@@ -125,7 +125,7 @@ interface PkgRef {
 
 interface Arg {
   scope: string | string[];
-  index?: number;
+  arg?: number;
 }
 
 interface Ref {
@@ -185,13 +185,13 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: object = {}) => {
     return gen(repoDict, node.ref, scopes);
   }
   if (isArg(node)) {
-    const { scope, index } = node;
+    const { scope, arg } = node;
     const scopeKey = scope instanceof Array ? scope.join(",") : scope;
     const scopeArgs = scopes[scopeKey];
     if (!scopeArgs) {
       return; // TODO: fill in defaults (or some other behavior?)
     }
-    return scopeArgs[index || 0];
+    return scopeArgs[arg || 0];
   }
   console.warn("how dis happen");
 };
@@ -253,6 +253,10 @@ export interface Repo {
   main: Dec[];
 }
 
+export type RepoStore = Repo & {
+  fillDict: any;
+};
+
 // TODO: figure out how to strongly type fillDec
 export const fillDec: any = (dec: Dec, currentPath: string[] = []) => {
   const path = [...currentPath, dec.id];
@@ -269,17 +273,19 @@ export const fillDec: any = (dec: Dec, currentPath: string[] = []) => {
 };
 
 export const Repo = (initial: Repo) => {
-  const store: any = observable({
+  const final = {
     ...initial,
-    // main: initial.main.map(dec => Dec({ getRepo: () => store, ...dec })),
     full(group?: string[]) {
       if (!group) {
         const full = store.main.map((dec: any) => fillDec(dec));
+        return full;
       }
     },
     get dict() {
-      return fillDict(store.main);
+      return fillDict(store ? store.main : initial.main);
     }
-  });
+  };
+  const store: any = observable(final);
+
   return store;
 };

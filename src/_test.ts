@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
 import * as C from "./core";
+import * as U from "./ui";
 import { strictEqual as se, deepStrictEqual as dse } from "assert";
 
 const g = window as any;
@@ -21,7 +22,7 @@ g.d = {
   a: [{ val: 1 }],
   b: [add, { val: 2 }, { val: 3 }],
   "c,R": [add, { scope: "c" }, { val: 7 }],
-  "d,R": [add, { scope: "d" }, { scope: "d", index: 1 }, { val: 11 }],
+  "d,R": [add, { scope: "d" }, { scope: "d", arg: 1 }, { val: 11 }],
   "d1,R": [add, { ref: ["d1", "a"] }, { val: 10 }],
   "d1,a": [add, { scope: "d1" }, { val: 20 }],
   e: [{ ref: "d" }, { val: 6 }, { val: 8 }],
@@ -75,5 +76,34 @@ const i: C.Repo = {
     }
   ]
 };
+g.i = i;
+
+const h: U.UI = {
+  repo: i
+};
 
 g.h = i.main.map(dec => C.fillDec(dec));
+
+interface K {
+  b: number;
+  a: number;
+  fuzzy: { (x: number): number };
+}
+
+const k: K = {
+  b: 5,
+  get a() {
+    // console.log("htirstensr");
+    return k.b * 5;
+  },
+  fuzzy(x: number) {
+    return x * k.b * k.a;
+  }
+};
+g.k = k;
+g.l = observable(k);
+
+const j = U.App({
+  repo: i
+});
+g.j = j;
