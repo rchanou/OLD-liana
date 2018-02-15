@@ -54,7 +54,8 @@ const undef = "u";
 const throwOp = () => {
   throw new Error("Special-cased op...this shouldn't be run!");
 };
-const opFuncs = {
+
+const opFuncs = Object.freeze({
   [ifOp]: throwOp,
   [switchOp]: throwOp,
   [and]: throwOp,
@@ -106,12 +107,13 @@ const opFuncs = {
   [strictEqual](a: any, b: any) {
     return a === b;
   }
-};
+});
 
 const ops = [];
 for (const op in opFuncs) {
   ops.push(op);
 }
+Object.freeze(ops);
 
 interface Pkg {
   id: string;
@@ -144,8 +146,7 @@ function isRef(node: Node): node is Ref {
   return (node as Ref).ref != null;
 }
 
-// type Line = Node[] | Dec[];
-type Line = (Node | Dec)[];
+type Line = Node[] | Dec[];
 
 interface Dec {
   path: string[];
@@ -171,7 +172,7 @@ interface Repo {
   readonly dict: DecDict;
 }
 
-const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
+const parseNode = (repoDict: DecDict, node: Node, scopes: object = {}) => {
   if (isVal(node)) {
     return node.val;
   }
@@ -180,12 +181,6 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
   }
   if (isRef(node)) {
     return gen(repoDict, node.ref, scopes);
-    // const { ref } = node;
-    // if (ref instanceof Array) {
-    //   return gen(repoDict, ref, scopes);
-    // } else {
-    //   return gen(repoDict, [ref], scopes);
-    // }
   }
   if (isArg(node)) {
     const { scope, index } = node;
@@ -202,7 +197,7 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
 export const gen: any = (
   repoDict: DecDict,
   path: string | string[],
-  scopes: Object = {}
+  scopes: object = {}
 ) => {
   const decKey = path instanceof Array ? path.join(",") : path;
   const line: Line = repoDict[decKey];
@@ -256,22 +251,3 @@ export const Repo = (initial: Repo) => {
   });
   return store;
 };
-
-// const A = (snapshot: { name: string }) => {
-//   const store = observable({
-//     ...snapshot
-//   });
-//   return store;
-// };
-
-// const a = A({ name: "abc" + 1 });
-
-// a.name = "whut";
-
-// const b: Dec = {
-//   line: [{ line: [1, "fiv", 2, 3] }]
-// };
-
-const d: Node = { op: OpEnum.Global };
-const e: Node = { val: 5 };
-const f = d.op === e.val;

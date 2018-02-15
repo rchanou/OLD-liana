@@ -14,6 +14,7 @@ const b = observable({
 });
 se(a, b.a);
 
+const glob = { op: C.OpEnum.Global };
 const add = { op: C.OpEnum.Add };
 
 const d = {
