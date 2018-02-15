@@ -181,7 +181,7 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
   if (isRef(node)) {
     const { ref } = node;
     if (typeof ref === "string") {
-      return gen(repoDict, ref, scopes);
+      return gen(repoDict, [ref], scopes);
     } else {
       return gen(repoDict, ref, scopes);
     }
@@ -200,23 +200,7 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: Object = {}) => {
 export const gen: any = (repoDict: DecDict, path: string[], scopes: Object = {}) => {
   const decKey = path.join(",");
   const line: Line = repoDict[decKey];
-  if (!line) {
-    // return gen(repoDict, [...path, "R"], scopes);
-    return function(...params: any[]): any {
-      scopes[decKey] = params;
-      console.log(path, scopes);
-      const func = gen(repoDict, [...path, "R"], scopes);
-      return func;
-      // const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
-      // const [head, ...tail] = outs;
-      // if (typeof head === "function") {
-      //   return head(...tail);
-      // }
-      // return head;
-    };
-  }
-  if (!path || path.length < 2) {
-    // if (path && path.length === 1) {
+  if (line) {
     const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
     const [head, ...tail] = outs;
     if (typeof head === "function") {
@@ -224,16 +208,9 @@ export const gen: any = (repoDict: DecDict, path: string[], scopes: Object = {})
     }
     return head;
   }
-  const scopeKey = path.slice(0, -1).join(",");
-  const pathKey = path.join(",");
   return function(...params: any[]) {
-    scopes[scopeKey] = params;
-    const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
-    const [head, ...tail] = outs;
-    if (typeof head === "function") {
-      return head(...tail);
-    }
-    return head;
+    scopes[path.join(",")] = params;
+    return gen(repoDict, [...path, "R"], scopes);
   };
 };
 

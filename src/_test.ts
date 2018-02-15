@@ -3,7 +3,7 @@ import { observable } from "mobx";
 import * as C from "./core";
 import { strictEqual as se, deepStrictEqual as dse } from "assert";
 
-const glob = window as any;
+const g = window as any;
 
 dse(1, 1);
 
@@ -21,38 +21,36 @@ const d = {
   b: [add, { val: 2 }, { val: 3 }],
   "c,R": [add, { scope: ["c"] }, { val: 7 }],
   "d,R": [add, { scope: ["d"] }, { scope: ["d"], index: 1 }, { val: 11 }],
-  e: [{ ref: ["d", "R"] }, { val: 6 }, { val: 8 }],
-  f: [{ ref: ["d", "R"] }, { val: -5 }, { val: -3 }],
+  "d1,R": [add, { ref: ["d1", "a"] }, { val: 10 }],
+  "d1,a": [add, { scope: ["d1"] }, { val: 20 }],
+  e: [{ ref: ["d"] }, { val: 6 }, { val: 8 }],
+  f: [{ ref: ["d"] }, { val: -5 }, { val: -3 }],
   g: [add, { ref: ["e"] }, { ref: ["f"] }],
-  // h: [],
-  // "h,R": [],
   "h,R,R": [add, { scope: ["h"] }, { scope: ["h", "R"] }],
-  i: [{ ref: ["h"] }, { val: 13 }],
+  i: [{ ref: ["h", "R"] }, { val: 13 }],
   j: [{ ref: ["i"] }, { val: 5 }],
   k: [{ ref: ["j"] }, { val: 2 }]
 };
 
-const ge = (path: string[]) => C.gen(d, path);
-glob.ge = ge;
+g.ge = (path: string[]) => C.gen(d, path);
+const { ge } = g;
 
-const e = ge(["a"]);
-se(e, 1);
+g.e = ge(["a"]);
+se(g.e, 1);
 
-const f = ge(["b"]);
-se(f, 5);
+g.f = ge(["b"]);
+se(g.f, 5);
 
-const g = ge(["c", "R"]);
-se(g(2), 9);
+g.g = ge(["c"]);
+se(g.g(2), 9);
 
-const h = ge(["d", "R"]);
-se(h(7, 9), 27);
+g.h = ge(["d"]);
+se(g.h(7, 9), 27);
+
+se(ge(["d1"])(30), 60);
 
 se(ge(["e"]), 25);
 se(ge(["f"]), 3);
 se(ge(["g"]), 28);
 
-// const i = ge(["i"]);
-// glob.j = ge(["j"]);
-// glob.k = ge(["k"]);
-// console.log(glob.k);
-glob.h = ge(["h"]);
+g.h = ge(["h"]);
