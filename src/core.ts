@@ -123,26 +123,26 @@ interface PkgRef {
   pkg: string;
 }
 
-interface Arg {
+export interface Arg {
   scope: string | string[];
   arg?: number;
 }
 
-interface Ref {
+export interface Ref {
   ref: string[];
 }
 
 type Node = Val | Op | PkgRef | Arg | Ref;
-function isVal(node: Node): node is Val {
+export function isVal(node: Node): node is Val {
   return (node as Val).val !== undefined;
 }
-function isOp(node: Node): node is Op {
+export function isOp(node: Node): node is Op {
   return (node as Op).op != null;
 }
-function isArg(node: Node): node is Arg {
+export function isArg(node: Node): node is Arg {
   return (node as Arg).scope != null;
 }
-function isRef(node: Node): node is Ref {
+export function isRef(node: Node): node is Ref {
   return (node as Ref).ref != null;
 }
 
@@ -155,9 +155,11 @@ export interface Dec {
   // readonly repoDict: DecDict;
 }
 
-interface FullDec {
+export type FullLine = FullDec[] | Node[];
+// export type FullLine = (FullDec | Node)[];
+export interface FullDec {
   path: string[];
-  line: Node[] | FullDec[];
+  line: FullLine;
   // readonly getRepo: { (): Repo };
   // readonly repoDict: DecDict;
 }
@@ -170,8 +172,16 @@ function isDec(node: Node | Dec): node is Dec {
   return (node as Dec).line != null;
 }
 
-function isDecList(line: Line): line is Dec[] {
+export function isDecList(line: Line): line is Dec[] {
   return isDec(line[0]);
+}
+
+function isFullDec(node: Node | FullDec): node is FullDec {
+  return (node as FullDec).line != null;
+}
+
+export function isFullDecList(line: FullLine): line is FullDec[] {
+  return isFullDec(line[0]);
 }
 
 const parseNode = (repoDict: DecDict, node: Node, scopes: object = {}) => {
@@ -265,11 +275,14 @@ export const fillDec: any = (dec: Dec, currentPath: string[] = []) => {
 export const Repo = (initial: Repo) => {
   const store: any = observable({
     main: initial.main,
-    full(group?: string[]) {
+    fill(group?: string[]) {
       if (!group) {
         const full = store.main.map((dec: any) => fillDec(dec));
         return full;
       }
+    },
+    get full() {
+      return store.fill();
     },
     get dict() {
       return fillDict(store.main);

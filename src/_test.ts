@@ -102,7 +102,7 @@ const k: K = {
 g.k = k;
 g.l = observable(k);
 
-const j = U.App({
+export const j = U.App({
   repo: i
 });
 g.j = j;

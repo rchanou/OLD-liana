@@ -4,7 +4,7 @@ import { render } from "react-dom";
 import { ReactView } from "./react-view";
 import registerServiceWorker from "./registerServiceWorker";
 import "./index.css";
-import "./_test";
+import * as T from "./_test";
 
-render(<div>shazbot</div>, document.getElementById("root") as HTMLElement);
+render(<ReactView store={T.j.editor} />, document.getElementById("root") as HTMLElement);
 registerServiceWorker();
