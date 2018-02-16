@@ -1,5 +1,10 @@
 import { FullLine } from "./core";
-import { observable } from "mobx";
+import { observable, extendObservable } from "mobx";
+
+export const mix = (store: any, more: object) => {
+  extendObservable(store, more);
+  return store;
+};
 
 interface Val {
   val?: string | number | boolean;
@@ -149,7 +154,6 @@ export function isRef(node: Node): node is Ref {
 }
 
 type Line = Node[] | Dec[];
-// type Line = (Node | Dec)[];
 
 export interface Dec {
   id: string;
@@ -159,7 +163,6 @@ export interface Dec {
 }
 
 export type FullLine = FullDec[] | Node[];
-// export type FullLine = (FullDec | Node)[];
 export interface FullDec {
   path: string[];
   line: FullLine;
@@ -237,20 +240,8 @@ export const gen: any = (
   };
 };
 
-// const Dec = (initial: Dec) => {
-//   const store: Dec = observable({
-//     ...initial
-//     // get repoDict() {
-//     //   return initial.getRepo().dict;
-//     // },
-//     // get out() {
-//     //   return gen(store.repoDict, store.path);
-//     // }
-//   });
-//   return store;
-// };
-
-export const fillDict = (
+// TODO: strongly type
+export const makeDict = (
   decList: Dec[],
   currentPath: string[] = [],
   dict = {}
@@ -258,7 +249,7 @@ export const fillDict = (
   for (const dec of decList) {
     const decPath = [...currentPath, dec.id];
     if (isDecList(dec.line)) {
-      fillDict(dec.line, decPath, dict);
+      makeDict(dec.line, decPath, dict);
     } else {
       dict[decPath.join(",")] = dec.line;
     }
@@ -270,7 +261,6 @@ export interface Repo {
   main: Dec[];
 }
 
-// TODO: figure out how to strongly type fillLine
 export function fillLine(line: Line, currentPath: string[] = []): FullLine {
   if (isDecList(line)) {
     return line.map((subDec: Dec): FullDec => {
@@ -282,39 +272,52 @@ export function fillLine(line: Line, currentPath: string[] = []): FullLine {
     });
   }
   return line;
-  // const path = [...currentPath, dec.id];
-  // if (isDecList(line)) {
-  // return {
-  //   path,
-  //   // line: dec.line.map(subDec => fillDecList(subDec, path))
-  //   line:fillLine(line)
-  // };
-
-  // return {
-  //   path,
-  //   line: dec.line
-  // };
 }
 
-// export const fill = ()
+export function Node(initial: Node) {
+  const store = observable(initial);
+  if (isArg(initial)) {
+  }
+  if (isRef(initial)) {
+  }
+  return store;
+}
+
+// export function Line(initial: Line) {
+//   if (isDecList(initial)) {
+//     return observable(initial);
+//   } else {
+//     return initial.map(node => Node(node));
+//   }
+//   // const store = observable()
+// }
 
 export function Repo(initial: Repo) {
+  // const getRepo = () => store.repo;
+  const Dec = ({ id, line }: Dec): Dec => observable({ id, line: Line(line) });
+  const Line = (initial: Line) => {
+    if (isDecList(initial)) {
+      return initial.map(Dec);
+    } else {
+      return initial.map(node =>
+        mix(
+          observable({
+            get repo() {
+              return store;
+            }
+          }),
+          node
+        )
+      );
+    }
+  };
   const store: any = observable({
-    main: initial.main,
-    // fill(group?: string[]) {
-    //   if (!group) {
-    //     // const full = store.main.map((dec: any) => fillLine(dec));
-    //     const full = fillLine(store.main);
-    //     return full;
-    //   }
-    //   return [];
-    // },
+    main: Line(initial.main),
     get full() {
-      // return store.fill();
       return fillLine(store.main);
     },
     get dict() {
-      return fillDict(store.main);
+      return makeDict(store.main);
     }
   });
   return store;
