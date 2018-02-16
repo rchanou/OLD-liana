@@ -34,8 +34,14 @@ for (const key in hues) {
 }
 
 interface Cell {
-  fill: string;
-  text: string;
+  x?: number; // TODO: create separate "full" interface w/ required x/y
+  y?: number;
+  key?: string;
+  width?: number;
+  fill?: string;
+  text?: string;
+  cursor?: boolean;
+  selectable?: boolean;
 }
 export function viewify(node: Node): Cell {
   if (isVal(node)) {
@@ -71,26 +77,58 @@ export function viewify(node: Node): Cell {
 }
 
 export interface UI {
-  selectedCellIndex?: number;
   repo?: Repo;
   readonly getRepo?: { (): Repo };
+  selectedCellIndex?: number;
+  // baseCells?: Cell[];
 }
 
-interface UIStore {
-  selectedCellIndex: number;
+type UIStore = UI & {
+  baseCells: Cell[];
+  selectedCell: Cell;
+  cursorCell: Cell;
+  input?: string;
   // readonly shownDec: DecDict;
   // readonly getRepo: { (): RepoStore };
-}
+};
 
+let cursorIdCounter = 0;
 export const UI = (initial: UI) => {
   const { selectedCellIndex = 0 } = initial;
   const store: UIStore = observable({
     selectedCellIndex,
+    get baseCells() {
+      return [];
+    },
     get repo() {
       if (initial.getRepo) {
         return initial.getRepo();
       }
       return;
+    },
+    get selectedCell() {
+      const { baseCells } = store;
+      let i = store.selectedCellIndex;
+      let foundCell: Cell = baseCells[i || 0]; // TS couldn't infer it from above default
+      while ((!foundCell || !foundCell.selectable) && i) {
+        foundCell = baseCells[i--];
+      }
+      return foundCell;
+    },
+    get cursorCell() {
+      const { input, selectedCell } = store;
+      const { x, y, width } = selectedCell;
+      return {
+        x,
+        y,
+        width,
+        input,
+        cursor: true,
+        key: String(cursorIdCounter)
+      };
+    },
+    get cells() {
+      return [...store.baseCells, store.cursorCell];
     }
     // get shownDec() {
     //   return store.getRepo().dict;
@@ -99,6 +137,7 @@ export const UI = (initial: UI) => {
     //   return
     // }
   });
+  cursorIdCounter++;
   return store;
 };
 
