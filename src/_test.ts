@@ -2,6 +2,7 @@ import { observable } from "mobx";
 
 import * as C from "./core";
 import * as U from "./ui";
+import { App } from "./app";
 import { deepStrictEqual as de } from "assert";
 
 const g = window as any;
@@ -102,7 +103,7 @@ const k: K = {
 g.k = k;
 g.l = observable(k);
 
-export const j = U.App({
+export const j = App({
   repo: i
 });
 g.j = j;
