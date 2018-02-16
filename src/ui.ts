@@ -1,4 +1,4 @@
-import { observable, extendObservable } from "mobx";
+import { observable, extendObservable, IObservable } from "mobx";
 import { Repo, DecDict } from "./core";
 
 export interface UI {
@@ -42,12 +42,13 @@ interface App {
   repo: Repo;
 }
 
-export const Editor = (initial: Editor) => {
-  const { groupFilter = "", ...rest } = initial;
-  const store = UI(rest);
-  extendObservable(store, { groupFilter });
+export const mix = (store: object, more: object) => {
+  extendObservable(store, more);
   return store;
 };
+
+export const Editor = ({ groupFilter = "", ...rest }: Editor) =>
+  mix(UI(rest), { groupFilter });
 
 export const App = (initial: App) => {
   const { repo, editor = {} } = initial;
