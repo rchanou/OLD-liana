@@ -51,7 +51,17 @@ const unpackDec = packed => {
   for (const id in packed) {
     full[id] = unpackDec(packed[id]);
   }
+  return full;
+};
 
+export const unpackDecNew = packed => {
+  if (packed instanceof Array) {
+    return packed.map(unpackNode);
+  }
+  const full = [];
+  for (const id in packed) {
+    full.push(unpackDec(packed[id]));
+  }
   return full;
 };
 

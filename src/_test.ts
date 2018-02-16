@@ -82,7 +82,7 @@ const h: U.UI = {
   repo: i
 };
 
-g.h = i.main.map(dec => C.fillDec(dec));
+g.h = C.fillLine(i.main);
 
 interface K {
   b: number;

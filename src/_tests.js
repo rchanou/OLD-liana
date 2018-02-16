@@ -2,9 +2,9 @@ import { strictEqual, deepStrictEqual, throws } from "assert";
 import { types, getSnapshot } from "mobx-state-tree";
 
 import { ContextRepo } from "./core";
-import { pack, unpack, inflate } from "./pack";
+import { pack, unpack, unpackDecNew } from "./pack";
 import { optionalModel, incrementLetterId } from "./model-utils";
-import { fullApp } from "./_test-data";
+import { app, fullApp } from "./_test-data";
 const { repo, user } = fullApp;
 export * from "./_test-data";
 
@@ -106,3 +106,7 @@ deepStrictEqual(strictCreate(D, { c: 7 }).toJSON(), {
   c: 7,
   e: null
 });
+
+const fullDecList = unpackDecNew(app.repo.m);
+console.log(fullDecList);
+deepStrictEqual(fullDecList[20].b[4], { val: "DECREMENT" });

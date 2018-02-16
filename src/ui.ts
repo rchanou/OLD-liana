@@ -1,6 +1,77 @@
 import { observable, extendObservable, IObservable } from "mobx";
-import { Repo, Dec, DecDict, isArg, FullDec, isFullDecList, isRef, FullLine, Arg, Ref } from "./core";
-import { calcWidth } from "./view";
+import {
+  Repo,
+  Dec,
+  DecDict,
+  FullDec,
+  isFullDecList,
+  FullLine,
+  isVal,
+  isOp,
+  isArg,
+  isRef,
+  Arg,
+  Ref,
+  Node
+} from "./core";
+import { unknown } from "./color";
+
+const calcWidth = (text: string) =>
+  typeof text !== "string" ? 1 : Math.ceil((text.length + 3) / 6);
+
+export const baseSL = ",66%,55%)";
+export const hues = {
+  op: 150,
+  val: 210,
+  arg: 30,
+  pkg: 190,
+  ref: 270,
+  unknown: 0
+};
+interface ColorMap {
+  [key: string]: string;
+}
+export const colors: ColorMap = {};
+for (const key in hues) {
+  colors[key] = `hsl(${hues[key]}${baseSL}`;
+}
+
+interface Cell {
+  fill: string;
+  text: string;
+}
+export function viewify(node: Node): Cell {
+  if (isVal(node)) {
+    return {
+      fill: colors.val,
+      text: String(node.val)
+    };
+  }
+  if (isOp(node)) {
+    return {
+      fill: colors.op,
+      text: String(node.op)
+    };
+  }
+  if (isRef(node)) {
+    return {
+      fill: colors.ref,
+      text: node.ref.join(",")
+    };
+  }
+  if (isArg(node)) {
+    const { scope, arg = 0 } = node;
+    const path = scope instanceof Array ? [...scope, arg] : [scope, arg];
+    return {
+      fill: colors.arg,
+      text: path.join(",")
+    };
+  }
+  return {
+    fill: colors.unknown,
+    text: "???"
+  };
+}
 
 export interface UI {
   selectedCellIndex?: number;
@@ -48,141 +119,91 @@ export const Editor = ({ groupFilter = "", ...rest }: Editor) => {
     groupFilter,
     get baseCells() {
       const { full } = store.repo;
-      // let x = 0;
-      // let y = 0;
-      // const groupCell = {
-      //   key: `CL-GROUP`,
-      //   x,
-      //   y: y++,
-      //   text: groupFilter,
-      //   width: calcWidth(groupFilter)
-      // };
-      // const makeDecCells = (parent, id, path = [], x = 0, y = 0) => {
-      const makeDecCells = (decList: FullLine, path: string[] = [], x = 0, y = 0) => {
-        // const makeDecCells = (decList: FullLine, path: string[] = []) => {
-        // let decList = parent;
-        // if (id !== undefined) {
-        //   decList = parent.get(id);
-        // }
-        // const isDec = !(decList instanceof Array);
+      const makeDecCells = (
+        decList: FullLine,
+        path: string[] = [],
+        x = 0,
+        y = 0
+      ): any[] => {
         const isDecList = isFullDecList(decList);
-        // const procName = user.pathName(path);
-        const procName = path.join(",");
-        const decCellWidth = calcWidth(procName);
-        const cells = [
-          {
+        const name = path.join(",");
+        const decCellWidth = calcWidth(name);
+        const cells = [];
+        const isChild = Boolean(path.length);
+        if (isChild) {
+          cells.push({
             key: `CL-${path}`,
             x,
             y,
             width: decCellWidth,
-            text: procName,
+            text: name,
             fill: "hsl(270,66%,88%)",
             color: "#333",
             selectable: true,
             path,
             editableName: true,
             isDecList
-          }
-        ];
-        // const params = full.fullParams[path];
-        // if (params) {
-        //   let paramX = x + width;
-        //   for (let i = 0; i < params.length; i++) {
-        //     const param = params[i];
-        //     // const name = user.pathName([...path, i]);
-        //     const name = [...path, i].join(",");
-        //     const paramWidth = calcWidth(name);
-        //     cells.push({
-        //       key: `CL-P-${path},${i}`,
-        //       x: paramX,
-        //       y,
-        //       width: paramWidth,
-        //       text: name,
-        //       fill: "hsl(30,66%,83%)",
-        //       color: "#333",
-        //       selectable: true,
-        //       path: [...path, i],
-        //       editableName: true
-        //     });
-        //     paramX += paramWidth;
-        //   }
-        // }
+          });
+        }
         if (!isDecList) {
           x += decCellWidth;
           let params;
           let i = 0;
           for (i; i < decList.length; i++) {
             const node = decList[i];
-            // const { width = 2 } = node;
             const width = 2;
             const newCell: any = {
+              ...viewify(node as Node),
               key: `CL-${path}-${i}`,
               x,
               y,
               width,
               selectable: true,
-              // fill: node.color,
-              // text: node.name || node.out,
-              fill: "coral",
-              text: "*",
+              // fill: "coral",
+              // text: "*",
               path,
               index: i
             };
             if (isRef(node as Ref)) {
               newCell.gotoCellKey = `CL-${(node as Ref).ref.slice()}-0`;
-              if (!i) {
-                params = full.params.get(path);
-                if (params) {
-                  console.log("par", params);
-                }
-              }
+              // if (!i) {
+              //   params = full.params.get(path);
+              //   if (params) {
+              //     console.log("par", params);
+              //   }
+              // }
             }
-            // if ("arg" in node) {
             if (isArg(node as Arg)) {
               const { scope, arg = 0 } = node as Arg;
-              // newCell.gotoCellKey = `CL-P-${(node as Arg).arg.slice()}`;
-              const argPath = scope instanceof Array ? [...scope, arg] : [scope, arg];
+              const argPath =
+                scope instanceof Array ? [...scope, arg] : [scope, arg];
               newCell.gotoCellKey = `CL-P-${argPath}`;
             }
             cells.push(newCell);
             x += width;
           }
-          // if (!decList.some((node: Node) => isArg(node))) {
-          //   const text = formatOut(full, path);
-          //   cells.push({
-          //     key: `CL-${path}-out`,
-          //     x,
-          //     y,
-          //     text,
-          //     width: calcWidth(text)
-          //   });
-          // }
           return cells;
         }
-
-        // if (id !== undefined) {
-        if (!path.length) {
+        if (isChild) {
           y++;
         }
-        // decList.forEach((_, subId) => {
         for (const subDec of decList) {
-          // TODO: inline anonymous decs
-          // const subX = id === undefined ? x : x + 1;
           const subX = path.length ? x + 1 : x;
-          // const subDecCells = makeDecCells(decList, subId, [...path, subId], subX, y);
-          // const subDecCells = makeDecCells(decList, dec.path);
-          const subDecCells = makeDecCells((subDec as FullDec).line, (subDec as FullDec).path, subX, y);
+          const subDecCells = makeDecCells(
+            (subDec as FullDec).line,
+            (subDec as FullDec).path,
+            subX,
+            y
+          );
           cells.push(...subDecCells);
           y = subDecCells[subDecCells.length - 1].y + 1;
-          // if (id === undefined) {
-          if (path.length) {
+          if (isChild) {
             y++;
           }
         }
-        // });
         return cells;
       };
-      return makeDecCells(store.repo.full); // .concat(groupCell);
+      return makeDecCells(store.repo.full);
     },
     get cells() {
       return store.baseCells;
