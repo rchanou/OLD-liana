@@ -2,18 +2,18 @@ import { observable } from "mobx";
 
 import * as C from "./core";
 import * as U from "./ui";
-import { strictEqual as se, deepStrictEqual as dse } from "assert";
+import { deepStrictEqual as de } from "assert";
 
 const g = window as any;
 
-dse(1, 1);
+de(1, 1);
 
 const a = observable({ a: 1 });
 g.b = observable({
   b: 2,
   a
 });
-se(a, g.b.a);
+de(a, g.b.a);
 
 const glob = { op: C.OpEnum.Global };
 const add = { op: C.OpEnum.Add };
@@ -38,26 +38,26 @@ g.ge = (path: string[]) => C.gen(g.d, path);
 const { ge } = g;
 
 g.e = ge("a");
-se(g.e, 1);
-se(g.e, ge("a"));
+de(g.e, 1);
+de(g.e, ge("a"));
 
 g.f = ge("b");
-se(g.f, 5);
+de(g.f, 5);
 
 g.g = ge("c");
-se(g.g(2), 9);
+de(g.g(2), 9);
 
 g.h = ge("d");
-se(g.h(7, 9), 27);
+de(g.h(7, 9), 27);
 
-se(ge("d1")(30), 60);
+de(ge("d1")(30), 60);
 
-se(ge("e"), 25);
-se(ge("f"), 3);
-se(ge("g"), 28);
+de(ge("e"), 25);
+de(ge("f"), 3);
+de(ge("g"), 28);
 
 g.h = ge("h");
-se(g.h(-3)(-7), -10);
+de(g.h(-3)(-7), -10);
 
 const i: C.Repo = {
   main: [
@@ -93,7 +93,6 @@ interface K {
 const k: K = {
   b: 5,
   get a() {
-    // console.log("htirstensr");
     return k.b * 5;
   },
   fuzzy(x: number) {

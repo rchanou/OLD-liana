@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, extendObservable } from "mobx";
 import { Repo, DecDict } from "./core";
 
 export interface UI {
@@ -14,33 +14,47 @@ interface UIStore {
 }
 
 export const UI = (initial: UI) => {
+  const { selectedCellIndex = 0 } = initial;
   const store: UIStore = observable({
-    selectedCellIndex: 0,
+    selectedCellIndex,
     get repo() {
       if (initial.getRepo) {
         return initial.getRepo();
       }
       return;
-    },
-    ...initial
+    }
     // get shownDec() {
     //   return store.getRepo().dict;
+    // }
+    // get baseCells() {
+    //   return
     // }
   });
   return store;
 };
 
+export type Editor = UI & {
+  groupFilter?: string;
+};
+
 interface App {
-  ui?: UI;
+  editor?: Editor;
   repo: Repo;
 }
 
+export const Editor = (initial: Editor) => {
+  const { groupFilter = "", ...rest } = initial;
+  const store = UI(rest);
+  extendObservable(store, { groupFilter });
+  return store;
+};
+
 export const App = (initial: App) => {
+  const { repo, editor = {} } = initial;
   const store: App = observable({
-    // ...initial,
-    repo: Repo(initial.repo),
-    ui: UI({
-      ...(initial.ui || {}),
+    repo: Repo(repo),
+    editor: Editor({
+      ...editor,
       getRepo: () => store.repo
     })
   });

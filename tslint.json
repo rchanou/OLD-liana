@@ -36,7 +36,7 @@
     "one-line": [true, "check-catch", "check-else", "check-open-brace", "check-whitespace"],
     "quotemark": [false, "double", "jsx-double"],
     "radix": true,
-    "semicolon": [true, "always"],
+    "semicolon": [false, "always"],
     "switch-default": true,
 
     "trailing-comma": false,

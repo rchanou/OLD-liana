@@ -196,17 +196,11 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: object = {}) => {
   console.warn("how dis happen");
 };
 
-export const gen: any = (
-  repoDict: DecDict,
-  path: string | string[],
-  scopes: object = {}
-) => {
+export const gen: any = (repoDict: DecDict, path: string | string[], scopes: object = {}) => {
   const decKey = path instanceof Array ? path.join(",") : path;
   const line: Line = repoDict[decKey];
   if (line) {
-    const outs: any[] = line.map((node: Node) =>
-      parseNode(repoDict, node, scopes)
-    );
+    const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
     const [head, ...tail] = outs;
     if (typeof head === "function") {
       return head(...tail);
@@ -220,24 +214,20 @@ export const gen: any = (
   };
 };
 
-const Dec = (initial: Dec) => {
-  const store: Dec = observable({
-    ...initial
-    // get repoDict() {
-    //   return initial.getRepo().dict;
-    // },
-    // get out() {
-    //   return gen(store.repoDict, store.path);
-    // }
-  });
-  return store;
-};
+// const Dec = (initial: Dec) => {
+//   const store: Dec = observable({
+//     ...initial
+//     // get repoDict() {
+//     //   return initial.getRepo().dict;
+//     // },
+//     // get out() {
+//     //   return gen(store.repoDict, store.path);
+//     // }
+//   });
+//   return store;
+// };
 
-export const fillDict = (
-  decList: Dec[],
-  currentPath: string[] = [],
-  dict = {}
-) => {
+export const fillDict = (decList: Dec[], currentPath: string[] = [], dict = {}) => {
   for (const dec of decList) {
     const decPath = [...currentPath, dec.id];
     if (isDecList(dec.line)) {
