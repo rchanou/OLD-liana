@@ -33,17 +33,24 @@ for (const key in hues) {
   colors[key] = `hsl(${hues[key]}${baseSL}`;
 }
 
+interface NodeCell {
+  fill: string;
+  text: string;
+}
+
 interface Cell {
-  x?: number; // TODO: create separate "full" interface w/ required x/y
-  y?: number;
-  key?: string;
+  x: number;
+  y: number;
+  key: string;
   width?: number;
+  height?: number;
   fill?: string;
   text?: string;
   cursor?: boolean;
   selectable?: boolean;
 }
-export function viewify(node: Node): Cell {
+
+export function viewify(node: Node): NodeCell {
   if (isVal(node)) {
     return {
       fill: colors.val,
@@ -84,21 +91,27 @@ export interface UI {
 }
 
 type UIStore = UI & {
-  baseCells: Cell[];
-  selectedCell: Cell;
-  cursorCell: Cell;
   input?: string;
+  readonly baseCells: Cell[];
+  readonly selectedCell: Cell;
+  readonly cursorCell: Cell;
+  readonly moveBy: { (step?: number, axis?: string): void };
+  readonly moveUp: { (): void };
+  readonly moveDown: { (): void };
+  readonly moveLeft: { (): void };
+  readonly moveRight: { (): void };
+  readonly cellMap: any;
   // readonly shownDec: DecDict;
   // readonly getRepo: { (): RepoStore };
 };
 
 let cursorIdCounter = 0;
-export const UI = (initial: UI) => {
+export function UI(initial: UI): UIStore {
   const { selectedCellIndex = 0 } = initial;
-  const store: UIStore = observable({
+  const store: any = observable({
     selectedCellIndex,
     get baseCells() {
-      return [];
+      return [] as Cell[];
     },
     get repo() {
       if (initial.getRepo) {
@@ -129,17 +142,184 @@ export const UI = (initial: UI) => {
     },
     get cells() {
       return [...store.baseCells, store.cursorCell];
+    },
+    get cellMap() {
+      const cMap = {
+        y: {},
+        x: {}
+      };
+      const yx = cMap.y;
+      const xy = cMap.x;
+      const { baseCells } = store;
+      const { length } = baseCells;
+      for (let i = 0; i < length; i++) {
+        const cell = baseCells[i];
+        if (!cell.selectable) {
+          continue;
+        }
+        const { x, y, width = 0, height = 0 } = cell;
+        for (let cy = y; cy <= y + height; cy++) {
+          for (let cx = x; cx <= x + width; cx++) {
+            if (!yx[cy]) {
+              yx[cy] = { min: 0, max: 0 };
+            }
+            if (!xy[cx]) {
+              xy[cx] = { min: 0, max: 0 };
+            }
+            yx[cy][cx] = i;
+            xy[cx][cy] = i;
+            if (cx > yx[cy].max) {
+              yx[cy].max = cx;
+            }
+            if (cx < yx[cy].min) {
+              yx[cy].min = cx;
+            }
+            if (cy > xy[cx].max) {
+              xy[cx].max = cy;
+            }
+            if (cy < xy[cx].min) {
+              xy[cx].min = cy;
+            }
+          }
+        }
+      }
+      // TODO: logic to fill out "edge" cells for less jumpiness
+      return cMap;
+    },
+    get baseKeyMap() {
+      return {
+        1: {
+          2: { label: "▲", action: store.moveUp }
+        },
+        2: {
+          0: {
+            label: "Jump to Top",
+            action() {
+              store.selectedCellIndex = 0;
+            }
+          },
+          1: { label: "◀", action: store.moveLeft },
+          2: { label: "▼", action: store.moveDown },
+          3: { label: "▶", action: store.moveRight }
+        },
+        3: {
+          0: {
+            label: "Jump to End",
+            action() {
+              const { baseCells } = store;
+              let i = baseCells.length;
+              let toCellIndex;
+              while (toCellIndex === undefined && --i) {
+                if (store.baseCells[i].selectable) {
+                  toCellIndex = i;
+                }
+              }
+              store.selectedCellIndex = toCellIndex;
+            }
+          }
+        }
+      };
+    },
+    moveBy(step: number = +1, axis: string = "x") {
+      if (store.selectedCell == null) {
+        return;
+      }
+      const crossAxis = axis === "x" ? "y" : "x";
+      const currentCell = { ...store.selectedCell };
+      const crossSizeProp = crossAxis === "x" ? "width" : "height";
+      // TODO: center-finding can likely be improved (maybe try banker's rounding to prevent cursor "drift?")
+      const crossCenter = Math.ceil(
+        currentCell[crossAxis] + ((currentCell[crossSizeProp] || 0) - 1) / 2
+      );
+      currentCell[crossAxis] = crossCenter;
+      const crossAxisMap = store.cellMap[crossAxis];
+      if (!currentCell) {
+        return;
+      }
+      const crossAxisPos = currentCell[crossAxis];
+      const crossAxisSet = crossAxisMap[crossAxisPos];
+      if (!crossAxisSet) {
+        return;
+      }
+      let axisPos = currentCell[axis];
+      const { min } = crossAxisSet;
+      const { max } = crossAxisSet;
+      while (min <= axisPos && axisPos <= max) {
+        axisPos += step;
+        const foundIndex = crossAxisSet[axisPos];
+        if (
+          foundIndex !== store.selectedCellIndex &&
+          foundIndex !== undefined
+        ) {
+          // store.selectCellIndex(foundIndex);
+          store.selectedCellIndex = foundIndex;
+          return;
+        }
+      }
+      if (axisPos > max) {
+        let foundCurrent = false;
+        for (const crossAxisPosKey in crossAxisMap) {
+          if (crossAxisPos === parseInt(crossAxisPosKey)) {
+            foundCurrent = true;
+          } else if (foundCurrent) {
+            const posList = (Object as any).values(
+              crossAxisMap[crossAxisPosKey]
+            );
+            // third-from-last item is actual last pos of row; last two items are min/max of row
+            const wrapCellIndex = posList[posList.length - 3];
+            // store.selectCellIndex(wrapCellIndex);
+            store.selectedCellIndex = wrapCellIndex;
+            return;
+          }
+        }
+      }
+      if (axisPos < min) {
+        let prevKey = String(crossAxisPos);
+        for (const crossAxisPosKey in crossAxisMap) {
+          if (crossAxisPos === parseInt(crossAxisPosKey)) {
+            const wrapCellIndex = (Object as any).values(
+              crossAxisMap[prevKey]
+            )[0];
+            // store.selectCellIndex(wrapCellIndex);
+            store.selectedCellIndex = wrapCellIndex;
+            return;
+          } else {
+            prevKey = crossAxisPosKey;
+          }
+        }
+      }
+      // NOTE: Short-circuiting wraparound logic below at the moment (allow param to set?)
+      return;
+      if (axis === "y") {
+        return;
+      }
+      let foundIndex;
+      if (axisPos > max) {
+        foundIndex = crossAxisSet[min];
+      } else if (axisPos < min) {
+        foundIndex = crossAxisSet[max];
+      }
+      if (foundIndex !== undefined) {
+        // store.selectCellIndex(foundIndex);
+        store.selectedCellIndex = foundIndex;
+      }
+    },
+    moveRight() {
+      store.moveBy();
+    },
+    moveLeft() {
+      store.moveBy(-1);
+    },
+    moveDown() {
+      store.moveBy(+1, "y");
+    },
+    moveUp() {
+      store.moveBy(-1, "y");
     }
-    // get shownDec() {
-    //   return store.getRepo().dict;
-    // }
-    // get baseCells() {
-    //   return
-    // }
   });
   cursorIdCounter++;
   return store;
-};
+}
 
 export const mix = (store: any, more: object) => {
   extendObservable(store, more);

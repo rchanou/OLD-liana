@@ -106,6 +106,9 @@ export const Editor = ({ groupFilter = "", ...rest }: Editor) => {
         return cells;
       };
       return makeDecCells(store.repo.full);
+    },
+    get keyMap() {
+      return store.baseKeyMap;
     }
   });
   return store;
