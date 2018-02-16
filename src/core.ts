@@ -273,8 +273,8 @@ export const fillDec: any = (dec: Dec, currentPath: string[] = []) => {
 };
 
 export const Repo = (initial: Repo) => {
-  const final = {
-    ...initial,
+  const store: any = observable({
+    main: initial.main,
     full(group?: string[]) {
       if (!group) {
         const full = store.main.map((dec: any) => fillDec(dec));
@@ -282,10 +282,8 @@ export const Repo = (initial: Repo) => {
       }
     },
     get dict() {
-      return fillDict(store ? store.main : initial.main);
+      return fillDict(store.main);
     }
-  };
-  const store: any = observable(final);
-
+  });
   return store;
 };
