@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, toJS, isObservable, extendObservable } from "mobx";
 
 import * as C from "./core";
 import * as U from "./ui";
@@ -6,6 +6,7 @@ import { App } from "./app";
 import { deepStrictEqual as de } from "assert";
 
 const g = window as any;
+g.t = toJS;
 
 de(1, 1);
 
@@ -107,3 +108,21 @@ export const j = App({
   repo: i
 });
 g.j = j;
+
+const z = observable({ a: 1 });
+
+interface Y {
+  a: number;
+}
+const y: Y = { a: 1 };
+
+const extend = (obj: any, prop: string, val: any) => {
+  if (isObservable(obj)) {
+    extendObservable(obj, { [prop]: val });
+  } else {
+    obj[prop] = val;
+  }
+};
+extend(z, "wut", 3);
+extend(y, "wut", 3);
+console.log(z, y);

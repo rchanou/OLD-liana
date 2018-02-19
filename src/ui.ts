@@ -1,4 +1,4 @@
-import { observable, extendObservable, IObservable } from "mobx";
+import { observable, extendObservable } from "mobx";
 import {
   Repo,
   // DecDict,
@@ -85,6 +85,7 @@ export function viewify(node: Node): NodeCell {
 
 export interface UI {
   repo?: Repo;
+  params?: {};
   readonly getRepo?: { (): Repo };
   selectedCellIndex?: number;
   // baseCells?: Cell[];
@@ -320,8 +321,3 @@ export function UI(initial: UI): UIStore {
   cursorIdCounter++;
   return store;
 }
-
-export const mix = (store: any, more: object) => {
-  extendObservable(store, more);
-  return store;
-};

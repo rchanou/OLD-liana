@@ -1,6 +1,7 @@
-import { observable } from "mobx";
+import { observable, IObservableValue, IObservableObject } from "mobx";
 
 import { Repo } from "./core";
+import { User } from "./user";
 import { Editor } from "./editor";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -43,18 +44,24 @@ const yxKeyLayout: YXMap = {
 };
 
 interface App {
-  editor?: Editor;
   repo: Repo;
+  user?: User;
+  editor?: Editor;
+  heldKeyCoords?: {
+    x: number;
+    y: number;
+  };
 }
 
 export const App = (initial: App) => {
-  const { repo, editor = {} } = initial;
+  const { repo, user = {}, editor = {} } = initial;
   const store: any = observable({
     repo: Repo(repo),
     editor: Editor({
       ...editor,
       getRepo: () => store.repo
     }),
+    heldKeyCoords: null,
     get current() {
       return store.editor;
     },
@@ -70,7 +77,6 @@ export const App = (initial: App) => {
     handleKeyDown(e: any) {
       const { keyCode } = e;
       const { keyMap } = store;
-      // if (typeof keyMap === "function") {
       if (keyMap instanceof Function) {
         keyMap(e);
         return;
@@ -91,10 +97,8 @@ export const App = (initial: App) => {
         const thisKey = YKeyMap[x];
         if (thisKey) {
           const { action } = thisKey;
-          // if (typeof action === "function") {
           if (action instanceof Function) {
             action();
-            // } else if (Array.isArray(action)) {
           } else if (action instanceof Array) {
             for (const subAction of action) {
               subAction();
@@ -102,9 +106,16 @@ export const App = (initial: App) => {
           }
         }
       }
+    },
+    handleKeyUp() {
+      store.heldKeyCoords = null;
+    },
+    destroy() {
+      document.removeEventListener("keydown", store.handleKeyDown);
+      document.removeEventListener("keyup", store.handleKeyUp);
     }
   });
   document.addEventListener("keydown", store.handleKeyDown);
-  // document.addEventListener("keyup", store.handleKeyUp);
+  document.addEventListener("keyup", store.handleKeyUp);
   return store;
 };

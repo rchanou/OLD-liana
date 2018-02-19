@@ -1,7 +1,8 @@
 import { observable } from "mobx";
 
-import { mix, UI, calcWidth, viewify } from "./ui";
+import { UI, calcWidth, viewify } from "./ui";
 import {
+  mix,
   FullDec,
   isFullDecList,
   FullLine,

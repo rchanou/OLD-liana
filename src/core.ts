@@ -257,8 +257,43 @@ export const makeDict = (
   return dict;
 };
 
+interface BaseType {
+  nullable?: boolean | string[];
+  validatorRef: string[];
+  defaultRef: string[];
+}
+
+type NumType = BaseType & {
+  kind: "N";
+  integer?: boolean | string[];
+  start?: number | string[];
+  end?: number | string[];
+  default?: number;
+};
+
+type BoolType = BaseType & {
+  kind: "B";
+  default?: boolean;
+};
+
+type StringType = BaseType & {
+  kind: "S";
+  default?: string;
+};
+
+type ObjectType = BaseType & {
+  kind: "O";
+};
+
+type ValType = NumType | BoolType | StringType | ObjectType;
+
 export interface Repo {
   main: Dec[];
+  params?: {
+    [pathKey: string]: {
+      type?: ValType;
+    }[];
+  };
 }
 
 export function fillLine(line: Line, currentPath: string[] = []): FullLine {
@@ -274,26 +309,7 @@ export function fillLine(line: Line, currentPath: string[] = []): FullLine {
   return line;
 }
 
-export function Node(initial: Node) {
-  const store = observable(initial);
-  if (isArg(initial)) {
-  }
-  if (isRef(initial)) {
-  }
-  return store;
-}
-
-// export function Line(initial: Line) {
-//   if (isDecList(initial)) {
-//     return observable(initial);
-//   } else {
-//     return initial.map(node => Node(node));
-//   }
-//   // const store = observable()
-// }
-
 export function Repo(initial: Repo) {
-  // const getRepo = () => store.repo;
   const Dec = ({ id, line }: Dec): Dec => observable({ id, line: Line(line) });
   const Line = (initial: Line) => {
     if (isDecList(initial)) {
