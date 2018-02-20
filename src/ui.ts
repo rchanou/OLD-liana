@@ -1,5 +1,7 @@
+import { UIStore } from "./ui";
 import { observable, extendObservable } from "mobx";
 import {
+  mix,
   Repo,
   // DecDict,
   // FullLine,
@@ -9,7 +11,8 @@ import {
   isRef,
   // Arg,
   // Ref,
-  Node
+  Node,
+  RepoStore
 } from "./core";
 // import { unknown } from "./color";
 
@@ -48,6 +51,7 @@ export interface Cell {
   text?: string;
   cursor?: boolean;
   selectable?: boolean;
+  gotoCellKey?: string;
 }
 
 export function viewify(node: Node): NodeCell {
@@ -84,15 +88,17 @@ export function viewify(node: Node): NodeCell {
 }
 
 export interface UI {
-  repo?: Repo;
+  repo: Repo;
+  // getRepo: { (): Repo };
   params?: {};
-  readonly getRepo?: { (): Repo };
   selectedCellIndex?: number;
   // baseCells?: Cell[];
 }
 
-type UIStore = UI & {
+export type UIStore = UI & {
+  repo: RepoStore;
   input?: string;
+  readonly baseKeyMap: {};
   readonly baseCells: Cell[];
   readonly selectedCell: Cell;
   readonly cursorCell: Cell;
@@ -109,17 +115,18 @@ type UIStore = UI & {
 let cursorIdCounter = 0;
 export function UI(initial: UI): UIStore {
   const { selectedCellIndex = 0 } = initial;
-  const store: any = observable({
+  // const store: any = observable({
+  const store: any = mix(initial, {
     selectedCellIndex,
     get baseCells() {
       return [] as Cell[];
     },
-    get repo() {
-      if (initial.getRepo) {
-        return initial.getRepo();
-      }
-      return;
-    },
+    // get repo() {
+    //   if (initial.getRepo) {
+    //     return initial.getRepo();
+    //   }
+    //   return;
+    // },
     get selectedCell() {
       const { baseCells } = store;
       let i = store.selectedCellIndex;

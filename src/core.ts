@@ -310,6 +310,10 @@ export interface Repo {
   };
 }
 
+export type RepoStore = Repo & {
+  readonly full: any;
+};
+
 export function fillLine(line: Line, currentPath: string[] = []): FullLine {
   if (isDecList(line)) {
     return line.map((subDec: Dec): FullDec => {

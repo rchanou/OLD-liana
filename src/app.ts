@@ -1,6 +1,6 @@
 import { observable, IObservableValue, IObservableObject } from "mobx";
 
-import { Repo } from "./core";
+import { Repo, mix } from "./core";
 import { User } from "./user";
 import { Editor } from "./editor";
 
@@ -57,10 +57,30 @@ export const App = (initial: App) => {
   const { repo, user = {}, editor = {} } = initial;
   const store: any = observable({
     repo: Repo(repo),
-    editor: Editor({
-      ...editor,
-      getRepo: () => store.repo
-    }),
+    editor: Editor(
+      Object.assign(
+        {
+          get repo() {
+            console.log("hol up");
+            return store.repo;
+          },
+          get app() {
+            return store;
+          }
+        },
+        editor
+      )
+    ),
+    // editor: Editor({
+    //   ...editor,
+    //   // getRepo: (): Repo => store.repo
+    //   get repo() {
+    //     return store.repo;
+    //   },
+    //   get app() {
+    //     return store;
+    //   }
+    // }),
     heldKeyCoords: null,
     get current() {
       return store.editor;
