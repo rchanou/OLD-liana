@@ -89,7 +89,6 @@ export function viewify(node: Node): NodeCell {
 
 export interface UI {
   repo: Repo;
-  // getRepo: { (): Repo };
   params?: {};
   selectedCellIndex?: number;
   // baseCells?: Cell[];
@@ -108,29 +107,20 @@ export type UIStore = UI & {
   readonly moveLeft: { (): void };
   readonly moveRight: { (): void };
   readonly cellMap: any;
-  // readonly shownDec: DecDict;
-  // readonly getRepo: { (): RepoStore };
 };
 
 let cursorIdCounter = 0;
 export function UI(initial: UI): UIStore {
   const { selectedCellIndex = 0 } = initial;
-  // const store: any = observable({
-  const store: any = mix(initial, {
+  const store: UIStore = mix(initial, {
     selectedCellIndex,
     get baseCells() {
       return [] as Cell[];
     },
-    // get repo() {
-    //   if (initial.getRepo) {
-    //     return initial.getRepo();
-    //   }
-    //   return;
-    // },
     get selectedCell() {
       const { baseCells } = store;
       let i = store.selectedCellIndex;
-      let foundCell: Cell = baseCells[i || 0]; // TS couldn't infer it from above default
+      let foundCell: Cell = baseCells[i || 0]; // TS checker couldn't infer default zero from above
       while ((!foundCell || !foundCell.selectable) && i) {
         foundCell = baseCells[i--];
       }
@@ -259,7 +249,6 @@ export function UI(initial: UI): UIStore {
           foundIndex !== store.selectedCellIndex &&
           foundIndex !== undefined
         ) {
-          // store.selectCellIndex(foundIndex);
           store.selectedCellIndex = foundIndex;
           return;
         }
@@ -275,7 +264,6 @@ export function UI(initial: UI): UIStore {
             );
             // third-from-last item is actual last pos of row; last two items are min/max of row
             const wrapCellIndex = posList[posList.length - 3];
-            // store.selectCellIndex(wrapCellIndex);
             store.selectedCellIndex = wrapCellIndex;
             return;
           }
@@ -288,7 +276,6 @@ export function UI(initial: UI): UIStore {
             const wrapCellIndex = (Object as any).values(
               crossAxisMap[prevKey]
             )[0];
-            // store.selectCellIndex(wrapCellIndex);
             store.selectedCellIndex = wrapCellIndex;
             return;
           } else {
@@ -308,7 +295,6 @@ export function UI(initial: UI): UIStore {
         foundIndex = crossAxisSet[max];
       }
       if (foundIndex !== undefined) {
-        // store.selectCellIndex(foundIndex);
         store.selectedCellIndex = foundIndex;
       }
     },

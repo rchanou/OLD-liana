@@ -61,7 +61,6 @@ export const App = (initial: App) => {
       Object.assign(
         {
           get repo() {
-            console.log("hol up");
             return store.repo;
           },
           get app() {
@@ -71,16 +70,6 @@ export const App = (initial: App) => {
         editor
       )
     ),
-    // editor: Editor({
-    //   ...editor,
-    //   // getRepo: (): Repo => store.repo
-    //   get repo() {
-    //     return store.repo;
-    //   },
-    //   get app() {
-    //     return store;
-    //   }
-    // }),
     heldKeyCoords: null,
     get current() {
       return store.editor;
