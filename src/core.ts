@@ -311,7 +311,7 @@ export interface Repo {
 }
 
 export type RepoStore = Repo & {
-  readonly full: any;
+  readonly full: any; // TODO: type
 };
 
 export function fillLine(line: Line, currentPath: string[] = []): FullLine {
@@ -366,7 +366,7 @@ export function Repo(initial: Repo) {
       return initial.map(node => mix(Node(node), nodeStoreContext));
     }
   };
-  const store: any = observable({
+  const store: RepoStore = observable({
     main: Line(initial.main),
     get full() {
       return fillLine(store.main);

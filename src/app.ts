@@ -2,6 +2,7 @@ import { observable, IObservableValue, IObservableObject } from "mobx";
 
 import { Repo, mix } from "./core";
 import { User } from "./user";
+import { UIStore } from "./ui";
 import { Editor } from "./editor";
 
 const LOCAL_STORAGE_KEY = "LIANA";
@@ -50,12 +51,24 @@ interface App {
   heldKeyCoords?: {
     x: number;
     y: number;
-  };
+  } | null;
+  current?: UIStore;
 }
+
+interface KeyMap {
+  onKey: { (e: KeyboardEvent): void };
+}
+
+export type AppStore = App & {
+  current: UIStore;
+  keyMap: KeyMap;
+  handleKeyDown: { (): void };
+  handleKeyUp: { (): void };
+};
 
 export const App = (initial: App) => {
   const { repo, user = {}, editor = {} } = initial;
-  const store: any = observable({
+  const store: AppStore = mix({
     repo: Repo(repo),
     editor: Editor(
       Object.assign(
@@ -83,7 +96,7 @@ export const App = (initial: App) => {
     get handleInput() {
       return store.current.handleInput;
     },
-    handleKeyDown(e: any) {
+    handleKeyDown(e: KeyboardEvent) {
       const { keyCode } = e;
       const { keyMap } = store;
       if (keyMap instanceof Function) {

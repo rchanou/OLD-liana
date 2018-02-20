@@ -3,7 +3,7 @@ import { observable } from "mobx";
 import { defaultsDeep } from "lodash";
 
 import { UI, UIStore, Cell, calcWidth, viewify } from "./ui";
-import { App } from "./app";
+import { AppStore } from "./app";
 import {
   mix,
   FullDec,
@@ -17,7 +17,7 @@ import {
 } from "./core";
 
 export type Editor = UI & {
-  app: any;
+  app: AppStore;
   groupFilter?: string;
   editPathName?: (string | number)[];
 };
@@ -25,7 +25,6 @@ export type Editor = UI & {
 export type EditorStore = UIStore & Editor;
 
 export const Editor = (initial: Editor) => {
-  console.log("naw fam", initial);
   const store: EditorStore = mix(UI(initial), {
     groupFilter: initial.groupFilter || "",
     get baseCells() {
@@ -34,7 +33,7 @@ export const Editor = (initial: Editor) => {
         path: string[] = [],
         x = 0,
         y = 0
-      ): any[] => {
+      ): Cell[] => {
         const isDecList = isFullDecList(decList);
         const name = path.join(",");
         const decCellWidth = calcWidth(name);
@@ -62,15 +61,15 @@ export const Editor = (initial: Editor) => {
           for (i; i < decList.length; i++) {
             const node = decList[i];
             const width = 2;
-            const newCell: any = {
+            const newCell: Cell = {
               ...viewify(node as Node),
               key: `CL-${path}-${i}`,
               x,
               y,
               width,
               selectable: true,
-              path,
-              index: i
+              path
+              // index: i // TODO: why do i need this again?
             };
             if (isRef(node as Ref)) {
               newCell.gotoCellKey = `CL-${(node as Ref).ref.slice()}-0`;

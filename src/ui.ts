@@ -48,10 +48,14 @@ export interface Cell {
   width?: number;
   height?: number;
   fill?: string;
+  color?: string;
   text?: string;
   cursor?: boolean;
   selectable?: boolean;
+  path?: string[];
   gotoCellKey?: string;
+  editableName?: boolean;
+  isDecList?: boolean;
 }
 
 export function viewify(node: Node): NodeCell {
@@ -91,14 +95,17 @@ export interface UI {
   repo: Repo;
   params?: {};
   selectedCellIndex?: number;
-  // baseCells?: Cell[];
 }
 
 export type UIStore = UI & {
   repo: RepoStore;
   input?: string;
   readonly baseKeyMap: {};
+  readonly keyMap: {};
+  readonly handleInput: { (): void };
   readonly baseCells: Cell[];
+  readonly cells: Cell[];
+  readonly activeCells: Cell[];
   readonly selectedCell: Cell;
   readonly cursorCell: Cell;
   readonly moveBy: { (step?: number, axis?: string): void };
@@ -106,7 +113,7 @@ export type UIStore = UI & {
   readonly moveDown: { (): void };
   readonly moveLeft: { (): void };
   readonly moveRight: { (): void };
-  readonly cellMap: any;
+  readonly cellMap: {};
 };
 
 let cursorIdCounter = 0;
