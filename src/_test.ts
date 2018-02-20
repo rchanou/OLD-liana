@@ -17,8 +17,8 @@ g.b = observable({
 });
 de(a, g.b.a);
 
-const glob = { op: C.OpEnum.Global };
-const add = { op: C.OpEnum.Add };
+const glob = { op: C.Op.Global };
+const add = { op: C.Op.Add };
 
 g.d = {
   a: [{ val: 1 }],

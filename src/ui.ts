@@ -38,7 +38,7 @@ interface NodeCell {
   text: string;
 }
 
-interface Cell {
+export interface Cell {
   x: number;
   y: number;
   key: string;

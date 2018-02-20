@@ -1,6 +1,7 @@
 import { observable } from "mobx";
+import { defaultsDeep } from "lodash";
 
-import { UI, calcWidth, viewify } from "./ui";
+import { UI, Cell, calcWidth, viewify } from "./ui";
 import {
   mix,
   FullDec,
@@ -62,8 +63,6 @@ export const Editor = ({ groupFilter = "", ...rest }: Editor) => {
               y,
               width,
               selectable: true,
-              // fill: "coral",
-              // text: "*",
               path,
               index: i
             };
@@ -109,7 +108,22 @@ export const Editor = ({ groupFilter = "", ...rest }: Editor) => {
       return makeDecCells(store.repo.full);
     },
     get keyMap() {
-      return store.baseKeyMap;
+      const { selectedCell } = store;
+      const keyMap = { 2: {} };
+      if (selectedCell.gotoCellKey) {
+        keyMap[2][7] = {
+          label: "Go To Def",
+          action() {
+            const gotoCellIndex = store.baseCells.findIndex(
+              (cell: Cell) => cell.key === selectedCell.gotoCellKey
+            );
+            if (gotoCellIndex !== -1) {
+              store.selectedCellIndex = gotoCellIndex;
+            }
+          }
+        };
+      }
+      return defaultsDeep(keyMap, store.baseKeyMap);
     }
   });
   return store;

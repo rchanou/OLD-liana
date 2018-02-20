@@ -1,8 +1,14 @@
-import { FullLine } from "./core";
-import { observable, extendObservable } from "mobx";
+import { observable, isObservable, extendObservable } from "mobx";
 
-export const mix = (store: any, more: object) => {
-  extendObservable(store, more);
+import { User } from "./user";
+
+export const mix = (store: any, ...more: object[]) => {
+  if (!isObservable(store)) {
+    store = observable(store);
+  }
+  for (const props of more) {
+    extendObservable(store, props);
+  }
   return store;
 };
 
@@ -10,14 +16,14 @@ interface Val {
   val?: string | number | boolean;
 }
 
-export enum OpEnum {
+export enum Op {
   Global = "g",
   Dot = ".",
   Add = "+",
   Minus = "-"
 }
-interface Op {
-  op: OpEnum;
+interface OpRef {
+  op: Op;
 }
 
 const gRef = "g";
@@ -75,7 +81,7 @@ const opFuncs = Object.freeze({
       return ex;
     }
   },
-  [OpEnum.Add](...nums: any[]) {
+  [Op.Add](...nums: any[]) {
     let sum;
     for (let i = 0; i < nums.length; i++) {
       if (i === 0) {
@@ -121,6 +127,13 @@ for (const op in opFuncs) {
 }
 Object.freeze(ops);
 
+const defaultOpNames = Object.freeze({
+  [Op.Dot]: "•",
+  [Op.Global]: "🌐",
+  [Op.Add]: "+",
+  [Op.Minus]: "-"
+});
+
 interface Pkg {
   id: string;
 }
@@ -138,13 +151,13 @@ export interface Ref {
   ref: string[];
 }
 
-export type Node = Val | Op | PkgRef | Arg | Ref;
+export type Node = Val | OpRef | PkgRef | Arg | Ref;
 
 export function isVal(node: Node): node is Val {
   return (node as Val).val !== undefined;
 }
-export function isOp(node: Node): node is Op {
-  return (node as Op).op != null;
+export function isOp(node: Node): node is OpRef {
+  return (node as OpRef).op != null;
 }
 export function isArg(node: Node): node is Arg {
   return (node as Arg).scope != null;
@@ -288,6 +301,7 @@ type ObjectType = BaseType & {
 type ValType = NumType | BoolType | StringType | ObjectType;
 
 export interface Repo {
+  user?: User;
   main: Dec[];
   params?: {
     [pathKey: string]: {
@@ -309,22 +323,43 @@ export function fillLine(line: Line, currentPath: string[] = []): FullLine {
   return line;
 }
 
+export function Node(initial: Node) {
+  if (isVal(initial)) {
+    const store = mix(initial, {
+      get name() {
+        return store.val;
+      }
+    });
+    return store;
+  }
+  if (isOp(initial)) {
+    const store = mix(initial, {
+      get name() {
+        return store.op;
+      }
+    });
+    return store;
+  }
+  return mix(initial, {
+    get name() {
+      return "???";
+    }
+  });
+}
+
 export function Repo(initial: Repo) {
+  const nodeStoreContext = {
+    get repo() {
+      return store;
+    }
+  };
   const Dec = ({ id, line }: Dec): Dec => observable({ id, line: Line(line) });
   const Line = (initial: Line) => {
     if (isDecList(initial)) {
       return initial.map(Dec);
     } else {
-      return initial.map(node =>
-        mix(
-          observable({
-            get repo() {
-              return store;
-            }
-          }),
-          node
-        )
-      );
+      // return initial.map(node => mix(observable(nodeStoreContext), node));
+      return initial.map(node => mix(Node(node), nodeStoreContext));
     }
   };
   const store: any = observable({

@@ -6,6 +6,7 @@ import { isAlive, destroy } from "mobx-state-tree";
 import { ReactGUI } from "../src/react-gui";
 import { App, unpackApp } from "../src/app";
 import * as T from "../src/_tests"; // importing this file also runs its tests
+import { mix } from "../src/core.ts";
 
 const LOCAL_STORAGE_KEY = "LIANA";
 const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
