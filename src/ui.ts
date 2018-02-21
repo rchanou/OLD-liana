@@ -1,7 +1,7 @@
 import { UIStore } from "./ui";
 import { observable, extendObservable } from "mobx";
 import {
-  mix,
+  makeStore,
   Repo,
   // DecDict,
   // FullLine,
@@ -52,7 +52,7 @@ export interface Cell {
   text?: string;
   cursor?: boolean;
   selectable?: boolean;
-  path?: string[];
+  path?: (string | number)[];
   gotoCellKey?: string;
   editableName?: boolean;
   isDecList?: boolean;
@@ -119,7 +119,7 @@ export type UIStore = UI & {
 let cursorIdCounter = 0;
 export function UI(initial: UI): UIStore {
   const { selectedCellIndex = 0 } = initial;
-  const store: UIStore = mix(initial, {
+  const store: UIStore = makeStore(initial, {
     selectedCellIndex,
     get baseCells() {
       return [] as Cell[];

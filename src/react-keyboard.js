@@ -50,9 +50,9 @@ export const ReactKeyboard = observer(({ store }) => {
   }
   const { title, enter } = keyMap;
   if (title) {
-    const children = [<div>{title}</div>];
+    const children = [<div key="T">{title}</div>];
     if (enter) {
-      children.push(<div>Press Enter to {enter}</div>);
+      children.push(<div key="E">Press Enter to {enter}</div>);
     }
     // TODO: display actions for esc, tab if given
     return (

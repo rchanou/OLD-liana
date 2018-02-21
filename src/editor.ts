@@ -5,7 +5,7 @@ import { defaultsDeep } from "lodash";
 import { UI, UIStore, Cell, calcWidth, viewify } from "./ui";
 import { AppStore } from "./app";
 import {
-  mix,
+  makeStore,
   FullDec,
   isFullDecList,
   FullLine,
@@ -15,18 +15,26 @@ import {
   Ref,
   Node
 } from "./core";
+import { User, UserStore } from "./user";
 
 export type Editor = UI & {
   app: AppStore;
+  user?: User;
   groupFilter?: string;
-  editPathName?: (string | number)[];
+  editPathName?: (string | number)[] | null;
 };
 
-export type EditorStore = UIStore & Editor;
+export type EditorStore = UIStore & {
+  user: UserStore;
+  groupFilter: string;
+  editPathName: (string | number)[] | null;
+};
 
 export const Editor = (initial: Editor) => {
-  const store: EditorStore = mix(UI(initial), {
-    groupFilter: initial.groupFilter || "",
+  const { groupFilter = "", editPathName = null } = initial;
+  const store: EditorStore = makeStore(UI(initial), {
+    groupFilter,
+    editPathName,
     get baseCells() {
       const makeDecCells = (
         decList: FullLine,
@@ -112,9 +120,36 @@ export const Editor = (initial: Editor) => {
       };
       return makeDecCells(store.repo.full);
     },
+    get input() {
+      if (store.editPathName) {
+        return store.user.nameSet[store.editPathName.join(",")] || "";
+      }
+      return;
+    },
     get keyMap() {
       const { selectedCell } = store;
+      if (store.editPathName) {
+        return {
+          title: "Type to Change Name",
+          enter: "Save",
+          esc: "Cancel",
+          tab: "Save and Move Right",
+          onKey(e: KeyboardEvent) {
+            if (e.keyCode === 13) {
+              store.editPathName = null;
+            }
+          }
+        };
+      }
       const keyMap = { 2: {} };
+      if (selectedCell.editableName) {
+        keyMap[2][6] = {
+          label: "Change Name",
+          action() {
+            store.editPathName = selectedCell.path || null;
+          }
+        };
+      }
       if (selectedCell.gotoCellKey) {
         keyMap[2][7] = {
           label: "Go To Def",

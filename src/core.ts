@@ -1,8 +1,8 @@
 import { observable, isObservable, extendObservable } from "mobx";
 
-import { User } from "./user";
+import { User, UserStore } from "./user";
 
-export const mix = (store: any, ...more: object[]) => {
+export const makeStore = (store: any, ...more: object[]) => {
   if (!isObservable(store)) {
     store = observable(store);
   }
@@ -171,16 +171,12 @@ type Line = Node[] | Dec[];
 export interface Dec {
   id: string;
   line: Line;
-  // readonly getRepo: { (): Repo };
-  // readonly repoDict: DecDict;
 }
 
 export type FullLine = FullDec[] | Node[];
 export interface FullDec {
   path: string[];
   line: FullLine;
-  // readonly getRepo: { (): Repo };
-  // readonly repoDict: DecDict;
 }
 
 export interface DecDict {
@@ -311,6 +307,7 @@ export interface Repo {
 }
 
 export type RepoStore = Repo & {
+  user: UserStore;
   readonly full: any; // TODO: type
 };
 
@@ -327,9 +324,15 @@ export function fillLine(line: Line, currentPath: string[] = []): FullLine {
   return line;
 }
 
+type NodeStore = {
+  readonly key: string;
+  readonly name: string;
+  readonly repo: RepoStore;
+};
+
 export function Node(initial: Node) {
   if (isVal(initial)) {
-    const store = mix(initial, {
+    const store: Val & NodeStore = makeStore(initial, {
       get name() {
         return store.val;
       }
@@ -337,14 +340,34 @@ export function Node(initial: Node) {
     return store;
   }
   if (isOp(initial)) {
-    const store = mix(initial, {
+    const store = makeStore(initial, {
       get name() {
         return store.op;
       }
     });
     return store;
   }
-  return mix(initial, {
+  if (isRef(initial)) {
+    const store: Ref & NodeStore = makeStore(initial, {
+      get name() {
+        return store.repo.user.nameSet[store.ref.join()];
+      }
+    });
+    return store;
+  }
+  if (isArg(initial)) {
+    const store: Arg & NodeStore = makeStore(initial, {
+      get key() {
+        const { scope, arg } = store;
+        return scope instanceof Array ? [...scope, arg] : [scope, arg];
+      },
+      get name() {
+        return store.repo.user.nameSet[store.key];
+      }
+    });
+    return store;
+  }
+  return makeStore(initial, {
     get name() {
       return "???";
     }
@@ -357,16 +380,15 @@ export function Repo(initial: Repo) {
       return store;
     }
   };
-  const Dec = ({ id, line }: Dec): Dec => observable({ id, line: Line(line) });
+  const Dec = ({ id, line }: Dec): Dec => makeStore({ id, line: Line(line) });
   const Line = (initial: Line) => {
     if (isDecList(initial)) {
       return initial.map(Dec);
     } else {
-      // return initial.map(node => mix(observable(nodeStoreContext), node));
-      return initial.map(node => mix(Node(node), nodeStoreContext));
+      return initial.map(node => makeStore(Node(node), nodeStoreContext));
     }
   };
-  const store: RepoStore = observable({
+  const store: RepoStore = makeStore({
     main: Line(initial.main),
     get full() {
       return fillLine(store.main);

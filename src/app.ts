@@ -1,6 +1,6 @@
 import { observable, IObservableValue, IObservableObject } from "mobx";
 
-import { Repo, mix } from "./core";
+import { Repo, makeStore } from "./core";
 import { User } from "./user";
 import { UIStore } from "./ui";
 import { Editor } from "./editor";
@@ -68,21 +68,41 @@ export type AppStore = App & {
 
 export const App = (initial: App) => {
   const { repo, user = {}, editor = {} } = initial;
-  const store: AppStore = mix({
-    repo: Repo(repo),
-    editor: Editor(
-      Object.assign(
-        {
-          get repo() {
-            return store.repo;
-          },
-          get app() {
-            return store;
-          }
+  const store: AppStore = makeStore({
+    repo: makeStore(Repo(repo), {
+      get user() {
+        return store.user;
+      }
+    }),
+    // user: User(user),
+    user: User(user),
+    editor: makeStore(
+      Editor({
+        get repo() {
+          return store.repo;
         },
-        editor
-      )
+        get user() {
+          return store.user;
+        },
+        get app() {
+          return store;
+        }
+      }),
+      editor
     ),
+    // editor: Editor(
+    //   Object.assign(
+    //     {
+    //       get repo() {
+    //         return store.repo;
+    //       },
+    //       get app() {
+    //         return store;
+    //       }
+    //     },
+    //     editor
+    //   )
+    // ),
     heldKeyCoords: null,
     get current() {
       return store.editor;
