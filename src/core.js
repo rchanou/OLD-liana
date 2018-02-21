@@ -4,13 +4,7 @@ import produce, { setAutoFreeze } from "immer";
 setAutoFreeze(false);
 
 import { ContextUserReader } from "./user";
-import {
-  asContext,
-  mixinModel,
-  optionalModel,
-  IndexType,
-  incrementLetterId
-} from "./model-utils";
+import { asContext, mixinModel, optionalModel, IndexType, incrementLetterId } from "./model-utils";
 import { pack, unpack } from "./pack";
 import * as Color from "./color";
 
@@ -145,19 +139,17 @@ export const Pkg = mixinModel(optionalModel({ resolved: false }))("Pkg", {
     }
   }));
 
-const PkgRef = types
-  .model("PkgRef", { pkg: types.reference(Pkg) })
-  .views(self => ({
-    get out() {
-      return self.pkg.out;
-    },
-    get name() {
-      return self.pkg.name;
-    },
-    get color() {
-      return self.pkg.color;
-    }
-  }));
+const PkgRef = types.model("PkgRef", { pkg: types.reference(Pkg) }).views(self => ({
+  get out() {
+    return self.pkg.out;
+  },
+  get name() {
+    return self.pkg.name;
+  },
+  get color() {
+    return self.pkg.color;
+  }
+}));
 
 const Val = types
   .model("Val", {
@@ -237,25 +229,22 @@ const Op = mixinModel(Named)("Op", {
 }));
 
 const Arg = mixinModel(ContextUserReader)("Arg", {
-  arg: types.refinement(
-    types.array(types.union(types.string, IndexType)),
-    path => {
-      const { length } = path;
-      if (typeof path[0] === "number" && typeof path[1] === "number") {
-        return length === 2;
-      }
-      for (let i = 0; i < length; i++) {
-        if (i === length - 1) {
-          if (typeof path[i] !== "number") {
-            return false;
-          }
-        } else if (typeof path[i] !== "string") {
+  arg: types.refinement(types.array(types.union(types.string, IndexType)), path => {
+    const { length } = path;
+    if (typeof path[0] === "number" && typeof path[1] === "number") {
+      return length === 2;
+    }
+    for (let i = 0; i < length; i++) {
+      if (i === length - 1) {
+        if (typeof path[i] !== "number") {
           return false;
         }
+      } else if (typeof path[i] !== "string") {
+        return false;
       }
-      return true;
     }
-  )
+    return true;
+  })
 }).views(self => ({
   get name() {
     return self.user.pathName(self.arg);
@@ -315,7 +304,7 @@ const walkPath = (base, up, walk) => {
   return finalPath;
 };
 
-const Dec = types.map(types.union(types.string, Line, types.late(() => Dec)));
+const Dec = types.array(types.union(types.string, Line, types.late(() => Dec)));
 
 const paramTypeEnum = {
   any: "A",
@@ -329,9 +318,7 @@ for (const enumKey in paramTypeEnum) {
   paramTypeEnumList.push(paramTypeEnum[enumKey]);
 }
 
-const ParamType = types.maybe(
-  types.enumeration("ParamType", paramTypeEnumList)
-);
+const ParamType = types.maybe(types.enumeration("ParamType", paramTypeEnumList));
 
 const Param = optionalModel("Param", {
   type: types.maybe(types.string),
@@ -427,10 +414,7 @@ export const ParamAspect = types
 
 window.j = toJS;
 export const SampleAspect = optionalModel("SampleAspect", {
-  sampleLists: types.optional(
-    types.map(types.array(types.array(types.union(Val, Ref, Op, PkgRef)))),
-    {}
-  )
+  sampleLists: types.optional(types.map(types.array(types.array(types.union(Val, Ref, Op, PkgRef)))), {})
 }).views(self => ({
   fullSample(mainId, sampleIndex = 0) {
     const { getDec, main, sampleLists } = self;
@@ -589,9 +573,7 @@ export const Repo = mixinModel(ParamAspect, SampleAspect)("Repo", {
                 return parseNode(casePairs[length - 1]);
               }
               // throwing for now, but maybe that's too strict
-              throw new Error(
-                "Switch case not matched. No default case defined."
-              );
+              throw new Error("Switch case not matched. No default case defined.");
               break;
           }
           // TODO: short-circuit "for"?

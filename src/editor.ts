@@ -1,20 +1,10 @@
 import { EditorStore } from "./editor";
-import { observable } from "mobx";
+import { action, observable, extendObservable, createTransformer } from "mobx";
 import { defaultsDeep } from "lodash";
 
 import { UI, UIStore, Cell, calcWidth, viewify } from "./ui";
 import { AppStore } from "./app";
-import {
-  makeStore,
-  FullDec,
-  isFullDecList,
-  FullLine,
-  isArg,
-  isRef,
-  Arg,
-  Ref,
-  Node
-} from "./core";
+import { makeStore, pushEntry, FullDec, isFullDecList, FullLine, isArg, isRef, Arg, Ref, Node } from "./core";
 import { User, UserStore } from "./user";
 
 export type Editor = UI & {
@@ -30,20 +20,22 @@ export type EditorStore = UIStore & {
   editPathName: (string | number)[] | null;
 };
 
+// const getName = createTransformer()
+
 export const Editor = (initial: Editor) => {
   const { groupFilter = "", editPathName = null } = initial;
   const store: EditorStore = makeStore(UI(initial), {
     groupFilter,
     editPathName,
     get baseCells() {
-      const makeDecCells = (
-        decList: FullLine,
-        path: string[] = [],
-        x = 0,
-        y = 0
-      ): Cell[] => {
+      const makeDecCells = (decList: FullLine, path: string[] = [], x = 0, y = 0): Cell[] => {
         const isDecList = isFullDecList(decList);
-        const name = path.join(",");
+        const pathKey = path.join(",");
+        const { nameSet } = store.user;
+        if (!(pathKey in nameSet)) {
+          pushEntry(nameSet, pathKey);
+        }
+        const name = nameSet[pathKey] || pathKey;
         const decCellWidth = calcWidth(name);
         const cells = [];
         const isChild = Boolean(path.length);
@@ -90,8 +82,7 @@ export const Editor = (initial: Editor) => {
             }
             if (isArg(node as Arg)) {
               const { scope, arg = 0 } = node as Arg;
-              const argPath =
-                scope instanceof Array ? [...scope, arg] : [scope, arg];
+              const argPath = scope instanceof Array ? [...scope, arg] : [scope, arg];
               newCell.gotoCellKey = `CL-P-${argPath}`;
             }
             cells.push(newCell);
@@ -102,14 +93,10 @@ export const Editor = (initial: Editor) => {
         if (isChild) {
           y++;
         }
-        for (const subDec of decList) {
+        for (let subDec of decList) {
+          subDec = subDec as FullDec;
           const subX = path.length ? x + 1 : x;
-          const subDecCells = makeDecCells(
-            (subDec as FullDec).line,
-            (subDec as FullDec).path,
-            subX,
-            y
-          );
+          const subDecCells = makeDecCells(subDec.line, subDec.path, subX, y);
           cells.push(...subDecCells);
           y = subDecCells[subDecCells.length - 1].y + 1;
           if (isChild) {
@@ -126,6 +113,19 @@ export const Editor = (initial: Editor) => {
       }
       return;
     },
+    handleInput: action((e: KeyboardEvent) => {
+      const { value } = e.target as HTMLInputElement;
+      if (store.editPathName != null) {
+        const pathKey = store.editPathName.join(",");
+        if (store.user.nameSet[pathKey] == null) {
+          extendObservable(store.user.nameSet, {
+            [pathKey]: value
+          });
+        } else {
+          store.user.nameSet[pathKey] = value;
+        }
+      }
+    }),
     get keyMap() {
       const { selectedCell } = store;
       if (store.editPathName) {
@@ -154,9 +154,7 @@ export const Editor = (initial: Editor) => {
         keyMap[2][7] = {
           label: "Go To Def",
           action() {
-            const gotoCellIndex = store.baseCells.findIndex(
-              (cell: Cell) => cell.key === selectedCell.gotoCellKey
-            );
+            const gotoCellIndex = store.baseCells.findIndex((cell: Cell) => cell.key === selectedCell.gotoCellKey);
             if (gotoCellIndex !== -1) {
               store.selectedCellIndex = gotoCellIndex;
             }

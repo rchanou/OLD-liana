@@ -12,6 +12,14 @@ export const makeStore = (store: any, ...more: object[]) => {
   return store;
 };
 
+export const pushEntry = (obj: any, key: string, val?: any): void => {
+  if (isObservable(obj) && !(key in obj)) {
+    extendObservable(obj, { [key]: val });
+  } else {
+    obj[key] = val;
+  }
+};
+
 interface Val {
   val?: string | number | boolean;
 }
@@ -177,6 +185,7 @@ export type FullLine = FullDec[] | Node[];
 export interface FullDec {
   path: string[];
   line: FullLine;
+  readonly name: string;
 }
 
 export interface DecDict {
@@ -225,17 +234,11 @@ const parseNode = (repoDict: DecDict, node: Node, scopes: object = {}) => {
   console.warn("how dis happen");
 };
 
-export const gen: any = (
-  repoDict: DecDict,
-  path: string | string[],
-  scopes: object = {}
-) => {
+export const gen: any = (repoDict: DecDict, path: string | string[], scopes: object = {}) => {
   const decKey = path instanceof Array ? path.join(",") : path;
   const line: Line = repoDict[decKey];
   if (line) {
-    const outs: any[] = line.map((node: Node) =>
-      parseNode(repoDict, node, scopes)
-    );
+    const outs: any[] = line.map((node: Node) => parseNode(repoDict, node, scopes));
     const [head, ...tail] = outs;
     if (typeof head === "function") {
       return head(...tail);
@@ -250,11 +253,7 @@ export const gen: any = (
 };
 
 // TODO: strongly type
-export const makeDict = (
-  decList: Dec[],
-  currentPath: string[] = [],
-  dict = {}
-) => {
+export const makeDict = (decList: Dec[], currentPath: string[] = [], dict = {}) => {
   for (const dec of decList) {
     const decPath = [...currentPath, dec.id];
     if (isDecList(dec.line)) {
@@ -310,19 +309,6 @@ export type RepoStore = Repo & {
   user: UserStore;
   readonly full: any; // TODO: type
 };
-
-export function fillLine(line: Line, currentPath: string[] = []): FullLine {
-  if (isDecList(line)) {
-    return line.map((subDec: Dec): FullDec => {
-      const path = [...currentPath, subDec.id];
-      return {
-        path,
-        line: fillLine(subDec.line, path)
-      };
-    });
-  }
-  return line;
-}
 
 type NodeStore = {
   readonly key: string;
@@ -380,7 +366,14 @@ export function Repo(initial: Repo) {
       return store;
     }
   };
-  const Dec = ({ id, line }: Dec): Dec => makeStore({ id, line: Line(line) });
+  const Dec = ({ id, line }: Dec): Dec =>
+    makeStore({
+      id,
+      line: Line(line),
+      get name() {
+        return store.user.nameSet;
+      }
+    });
   const Line = (initial: Line) => {
     if (isDecList(initial)) {
       return initial.map(Dec);
@@ -391,11 +384,27 @@ export function Repo(initial: Repo) {
   const store: RepoStore = makeStore({
     main: Line(initial.main),
     get full() {
-      return fillLine(store.main);
+      return fillLine(store.user, store.main);
     },
     get dict() {
       return makeDict(store.main);
     }
   });
   return store;
+}
+
+export function fillLine(user: UserStore, line: Line, currentPath: string[] = []): FullLine {
+  if (isDecList(line)) {
+    return line.map((subDec: Dec): FullDec => {
+      const path = [...currentPath, subDec.id];
+      return {
+        path,
+        line: fillLine(user, subDec.line, path),
+        get name() {
+          return user.nameSet[path.join(",")];
+        }
+      };
+    });
+  }
+  return line;
 }

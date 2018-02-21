@@ -36,17 +36,19 @@ const rightBorder = "1px solid rgba(0,0,0,0.2)";
 const boxBorder = "1px solid #eee";
 const emptyObj = {};
 
-class Input extends React.Component {
-  componentDidMount() {
-    const me = findDOMNode(this);
-    me.focus();
-    me.select();
+const Input = observer(
+  class Input extends React.Component {
+    componentDidMount() {
+      const me = findDOMNode(this);
+      me.focus();
+      me.select();
+    }
+    render() {
+      const { style, ...rest } = this.props;
+      return <input {...rest} style={{ ...style, background: "#eee" }} />;
+    }
   }
-  render() {
-    const { style, ...rest } = this.props;
-    return <input {...rest} style={{ ...style, background: "#eee" }} />;
-  }
-}
+);
 
 // const getShades = hsl => {
 //   if (typeof hsl !== "object") {
@@ -102,17 +104,19 @@ class ScrollIn extends React.Component {
   }
 }
 
-class Cursor extends React.Component {
-  componentDidMount() {
-    window.scrollTo(0, 0);
-    findDOMNode(this).scrollIntoView();
+const Cursor = observer(
+  class Cursor extends React.Component {
+    componentDidMount() {
+      window.scrollTo(0, 0);
+      findDOMNode(this).scrollIntoView();
+    }
+    render() {
+      const { value, ...rest } = this.props;
+      const Tag = value != null ? Input : ScrollIn;
+      return <Tag {...rest} value={value} />;
+    }
   }
-  render() {
-    const { value, ...rest } = this.props;
-    const Tag = value != null ? Input : ScrollIn;
-    return <Tag {...rest} value={value} />;
-  }
-}
+);
 
 const ReactBox = observer(({ box, onInput, store }) => {
   if (!box) {
@@ -167,15 +171,10 @@ const ReactBox = observer(({ box, onInput, store }) => {
 
 // TODO: better name
 export const ReactView = observer(({ store }) => {
-  const { activeCells, cells, onInput } = store;
+  const { activeCells, cells } = store;
   let throwawayIdCounter = 0;
   const cellBoxes = (activeCells || cells).map(cell => (
-    <ReactBox
-      key={cell ? cell.key : throwawayIdCounter++}
-      box={cell}
-      onInput={onInput}
-      store={store}
-    />
+    <ReactBox key={cell ? cell.key : throwawayIdCounter++} box={cell} store={store} />
   ));
   return <div style={containerStyle}>{cellBoxes}</div>;
 });

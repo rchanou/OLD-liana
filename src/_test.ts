@@ -3,6 +3,7 @@ import { observable, toJS, isObservable, extendObservable } from "mobx";
 import * as C from "./core";
 import * as U from "./ui";
 import { App } from "./app";
+import { User } from "./user";
 import { deepStrictEqual as de } from "assert";
 
 const g = window as any;
@@ -84,7 +85,16 @@ const h: U.UI = {
   repo: i
 };
 
-g.h = C.fillLine(i.main);
+const user = {
+  selectedNameSet: "en-US",
+  nameSets: {
+    "en-US": {
+      a: "test"
+    }
+  }
+};
+
+g.h = C.fillLine(User(user), i.main);
 
 interface K {
   b: number;
@@ -92,37 +102,8 @@ interface K {
   fuzzy: { (x: number): number };
 }
 
-const k: K = {
-  b: 5,
-  get a() {
-    return k.b * 5;
-  },
-  fuzzy(x: number) {
-    return x * k.b * k.a;
-  }
-};
-g.k = k;
-g.l = observable(k);
-
 export const j = App({
-  repo: i
+  repo: i,
+  user
 });
 g.j = j;
-
-const z = observable({ a: 1 });
-
-interface Y {
-  a: number;
-}
-const y: Y = { a: 1 };
-
-const extend = (obj: any, prop: string, val: any) => {
-  if (isObservable(obj)) {
-    extendObservable(obj, { [prop]: val });
-  } else {
-    obj[prop] = val;
-  }
-};
-extend(z, "wut", 3);
-extend(y, "wut", 3);
-console.log(z, y);
